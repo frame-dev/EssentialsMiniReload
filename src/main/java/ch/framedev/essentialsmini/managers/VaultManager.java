@@ -63,6 +63,9 @@ public class VaultManager {
             if (!eco.hasAccount(player))
                 eco.createPlayerAccount(player);
         }
+        if(plugin.isMongoDB()) {
+            VaultAPI.init();
+        }
 
         Bukkit.getConsoleSender().sendMessage(plugin.getPrefix() + "§aVaultManager Loaded and Enabled!");
     }

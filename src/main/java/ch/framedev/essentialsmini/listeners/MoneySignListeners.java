@@ -159,6 +159,8 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
                         if (s.getLine(1).equalsIgnoreCase(name.name()) && s.getLine(2).equalsIgnoreCase(amount + "") && s.getLine(3).equalsIgnoreCase(money + "" + Main.getInstance().getCurrencySymbolMulti())) {
                             if (eco.getBalance(e.getPlayer()) < money) {
                                 e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + Main.getInstance().getCurrencySymbolMulti());
+                                e.setCancelled(true);
+                                e.setUseInteractedBlock(Event.Result.DENY);
                                 return;
                             }
                             ItemStack item = new ItemStack(name);
@@ -206,6 +208,8 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
                             itemStack.setAmount(Integer.parseInt(s.getLine(2)));
                             if (e.getPlayer().getName().equalsIgnoreCase(cfg.getString("Items." + s.getLine(1).replace('§', '&') + ".player"))) {
                                 e.getPlayer().sendMessage("§c§lYou cannot Buy your own Item!");
+                                e.setCancelled(true);
+                                e.setUseInteractedBlock(Event.Result.DENY);
                                 return;
                             }
                             if (eco.has(e.getPlayer(), Double.parseDouble(s.getLine(3)))) {
@@ -314,6 +318,7 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
                             event.getPlayer().sendMessage("§aWie soll das Item heissen?");
                             playerSign.put(event.getPlayer(), sign);
                             event.setCancelled(true);
+                            event.setUseInteractedBlock(Event.Result.DENY);
                             itemHash.put(event.getPlayer(), item);
                         }
                     }

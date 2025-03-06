@@ -8,10 +8,11 @@ PlayerNameNotOnline: '&cDieser Spieler ist nicht Online! &6%Player%'
 FeedSet: '&aDein Hunger wurde gestillt!!'
 FeedOtherSet: '&6%Player% &asein Hunger wurde gestillt!'
 
-FlySelfOn: '&aDu kannst nun Fliegen!'
-FlySelfOff: '&cDu kannst nun nicht mehr Fliegen!'
-FlyOtherOn: '&6%Player% &akann nun Fliegen!'
-FlyOtherOff: '&6%Player% &ckann nun nicht mehr Fliegen!'
+Fly:
+  SelfOn: '&aDu kannst nun Fliegen!'
+  SelfOff: '&cDu kannst nun nicht mehr Fliegen!'
+  OtherOn: '&6%Player% &akann nun Fliegen!'
+  OtherOff: '&6%Player% &ckann nun nicht mehr Fliegen!'
 
 GameModeChanged: '&aDein SpielModus wurde gesetzt auf &6%GameMode%!'
 GameModeOtherChanged: '&aDenn SpielModus von &6%Player% &awurde auf &6%GameMode% &agesetzt'
@@ -32,29 +33,30 @@ HomeSet: '&aDein Home wurde gesetzt'
 HomeSetOther: '&aDein Home mit dem Namen &6%Name% &awurde gesetzt!'
 HomeTeleport: '&aDu wurdest zu deinem Home Teleportiert'
 HomeTeleportOther: '&aDu wurdest zu deinem Home mit dem Namen &6%Name% &aTeleportiert'
-HomeDelete: '§cDein Home wurde gelöscht!'
+HomeDelete: '&cDein Home wurde geloescht!'
 HomeDeleteOther: '&cDein Home mit dem Namen &6%Name% &cwurde gelöscht!'
 HomeNotExist: '&cDieses Home existiert nocht nicht!'
 HomeExist: '&cDieses Home existiert schon!'
-NoMoreHomesSet: '&cDu kannst keine weitern Homes setzten!'
-HomeButton: '&aSet Home? &6Click me and press enter'
-ShowTextHover: '&6Set Home?'
-ShowTextHoverOther: '&6Set %Home% Home?'
-SpyMessage: '&6%Player% &ahat eine Nachricht an &6%Target% &agesendet mit dem Text &6: §c%Message%'
+NoMoreHomesSet: '&cDu kannst keine weitern Homes setzen!'
+HomeButton: '&aHome setzen? &6Klick hier und druecke Enter'
+ShowTextHover: '&6Home setzen?'
+ShowTextHoverOther: '&6Home %Home% setzen?'
+SpyMessage: '&6%Player% &ahat eine Nachricht an &6%Target% &agesendet mit dem Text &6:&c%Message%'
 Spy:
-  Activate: '&aDir werden nun die Msg"s geschickt von anderen Spielern!'
-  Deactivate: '&aDir werden nun nicht mehr die Msg"s geschickt von anderen Spielern!'
+  Activate: '&aDir werden nun die Nachrichten von anderen Spielern geschickt!'
+  Deactivate: '&aDir werden nun nicht mehr die Nachrichten von anderen Spielern geschickt!'
 
 Item:
   Get: '&aDu hast das Item &6%Item% &abekommen! Menge &6%Amount%'
   Other: '&6%Player% &ahat das Item &6%Item% &abekommen! Menge &6%Amount%'
+  notFound: '&cDieses Item existiert nicht! &6%Item%'
 
 Warp:
   Created: '&aWarp wurde erstellt mit dem Namen &6%WarpName%&c!'
   Teleport: '&aDu wurdest erfolgreich zum Warp &6%WarpName% &aTeleportiert!'
-  Delete: '&aWarp mit dem Namen &6%WarpName% &awurde &cgelöscht!'
+  Delete: '&aWarp mit dem Namen &6%WarpName% &awurde &cgel�scht!'
   NotExist: '&cDieser Warp wurde noch nicht erstellt!'
-  Cost: '&aDieser Warp kostet nun &6%Cost%&c!'
+  Cost: '&aDieser Warp kostet &6%Cost%&c!'
 
 TpaMessages:
   TeleportSend: '&aDu hast an &6%Target% &aeine Teleportier Anfrage gesendet!'
@@ -65,11 +67,11 @@ TpaMessages:
   TpaDenyTarget: '&6%Player% &chat deine Teleportier Anfrage abgelehnt!"'
   Delay: '&aDu wirst in &6%Time% &aSekunden Teleportiert. Wenn du dich bewegst wird die Teleportierung abgebrochen.'
   Denied: '&cDu hast dich bewegt. &6Teleportierung wurde abgebrochen!'
-  TpaHereDeny: '&cDu hast die Tpa Here anfrage abgelehnt.'
-  TpaHereDenyTarget: '&6%Player% &chat die TpaHere anfrage abgelehnt!'
-  TpaHere: '&aDieser Spieler möchtest du zu dir Teleportieren &6%Player%'
+  TpaHereDeny: '&cDu hast die TpaHere Anfrage abgelehnt.'
+  TpaHereDenyTarget: '&6%Player% &chat die TpaHere Anfrage abgelehnt!'
+  TpaHere: '&6%Player% &amöchtest du diesen Spieler zu dir teleportieren?'
   TpaHereTarget: '&6%Player% &aMöchte dich zu ihm Telportieren!'
-  NoRequest: '&cDu hast keine Anfrage bekommen!'
+  NoRequest: '&cDu hast keine Anfragen bekommen!'
 
 
 Money:
@@ -84,13 +86,13 @@ Money:
       MSG: '&aDas Geld von &b[Target] &abeträgt &b[Money]'
   MoneySet:
     Other:
-      MSG: '&aDas Geld von &b[Target] &awurde auf &b[Money] §agesetzt!'
+      MSG: '&aDas Geld von &b[Target] &awurde auf &b[Money] &agesetzt!'
 
 DeathTeleport: '&aDu wurdest zu deinem Todespunkt Teleportiert!'
 NoDeathLocationFound: '&cEs ist kein Todespunkt gespeichert!'
-DeathCommandUsage: '&aBitte gib &6/back &aein damit du zu deinem Todespunkt zurückkehren kannst!'
+DeathCommandUsage: '&aBitte gib &6/back &aein, damit du zu deinem Todespunkt zurückkehren kannst!'
 
-NoBackPackFound: '&cDieser Spieler hat noch kein BackPack!'
+NoBackPackFound: '&cDieser Spieler hat noch kein Backpack!'
 
 ChatClear: '&aDer Chat wurde von &6%Player% &ageleert!'
 
@@ -112,37 +114,51 @@ VanishOff:
   Multi: '&6%Player% &c ist nun nicht mehr im Vanish'
 
 Repair:
-  Success: '&aDas Item &6: %Item% &awurde repariert!'
-  Failed: '&cDas Item &6: %Item% &cmuss nicht Repariert werden!'
+  Success: '&aDas Item &6:%Item% &awurde repariert!'
+  Failed: '&cDas Item &6:%Item% &cmuss nicht Repariert werden!'
   AirRepair: '&cLuft kann nicht Repariert werden!'
   OtherSuccess: '&aDas Item &6: %Item% &avon &6: %Player% &awurde repariert!'
   OtherFailed: '&cDas Item &6: %Item% &cvon &6: %Player% &cmuss nicht Repariert werden!'
-  Irreparable: '&cDas Item &6: %Item% &cvon &6: %Player%&c kann nicht Repariert werden!'
+  Irreparable: '&cDas Item &6: %Item% &cvon &6: %Player% &ckann nicht Repariert werden!'
 
 Mute:
   Self:
     Activate: '&cDu wurdest gemuted!'
-    Deactivate: '&aDu wurdest unmuted!'
+    Deactivate: '&aDu wurdest entmuted!'
   Other:
     Activate: '&6%Player% &cwurde gemuted!'
-    Deactivate: '&6%Player% &awurde unmuted!'
+    Deactivate: '&6%Player% &awurde entmuted!'
 
-ChangeFlySpeed: '&aDeine Flug Gehschwindigkeit wurde geändert auf &6%flyspeed%'
-ChangeFlySpeedOther: "&6%player%'s &aFlug Gehschwindigkeit wurde geändert auf &6%flyspeed%"
+ChangeFlySpeed: '&aDeine Fluggeschwindigkeit wurde geändert auf &6%flyspeed%'
+ChangeFlySpeedOther: "&6%player%'s &aFluggeschwindigkeit wurde geändert auf &6%flyspeed%"
 
-WalkSpeed: '&aDeine Geh Geschwindigkeit wurde geändert auf &6%WalkSpeed%'
+WalkSpeed: '&aDeine Gehgeschwindigkeit wurde geändert auf &6%WalkSpeed%'
 
 MsgToggle:
-  Activated: '&cNo more messages will be sent to you!'
-  Deactivated: '&aMessages will be sent to you!'
-  Message: "&cThis Player doesn't Allow Messages!"
+  Activated: '&cDir werden keine weiteren Nachrichten geschickt!'
+  Deactivated: '&aDir werden Nachrichten wieder geschickt!'
+  Message: "&cDieser Spieler erlaubt keine Nachrichten!"
 
-SkipNight: '&6%Player% &ahat die Nacht übersprungen!'
+SkipNight: '&6%Player% &ahat die Nacht uebersprungen!'
 
 Experience:
   Self:
-    Level: '&aYour Level is now &6%Level%'
-    XP: '&aYou have now &6%XP% &aExperience'
+    Level: '&aDein Level ist nun &6%Level%'
+    XP: '&aDu hast nun &6%XP% &aExperience'
   Other:
-    Level: '&aYour Level is now &6%Level%'
-    XP: '&aYou have now &6%XP% &aExperience'
+    Level: '&adein Level ist jetzt &6%Level%'
+    XP: '&aDu hast jetzt &6%XP% &aExperience'
+
+Bank:
+  NotFound: "&cdiese Bank exestiert nicht!"
+  Created: '&aBank erfolgreich erstellt!'
+  Deleted: '&cBank erfolgreich geloescht!'
+  Error: '&cError while &6%Reason% %Error%'
+  Deposit: '&6%Amount% &awurde erfolgreich auf der bank tranferiert!'
+  Withdraw: '&aDu hast &6%Amount% &aerfolgreich von der Bank bezogen!'
+  Balance: '&adein Kontostand liegt bei &6%Balance%!'
+  NotOwnerOrMember: '&cDu bist kein Bankmitglied oder Inhaber!'
+  NotOwner: '&cDu bist nicht der Inhaber!'
+
+JoinMessage: '&aWillkommen &6%Player% &aauf dem Server!'
+LeaveMessage: '&6%Player% &ahat den Server verlassen!'

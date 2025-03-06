@@ -42,13 +42,16 @@ public class WarpSigns extends ListenerBase {
                     if (line1.equalsIgnoreCase(location)) {
                         event.setLine(0, "§6[§bWARP§6]");
                         event.setLine(1, "§a" + location);
+                        if (new LocationsManager().costWarp(location)) {
+                            event.setLine(2, "§b" + new LocationsManager().getWarpCost(location) + Main.getInstance().getCurrencySymbolMulti());
+                        }
                         success = true;
                     }
                 }
                 if (!success) {
-                    if(getPlugin().getLanguageConfig(null).getString("Warp.NotExist") != null) {
+                    if (getPlugin().getLanguageConfig(null).getString("Warp.NotExist") != null) {
                         String message = getPlugin().getLanguageConfig(null).getString("Warp.NotExist");
-                        if(message == null) return;
+                        if (message == null) return;
                         if (message.contains("&"))
                             message = message.replace('&', '§');
                         if (message.contains("%WarpName%"))
@@ -71,9 +74,9 @@ public class WarpSigns extends ListenerBase {
                 return;
             }
             Block block = event.getClickedBlock();
-            if(block == null) return;
+            if (block == null) return;
             EquipmentSlot equipmentSlot = event.getHand();
-            if(equipmentSlot == null) return;
+            if (equipmentSlot == null) return;
             if (event.getHand().equals(EquipmentSlot.HAND) &&
                     event.getClickedBlock().getState() instanceof Sign) {
                 Sign s = (Sign) event.getClickedBlock().getState();
@@ -81,12 +84,31 @@ public class WarpSigns extends ListenerBase {
                 if (lines[0].equalsIgnoreCase("§6[§bWARP§6]")) {
                     if (event.getPlayer().hasPermission("essentialsmini.signs.use")) {
                         String warpName = lines[1].replace("§a", "");
+                        if (lines.length >= 3 && lines[2] != null && !lines[2].isEmpty()) {
+                            String cost = lines[2];
+                            cost = cost.replace("§b", "").replace(Main.getInstance().getCurrencySymbolMulti(), "");
+                            if (!getPlugin().isEconomyEnabled()) {
+                                event.getPlayer().sendMessage(getPlugin().getPrefix() + "§cThe economy system is deactivated!");
+                                event.setCancelled(true);
+                                event.setUseInteractedBlock(Event.Result.DENY);
+                                return;
+                            }
+                            if (Double.parseDouble(cost) > getPlugin().getVaultManager().getEco().getBalance(event.getPlayer())) {
+                                event.getPlayer().sendMessage(getPlugin().getPrefix() + "§cYou do not have enough " + Main.getInstance().getCurrencySymbolMulti());
+                                event.setCancelled(true);
+                                event.setUseInteractedBlock(Event.Result.DENY);
+                                return;
+                            } else {
+                                getPlugin().getVaultManager().getEco().withdrawPlayer(event.getPlayer(), Double.parseDouble(cost));
+                                event.getPlayer().sendMessage(getPrefix() + "§aYou have been charged §6" + cost + " §afor the warp cost!");
+                            }
+                        }
                         Location location = new LocationsManager().getLocation("warps." + warpName);
                         if (event.getPlayer().hasPermission("essentialsmini.warp")) {
                             event.getPlayer().teleport(location);
                             Player player = event.getPlayer();
                             String message = getPlugin().getLanguageConfig(player).getString("Warp.Teleport");
-                            if(message == null) return;
+                            if (message == null) return;
                             if (message.contains("&"))
                                 message = message.replace('&', '§');
                             if (message.contains("%WarpName%"))

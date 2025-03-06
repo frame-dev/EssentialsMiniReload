@@ -86,6 +86,7 @@ public class Main extends JavaPlugin {
         silent = new ArrayList<>();
 
         this.variables = new Variables();
+        this.databaseManager = new DatabaseManager(this);
 
         if (getConfig().getBoolean("MongoDB.Boolean") || getConfig().getBoolean("MongoDB.LocalHost")) {
             if (Bukkit.getPluginManager().getPlugin("SpigotMongoDBUtils") == null) {
@@ -111,8 +112,6 @@ public class Main extends JavaPlugin {
                 }
             }
         }
-
-        this.databaseManager = new DatabaseManager(this);
 
         if (getConfig().getBoolean("Economy.Activate")) {
             if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
@@ -303,7 +302,7 @@ public class Main extends JavaPlugin {
     }
 
     public FileConfiguration getLanguageConfig(Player player) {
-        String locale = "en"; // Default locale
+        String locale; // Default locale
         File configFile;
 
         if (player == null) {
@@ -497,5 +496,9 @@ public class Main extends JavaPlugin {
         } catch (IOException ex) {
             getLogger4J().error(ex.getMessage(), ex);
         }
+    }
+
+    public boolean isEconomyEnabled() {
+        return getConfig().getBoolean("Economy.Activate", false);
     }
 }

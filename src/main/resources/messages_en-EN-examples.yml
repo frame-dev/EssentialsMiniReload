@@ -55,6 +55,7 @@ Warp:
   Delete: '&athe Warp with the name &6%WarpName% &ahas been &cdeleted!'
   NotExist: "&cThis Warp hasn't been created!"
   Cost: '&aThis Warp costs &6%Cost%&c!'
+  WarpSignCost: '&aYou have been charged &6%COST% &afor the warp cost!'
 
 TpaMessages:
   TeleportSend: '&aYou sent &6%Target% &aa teleport request!'
