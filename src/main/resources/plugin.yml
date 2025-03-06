@@ -1,0 +1,594 @@
+name: EssentialsMini
+author: FrameDev
+api-version: 1.20
+version: ${project.version}
+main: ch.framedev.essentialsmini.main.Main
+softdepend:
+  - Vault
+  - SpigotMongoDBUtils
+  - ProtocolLib
+  - LuckPerms
+loadbefore:
+  - Vault
+website: https://framedev.ch
+
+commands:
+  signremove:
+    description: Sign remove
+  balance:
+    permission: essentialsmini.balance
+    aliases:
+      - bal
+  eco:
+    description: Main Command for all Economy Commands
+  srestart:
+    permission: essentialsmini.restart
+    description: Custom restart feature
+  tpaheredeny:
+    description: Disallow the Teleport Request
+  home:
+    description: teleport you to our home Location
+  homegui:
+    description: open an GUI with all Homes
+  sethome:
+    description: set your home location
+  setspawn:
+    permission: essentialsmini.setspawn
+    description: sets the worldSpawn point if enabled
+  spawn:
+    description: Teleports you to our WorldSpawnPoint
+  tpa:
+    description: Send a Teleport Request to another Player
+  tpaaccept:
+    description: accept the Teleport Request
+  tpadeny:
+    description: Disallow the Teleport Request
+  fly:
+    permission: essentialsmini.fly
+    description: Do you want to Fly
+  delhome:
+    description: delete your home
+  invsee:
+    permission: essentialsmini.invsee
+    description: sere others inventory
+  saveinventory:
+    description: opens an Inventory that will save
+  enderchest:
+    permission: essentialsmini.enderchest
+    aliases:
+      - ec
+    description: show your enderchest or from other Players
+  back:
+    description: Teleports to your last death location
+  backup:
+    description: Create a World Backup
+  gamemode:
+    aliases:
+      - gm
+    description: set your Gamemode
+  vanish:
+    aliases:
+      - v
+    description: make you invisible for other Players
+  setwarp:
+    description: sets a new Warp point
+  warp:
+    description: teleport you to an Warppoint
+  warps:
+    description: get all Warppoints
+  online:
+    aliases:
+      - plist
+      - playerlist
+      - players
+    description: shows you all Online Players on the Server
+  day:
+    description: set Day in our World
+  night:
+    description: set Night in our World
+  tpahere:
+    description: Send a Teleport Request to another Player
+  tpahereaccept:
+    description: accept the Teleport Request
+  tphereall:
+    description: Teleport all Players to your Location
+  backpack:
+    description: Opens an Backpack
+    aliases:
+      - bp
+      - bpack
+  essentialsmini:
+    aliases:
+      - essmini
+    description: Command for all Children Commands
+  sleep:
+    description: Use this command as Sleep bag the Bed despawn at 7 seconds
+  item:
+    aliases:
+      - i
+    description: like the give command from minecraft
+  delotherhome:
+    description: delete other Homes from Player
+  killall:
+    description: killall monsters,items,animals
+  suicid:
+    description: make suicid
+  showcrafting:
+    description: shows you the Crafting from the Item you have entered as args
+  signitem:
+    description: sign your custom Item
+  playerheads:
+    description: getPlayer heads from Players
+  r:
+    aliases:
+      - reply
+    description: reply to a Player if they use msg
+  msg:
+    aliases:
+      - tell
+      - message
+    description: send player a Message
+  spy:
+    aliases:
+      - spymsg
+      - spymessage
+      - spytell
+    description: spy other messages from Players
+  enchant:
+    aliases:
+      - ent
+    description: Enchant your item
+  workbench:
+    description: opens an portable Workbench
+  sun:
+    aliases:
+      - sunny
+    description: set sun in our World
+  rain:
+    aliases:
+      - rainy
+    description: set Rain in our World
+  thunder:
+    aliases:
+      - thunderstorm
+    description: set Thunder in our World
+  renameitem:
+    description: Rename a Item
+  showlocation:
+    description: Show you location to other Players
+  position:
+    aliases:
+      - pos
+    description: Mark an position for other player after an reload all positions will be removed
+  repair:
+    description: repair your item
+  heal:
+    aliases:
+      - healme
+    description: Heal you or another Player
+  trash:
+    description: opens an Trash Inventory
+  feed:
+    aliases:
+      - feedme
+    description: fill your saturation or our Hunger
+  key:
+    description: this is used for Generate key to connect to protected Worlds
+  kits:
+    description: Select your kit if you has the Permissions
+  worldtp:
+    description: Teleports you to an Protected World
+  addworld:
+    description: add a new Protected World
+  godmode:
+    aliases:
+      - god
+  spawnmob:
+    description: Spawn a Custom Mob
+  speed:
+    description: Change your Walk Speed
+  chatclear:
+    aliases:
+      - cc
+      - clearchat
+    description: Clear the Chat
+  lightningstrike:
+    aliases:
+      - lightning
+    description: Summon a Lightningstrike
+  pay:
+    description: Pay Money to another Player
+  pltime:
+    description: Change the Playertime
+  resetpltime:
+    description: Reset the Playertime
+  fuck:
+    description: Spawn Firework
+  lag:
+    description: Show statistics about the Server
+  delwarp:
+    description: Delete a Warp Location
+  msgtoggle:
+    description: This will allow or deny messages from other players
+  tptoggle:
+    description: This will allow or deny Teleports from other players
+  mysql:
+    description: Check if MySQL is Enabled
+  balancetop:
+    description: Who has the Most Money
+    aliases:
+      - baltop
+  afk:
+    description: Command to set as Afk
+  silent:
+    description: Command to enable Silent
+  bank:
+    description: Main Command for all Bank Commands
+  flyspeed:
+    description: Change your Fly Speed
+  tempmute:
+    description: Base Command for the use of Temp Mute
+  muteinfo:
+    description: Show all Muted Player and there Reason and Expiration
+  removetempmute:
+    description: Base Command for the use of Remove Temp Mute
+  mute:
+    description: Mute a Player
+  tempban:
+    description: Base Command for the use of Temp Ban
+  eban:
+    description: Base Command for Permanent Ban
+  eunban:
+    description: Base Command for Permanent Unban
+  book:
+    description: Open an Written Book and edited it
+  copybook:
+    description: Copy an Written Book
+  removetempban:
+    description: Base Command for the use of Remove Temp Ban
+  firework:
+    description: Spawn a Firework
+  createkit:
+    description: Create a new Kit, Place all your Items in your Inventory.This Command will delete your Inventory after execute
+  globalmute:
+    aliases:
+      - gmute
+      - glmute
+    description: Mute all Messages
+  offline:
+    aliases:
+      - offlineplayers
+      - offplayers
+    description: Show all Offline Players
+  xp:
+    aliases:
+      - exp
+      - experience
+    description: Base Command to change your XP or Level
+  register:
+    description: Register to the Server
+  login:
+    description: Login to the Server
+  plweather:
+    aliases:
+      - playerweather
+    description: Change the Weather for a Player
+  resetplweather:
+    aliases:
+      - resetplayerweather
+    description: Reset the Weather for a Player
+  timeplayed:
+    aliases:
+      - playedtime
+    description: Show your Playtime
+  muteforplayer:
+    description: Mute a Player for a specific Player
+  nick:
+  nicklist:
+  playerweather:
+    aliases:
+      - plweather
+      - playerw
+  resetplayerweather:
+    aliases:
+      - resetplayerw
+      - rplayerweather
+  maintenance:
+permissions:
+  essentialsmini.*:
+    children:
+      essentialsmini.summon: true
+      essentialsmini.sethome: true
+      essentialsmini.setspawn: true
+      essentialsmini.fly: true
+      essentialsmini.vanish: true
+      essentialsmini.vanish.see: true
+      essentialsmini.invsee: true
+      essentialsmini.invsee.owner: true
+      essentialsmini.resethealth: true
+      essentialsmini.setwarp: true
+      essentialsmini.warp: true
+      essentialsmini.warps: true
+      essentialsmini.gamemode: true
+      essentialsmini.gamemode.others: true
+      essentialsmini.online: true
+      essentialsmini.day: true
+      essentialsmini.night: true
+      essentialsmini.ignorejoin: true
+      essentialsmini.tphereall: true
+      essentialsmini.suicid: true
+      essentialsmini.killall: true
+      essentialsmini.item: true
+      essentialsmini.sleep: true
+      essentialsmini.showlocation: true
+      essentialsmini.showcrafting: true
+      essentialsmini.position: true
+      essentialsmini.plugins: true
+      essentialsmini.enderchest: true
+      essentialsmini.enderchest.others: true
+      essentialsmini.enderchest.owner: true
+      essentialsmini.trash: true
+      essentialsmini.worldutils: true
+      essentialsmini.restart: true
+      essentialsmini.feed: true
+      essentialsmini.feed.others: true
+      essentialsmini.heal: true
+      essentialsmini.heal.others: true
+      essentialsmini.generatekey: true
+      essentialsmini.removekey: true
+      essentialsmini.enchant: true
+      essentialsmini.enchant.others: true
+      essentialsmini.showitem: true
+      essentialsmini.playerdata: true
+      essentialsmini.god: true
+      essentialsmini.god.others: true
+      essentialsmini.sethealth: true
+      essentialsmini.sethealth.others: true
+      essentialsmini.chatclear: true
+      essentialsmini.signs.use: true
+      essentialsmini.signs.create: true
+      essentialsmini.signs.update: true
+      essentialsmini.playertime: true
+      essentialsmini.balance: true
+      essentialsmini.balance.others: true
+      essentialsmini.eco.set: true
+      essentialsmini.eco.set.others: true
+      essentialsmini.pay: true
+      essentialsmini.msgtoggle: true
+      essentialsmini.msgtoggle.bypass: true
+      essentialsmini.tptoggle: true
+      essentialsmini.tptoggle.bypass: true
+      essentialsmini.silent: true
+      essentialsmini.flyspeed: true
+      essentialsmini.flyspeed.others: true
+      essentialsmini.mute: true
+      essentialsmini.tempban: true
+      essentialsmini.ban: true
+      essentialsmini.unban: true
+      essentialsmini.tempmute: true
+      essentialsmini.muteinfo: true
+      essentialsmini.removetempmute: true
+      essentialsmini.bank.create: true
+      essentialsmini.bank.balance: true
+      essentialsmini.bank.remove: true
+      essentialsmini.bank.deposit: true
+      essentialsmini.bank.withdraw: true
+      essentialsmini.bank.addmember: true
+      essentialsmini.bank.removemember: true
+      essentialsmini.workbench: true
+      essentialsmini.balancetop: true
+      essentialsmini.xp: true
+      essentialsmini.checkupdates: true
+      essentialsmini.globalmute: true
+      essentialsmini.globalmute.bypass: true
+      essentialsmini.plweather: true
+      essentialsmini.maintenance: true
+      essentialsmini.maintenance.bypass: true
+  essentialsmini.sethome:
+    default: op
+  essentialsmini.worldutils:
+    default: op
+  essentialsmini.setspawn:
+    default: op
+  essentialsmini.fly:
+    default: op
+  essentialsmini.plugins:
+    default: op
+  essentialsmini.help:
+    default: op
+  essentialsmini.showlocation:
+    default: op
+  essentialsmini.showcrafting:
+    default: op
+  essentialsmini.position:
+    default: op
+  essentialsmini.vanish:
+    default: op
+  essentialsmini.invsee:
+    default: op
+  essentialsmini.resethealth:
+    default: op
+  essentialsmini.setwarp:
+    default: op
+  essentialsmini.warp:
+    default: op
+  essentialsmini.warps:
+    default: op
+  essentialsmini.gamemode:
+    default: op
+  essentialsmini.gamemode.others:
+    default: op
+    children:
+      essentialsmini.gamemode: true
+  essentialsmini.vanish.see:
+    default: op
+    children:
+      essentialsmini.vanish: true
+  essentialsmini.online:
+    default: op
+  essentialsmini.day:
+    default: op
+  essentialsmini.night:
+    default: op
+  essentialsmini.ignorejoin:
+    default: op
+  essentialsmini.tphereall:
+    default: op
+  essentialsmini.suicid:
+    default: op
+  essentialsmini.killall:
+    default: op
+  essentialsmini.item:
+    default: op
+  essentialsmini.sleep:
+    default: op
+  essentialsmini.enderchest:
+    default: op
+  essentialsmini.enderchest.others:
+    default: op
+    children:
+      essentialsmini.enderchest: true
+  essentialsmini.trash:
+    default: op
+  essentialsmini.restart:
+    default: op
+  essentialsmini.feed:
+    default: op
+  essentialsmini.feed.others:
+    default: op
+    children:
+      essentialsmini.feed: true
+  essentialsmini.heal:
+    default: op
+  essentialsmini.heal.others:
+    default: op
+    children:
+      essentialsmini.heal: true
+  essentialsmini.generatekey:
+    default: op
+  essentialsmini.removekey:
+    default: op
+  essentialsmini.enchant:
+    default: op
+  essentialsmini.enchant.others:
+    default: op
+    children:
+      essentialsmini.enchant: true
+  essentialsmini.showitem:
+    default: op
+  essentialsmini.playerdata:
+    default: op
+  essentialsmini.god:
+    default: op
+  essentialsmini.god.others:
+    default: op
+    children:
+      essentialsmini.god: true
+  essentialsmini.summon:
+    default: op
+  essentialsmini.sethealth:
+    default: op
+  essentialsmini.sethealth.others:
+    default: op
+    children:
+      essentialsmini.sethealth: true
+  essentialsmini.chatclear:
+    default: op
+  essentialsmini.signs.use:
+    default: op
+  essentialsmini.signs.create:
+    default: op
+  essentialsmini.playertimer:
+    default: op
+  essentialsmini.invsee.owner:
+    default: op
+    children:
+      essentialsmini.invsee: true
+  essentialsmini.enderchest.owner:
+    default: op
+    children:
+      essentialsmini.enderchest: true
+  essentialsmini.balance:
+    default: op
+  essentialsmini.balance.others:
+    default: op
+    children:
+      essentialsmini.balance: true
+  essentialsmini.eco.set:
+    default: op
+  essentialsmini.eco.set.others:
+    default: op
+    children:
+      essentialsmini.eco.set: true
+  essentialsmini.pay:
+    default: op
+  essentialsmini.msgtoggle:
+    default: op
+  essentialsmini.msgtoggle.bypass:
+    default: op
+    children:
+      essentialsmini.msgtoggle: true
+  essentialsmini.tptoggle:
+    default: op
+  essentialsmini.tptoggle.bypass:
+    default: op
+    children:
+      essentialsmini.tptoggle: true
+  essentialsmini.silent:
+    default: op
+  essentialsmini.flyspeed:
+    default: op
+  essentialsmini.flyspeed.others:
+    default: op
+    children:
+      essentialsmini.flyspeed: true
+  essentialsmini.mute:
+    default: op
+  essentialsmini.tempban:
+    default: op
+  essentialsmini.ban:
+    default: op
+  essentialsmini.unban:
+    default: op
+  essentialsmini.muteinfo:
+    default: op
+  essentialsmini.removetempmute:
+    default: op
+  essentialsmini.signs.update:
+    default: op
+  essentialsmini.bank.create:
+    default: op
+  essentialsmini.bank.balance:
+    default: op
+  essentialsmini.bank.remove:
+    default: op
+  essentialsmini.bank.deposit:
+    default: op
+  essentialsmini.bank.withdraw:
+    default: op
+  essentialsmini.bank.addmember:
+    default: op
+  essentialsmini.bank.removemember:
+    default: op
+  essentialsmini.workbench:
+    default: op
+  essentialsmini.balancetop:
+    default: op
+  essentialsmini.xp:
+    default: op
+  essentialsmini.checkupdates:
+    default: op
+  essentialsmini.globalmute:
+    default: op
+  essentialsmini.globalmute.bypass:
+    default: op
+    children:
+      essentialsmini.globalmute: true
+  essentialsmini.plweather:
+    default: op
+  essentialsmini.maintenance:
+    default: op
+  essentialsmini.maintenance.bypass:
+    default: op
+    children:
+      essentialsmini.maintenance: true

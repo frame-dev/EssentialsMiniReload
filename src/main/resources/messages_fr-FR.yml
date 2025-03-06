@@ -1,0 +1,116 @@
+NoPermissions: "&6Vous n'avez pas la permission&4&l!"
+WrongArgs: '&cVeuillez utiliser &6%cmdUsage%&4&l!'
+UnknownCommand: "&cCette commande n'existe pas &6%CMD%&4&l!"
+OnlyPlayer: '&cCette commande ne peut être utilisée que par un joueur!'
+PlayerNotOnline: "&cCe joueur n'est pas en ligne!"
+PlayerNameNotOnline: "&cCe joueur n'est pas en ligne! &6%Player%"
+
+FeedSet: '&aVotre faim a été saturée!'
+FeedOtherSet: "&aLa faim de &6%Player% &aa été saturée!"
+
+FlySelfOn: '&aVous pouvez maintenant voler!'
+FlySelfOff: "&cVous ne pouvez plus voler!"
+FlyOtherOn: '&6%Player% &apeut maintenant voler!'
+FlyOtherOff: "&6%Player% &cne peut plus voler!"
+
+GameModeChanged: '&aVotre mode de jeu a été défini sur &6%GameMode%!'
+GameModeOtherChanged: "&aLe mode de jeu de &6%Player% &aa été défini sur &6%GameMode%"
+
+God:
+  Self:
+    Activated: '&aVous êtes maintenant invincible'
+    Deactivated: '&cVous êtes de nouveau &6vulnérable'
+  Other:
+    Activated: '&6%Player% &aest maintenant invincible'
+    Deactivated: '&6%Player% &cest de nouveau vulnérable'
+
+Heal:
+  Self: '&aVous avez été soigné!'
+  Other: '&6%Player% &aa été soigné!'
+
+HomeSet: '&aVotre maison a été définie'
+HomeSetOther: '&aVotre maison nommée &6%Name% &aa été définie'
+HomeTeleport: "&aVous avez été téléporté à votre maison"
+HomeTeleportOther: "&aVous avez été téléporté à votre maison nommée &6%Name%"
+HomeDelete: '&cVotre maison a été supprimée!'
+HomeDeleteOther: '&cVotre maison nommée &6%Name% &ca été supprimée!'
+HomeNotExist: "&cCette maison n'existe pas!"
+HomeExist: '&cCette maison existe déjà!'
+NoMoreHomesSet: "&cVous ne pouvez pas définir plus de maisons!"
+HomeButton: '&aDéfinir une maison? &6Cliquez ici et appuyez sur Entrée'
+ShowTextHover: '&6Définir une maison?'
+ShowTextHoverOther: '&6Définir la maison %Home%?'
+SpyMessage: '&6%Player% &aa envoyé un message à &6%Target% &aavec le texte &6:&c%Message%'
+Spy:
+  Activate: '&aVous pouvez maintenant voir les messages des autres joueurs!'
+  Deactivate: "&aVous ne pouvez plus voir les messages des autres joueurs!"
+  notFound: "&cCet objet n'existe pas! &6%Item%"
+
+Item:
+  Get: "&aVous avez obtenu l'objet &6%Item%! Quantité: &6%Amount%"
+  Other: "&6%Player% &aa obtenu l'objet &6%Item%! Quantité: &6%Amount%"
+
+Warp:
+  Created: '&aLe warp nommé &6%WarpName% &aa été créé!'
+  Teleport: "&aVous avez été téléporté à &6%WarpName%!"
+  Delete: '&aLe warp nommé &6%WarpName% &aa été supprimé!'
+  NotExist: "&cCe warp n'existe pas!"
+  Cost: '&aCe warp coûte &6%Cost%&c!'
+
+TpaMessages:
+  TeleportSend: '&aVous avez envoyé une demande de téléportation à &6%Target%!'
+  TeleportGot: '&aVous avez reçu une demande de téléportation de &6%Player%!'
+  TeleportToPlayer: '&aVous avez été téléporté à &6%Player%!'
+  TargetMessage: '&6%Target% &aa été téléporté vers vous!'
+  TpaDeny: '&aVous avez refusé la demande de téléportation!'
+  TpaDenyTarget: "&6%Player% &ca refusé votre demande de téléportation!"
+  Delay: "&aVous serez téléporté dans &6%Time%! &aSi vous bougez, la téléportation sera annulée."
+  Denied: '&cVous avez bougé. &6La téléportation a été annulée!'
+  NoRequest: "&cVous n'avez aucune demande en attente!"
+
+Money:
+  MSG:
+    NotEnough: "&cVous n'avez pas assez d'argent &6:%Money%"
+    Balance: '&aVotre solde actuel est de &b[Money]'
+    Pay: '&aVous avez payé &b[Target] &b[Money]!'
+    GotPay: '&aVous avez reçu &b[Money] &ade &b[Player]&a!'
+    Set: '&aVotre solde a été défini à &b[Money]!'
+
+DeathTeleport: "&aVous avez été téléporté à votre point de mort!"
+NoDeathLocationFound: '&cAucun point de mort enregistré!'
+DeathCommandUsage: '&aVeuillez écrire &6/back &apour revenir à votre point de mort!'
+
+NoBackPackFound: "&cCe joueur n'a pas de sac à dos!"
+
+ChatClear: '&aLe chat a été effacé par &6%Player%!'
+
+Day: "&aL'heure a été réglée sur &6jour!"
+Night: "&aL'heure a été réglée sur &6nuit!"
+
+EnchantNotExist: "&cCet enchantement n'existe pas!"
+NoItemFoundInHand: '&cAucun objet trouvé dans votre main!'
+
+WeatherSun: '&aIl fait maintenant soleil dans &6%World%!'
+WeatherRain: '&aIl pleut maintenant dans &6%World%!'
+WeatherThunder: '&aIl y a maintenant un orage dans &6%World%!'
+
+Mute:
+  Self:
+    Activate: '&cVous avez été réduit au silence!'
+    Deactivate: "&aVous pouvez de nouveau parler!"
+  Other:
+    Activate: '&6%Player% &ca été réduit au silence!'
+    Deactivate: '&6%Player% &apeut de nouveau parler!'
+
+JoinMessage: '&aBienvenue &6%Player% &asur ce serveur!'
+LeaveMessage: '&6%Player% &aa quitté le serveur!'
+
+SkipNight: '&6%Player% &aa passé la nuit!'
+
+Experience:
+  Self:
+    Level: '&aVotre niveau actuel est &6%Level%'
+    XP: "&aVous avez actuellement &6%XP% &ad'expérience"
+  Other:
+    Level: '&aLe niveau actuel de &6%Player% &aest &6%Level%'
+    XP: "&a%Player% a actuellement &6%XP% &ad'expérience"

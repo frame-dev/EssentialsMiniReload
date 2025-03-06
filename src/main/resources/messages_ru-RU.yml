@@ -1,0 +1,123 @@
+NoPermissions: '&6У вас нет прав!&4&l'
+WrongArgs: '&cПожалуйста, используйте &6%cmdUsage%&4&l!'
+UnknownCommand: '&cЭта команда не существует &6%CMD%&4&l!'
+OnlyPlayer: '&cЭту команду может использовать только игрок!'
+PlayerNotOnline: '&cЭтот игрок не в сети!'
+PlayerNameNotOnline: '&cЭтот игрок не в сети! &6%Player%'
+
+FeedSet: '&aВаш голод был насыщен!'
+FeedOtherSet: "&aГолод &6%Player% &aбыл насыщен!"
+
+FlySelfOn: '&aТеперь вы можете летать!'
+FlySelfOff: "&cВы больше не можете летать!"
+FlyOtherOn: '&6%Player% &aтеперь может летать!'
+FlyOtherOff: "&6%Player% &cбольше не может летать!"
+
+GameModeChanged: '&aВаш игровой режим был изменен на &6%GameMode%!'
+GameModeOtherChanged: "&aИгровой режим &6%Player% &aбыл изменен на &6%GameMode%!"
+
+God:
+  Self:
+    Activated: '&aТеперь вы неуязвимы!'
+    Deactivated: '&cТеперь вы снова &6уязвимы&c!'
+  Other:
+    Activated: '&6%Player% &aтеперь неуязвим!'
+    Deactivated: '&6%Player% &cтеперь снова уязвим!'
+
+Heal:
+  Self: '&aВы были исцелены!'
+  Other: '&6%Player% &aбыл исцелен!'
+
+HomeSet: '&aВаш дом был установлен!'
+HomeSetOther: '&aВаш дом с именем &6%Name% &aбыл установлен!'
+HomeTeleport: "&aВы были телепортированы домой!"
+HomeTeleportOther: "&aВы были телепортированы в дом с именем &6%Name%!"
+HomeDelete: '&cВаш дом был удален!'
+HomeDeleteOther: '&cДом с именем &6%Name% &cбыл удален!'
+HomeNotExist: "&cЭтот дом не существует!"
+HomeExist: '&cЭтот дом уже существует!'
+NoMoreHomesSet: "&cВы не можете установить больше домов!"
+HomeButton: '&aУстановить дом? &6Нажмите сюда и нажмите Enter'
+ShowTextHover: '&6Установить дом?'
+ShowTextHoverOther: '&6Установить дом %Home%?'
+SpyMessage: '&6%Player% &aотправил сообщение &6%Target% &aс текстом &6:&c%Message%'
+Spy:
+  Activate: '&aТеперь вы можете видеть сообщения других игроков!'
+  Deactivate: "&aВы больше не можете видеть сообщения других игроков!"
+  notFound: '&cЭтот предмет не существует! &6%Item%'
+
+Item:
+  Get: '&aВы получили предмет &6%Item%! Количество: &6%Amount%'
+  Other: '&6%Player% &aполучил предмет &6%Item%! Количество: &6%Amount%'
+
+Warp:
+  Created: '&aТочка варпа создана с именем &6%WarpName%&a!'
+  Teleport: "&aВы были телепортированы к &6%WarpName%!"
+  Delete: '&aТочка варпа с именем &6%WarpName% &aбыла удалена!'
+  NotExist: "&cЭта точка варпа не существует!"
+  Cost: '&aЭта точка варпа стоит &6%Cost%&a!'
+
+TpaMessages:
+  TeleportSend: '&aВы отправили запрос на телепортацию &6%Target%!'
+  TeleportGot: '&aВы получили запрос на телепортацию от &6%Player%!'
+  TeleportToPlayer: '&aВы были телепортированы к &6%Player%!'
+  TargetMessage: '&6%Target% &aтелепортировался к вам!'
+  TpaDeny: '&aВы отклонили запрос на телепортацию!'
+  TpaDenyTarget: "&6%Player% &cотклонил ваш запрос на телепортацию!"
+  Delay: "&aВы будете телепортированы через &6%Time%! &aЕсли вы двинетесь, телепортация будет отменена."
+  Denied: '&cВы двинулись. &6Телепортация отменена!'
+  NoRequest: "&cУ вас нет активных запросов!"
+
+Money:
+  MSG:
+    NotEnough: "&cУ вас недостаточно денег &6:%Money%!"
+    Balance: '&aВаш текущий баланс: &b[Money]'
+    Pay: '&aВы отправили &b[Target] &b[Money]!'
+    GotPay: '&aВы получили &b[Money] &aот &b[Player]&a!'
+    Set: '&aВаш баланс был установлен на &b[Money]!'
+
+DeathTeleport: "&aВы были телепортированы к точке смерти!"
+NoDeathLocationFound: '&cТочка смерти не найдена!'
+DeathCommandUsage: '&aВведите &6/back &aдля возвращения к точке смерти!'
+
+NoBackPackFound: "&cУ этого игрока нет рюкзака!"
+
+ChatClear: '&aЧат был очищен игроком &6%Player%!'
+
+Day: '&aВремя установлено на &6день!'
+Night: '&aВремя установлено на &6ночь!'
+
+EnchantNotExist: "&cЭтот зачар не существует!"
+NoItemFoundInHand: '&cВ вашей руке нет предмета!'
+
+WeatherSun: '&aВ мире &6%World% &aтеперь солнечно!'
+WeatherRain: '&aВ мире &6%World% &aтеперь идет дождь!'
+WeatherThunder: '&aВ мире &6%World% &aтеперь гроза!'
+
+VanishOn:
+  Single: '&aТеперь вы невидимы!'
+  Multi: '&6%Player% &aтеперь невидим!'
+VanishOff:
+  Single: "&cВы больше не невидимы!"
+  Multi: '&6%Player% &cбольше не невидим!'
+
+Mute:
+  Self:
+    Activate: '&cВы были заглушены!'
+    Deactivate: "&aВы снова можете говорить!"
+  Other:
+    Activate: '&6%Player% &cбыл заглушен!'
+    Deactivate: '&6%Player% &aбыл размучен!'
+
+JoinMessage: '&aДобро пожаловать, &6%Player% &aна сервер!'
+LeaveMessage: '&6%Player% &aвышел с сервера!'
+
+SkipNight: '&6%Player% &aпропустил ночь!'
+
+Experience:
+  Self:
+    Level: '&aВаш текущий уровень: &6%Level%'
+    XP: '&aВаш опыт: &6%XP%'
+  Other:
+    Level: '&aУровень &6%Player% &a: &6%Level%'
+    XP: '&aОпыт &6%Player% &a: &6%XP%'

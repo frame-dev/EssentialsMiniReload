@@ -1,0 +1,163 @@
+NoPermissions: '&6No permissions&4&l!'
+WrongArgs: '&cPlease use &6%cmdUsage%&4&l!'
+UnknownCommand: '&cThis command does not exist &6%CMD%&4&l!'
+OnlyPlayer: '&cThis command can only be used by a Player!'
+PlayerNotOnline: '&cThis Player is not online!'
+PlayerNameNotOnline: '&cThis Player is not online! &6%Player%'
+
+FeedSet: '&aYour hunger has been saturated!!'
+FeedOtherSet: "&6%Player% &a's hunger has been saturated!"
+
+FlySelfOn: '&aYou can fly now!'
+FlySelfOff: "&cYou can't fly anymore!"
+FlyOtherOn: '&6%Player% &acan fly now!'
+FlyOtherOff: "&6%Player% &ccan't fly anymore!"
+
+GameModeChanged: '&aYour Gamemode has been set to &6%GameMode%!'
+GameModeOtherChanged: "&6%Player%&a's Gamemode has been set to &6%GameMode%"
+
+God:
+  Self:
+    Activated: '&aYou are now invincible'
+    Deactivated: '&cYou are now &6vulnerable &cagain'
+  Other:
+    Activated: '&6%Player% &ais now invincible'
+    Deactivated: '&6%Player% &cis now vulnerable again'
+
+Heal:
+  Self: '&aYou have been healed!'
+  Other: '&6%Player% &ahas been healed!'
+
+HomeSet: '&aYour home has been set'
+HomeSetOther: '&aYour home with the name &6%Name%! &ahas been set'
+HomeTeleport: "&aYou've been teleported to your home"
+HomeTeleportOther: "&aYou've been teleported to your home with the name &6%Name%"
+HomeDelete: '&cYour home has been deleted!'
+HomeDeleteOther: '&cYour home with the name &6%Name% &chas been deleted!'
+HomeNotExist: "&cThis home doesn't exist!"
+HomeExist: '&cThis home already exists!'
+NoMoreHomesSet: "&cYou can't make any more homes!"
+HomeButton: '&aSet Home? &6Click me and press enter'
+ShowTextHover: '&6Set Home?'
+ShowTextHoverOther: '&6Set %Home% Home?'
+SpyMessage: '&6%Player% &ahas sent a message to &6%Target% &awith the text &6:&c%Message%'
+Spy:
+  Activate: '&aYou can now see messages from other players!'
+  Deactivate: "&a You can't see anymore messages from other players now!"
+  notFound: '&cThis item does not exist! &6%Item%'
+
+Item:
+  Get: '&aYou got the Item &6%Item%! Amount: &6%Amount%'
+  Other: '&6%Player% &agot the Item &6%Item%! Amount: &6%Amount%'
+
+Warp:
+  Created: '&aWarp has been created with the name &6%WarpName%&c!'
+  Teleport: "&aYou've teleported to &6%WarpName%!"
+  Delete: '&aThe Warp with the name &6%WarpName% &ahas been &cdeleted!'
+  NotExist: "&cThis Warp doesn't exist!"
+  Cost: '&aThis Warp costs &6%Cost%&c!'
+
+TpaMessages:
+  TeleportSend: '&aYou sent &6%Target% &aa teleport request!'
+  TeleportGot: '&aYou got a teleport request from &6%Player%!'
+  TeleportToPlayer: '&aYou were teleported to &6%Player%!'
+  TargetMessage: '&6%Target% &ateleported to you!'
+  TpaDeny: '&aYou declined the teleportation request!'
+  TpaDenyTarget: "&6%Player% &chas declined your teleportation request!"
+  Delay: "&aYou'll be teleported in &6%Time%! &aIf you move the teleportation will be cancelled."
+  Denied: '&cYou moved. &6Teleportation has been cancelled!'
+  TpaHereDeny: '&cYou declined the tpahere request.'
+  TpaHereDenyTarget: '&6%Player% &chas declined the tpahere request!'
+  TpaHere: '&aDo you want to teleport &6%Player% to you?'
+  TpaHereTarget: '&6%Player% &awants you to teleport to him!'
+  NoRequest: "&cYou don't have any requests!"
+
+
+Money:
+  MSG:
+    NotEnough: "&cYou don't have enough money &6:%Money%"
+    Balance: '&aYour current balance is &b[Money]'
+    Pay: '&aYou have paid &b[Target] &b[Money]!'
+    GotPay: '&aYou were paid &b[Money] &afrom &b[Player]&a!'
+    Set: '&aYour money has been set to &b[Money]!'
+  MoneyBalance:
+    Other:
+      MSG: "&b[Target]&a's balance is &b[Money]"
+  MoneySet:
+    Other:
+      MSG: "&b[Target]&a's balance has been set to &b[Money]&a!"
+
+DeathTeleport: "&aYou've been teleported to your deathpoint!"
+NoDeathLocationFound: '&cThere is no deathpoint currently saved!'
+DeathCommandUsage: '&aPlease write &6/back &a to go back to your deathpoint!'
+
+NoBackPackFound: "&cThis Player doesn't have a backpack!"
+
+ChatClear: '&aThe Chat was cleared by &6%Player%!'
+
+Day: '&aThe time was set to &6day!'
+Night: '&aThe time was set to &6night!'
+
+EnchantNotExist: "&cThis enchantment doesn't exist!"
+NoItemFoundInHand: '&cNo item found in your hand!'
+
+WeatherSun: '&aIn &6%World% &ait is now sunny!'
+WeatherRain: '&aIn &6%World% &ait rains now!'
+WeatherThunder: '&aIn &6%World% &ais now a thunderstorm!'
+
+VanishOn:
+  Single: '&aYou are now in vanish'
+  Multi: '&6%Player% &ais now in vanish'
+VanishOff:
+  Single: "&cYou aren't in vanish anymore"
+  Multi: '&6%Player% &cis not in vanish anymore'
+
+Repair:
+  Success: '&aThe item &6: %Item% &ahas been repaired!'
+  Failed: "&cThe item &6: %Item% &cdoesn't need to be repaired!"
+  AirRepair: "&cAir can't be repaired!"
+  OtherSuccess: '&aThe item &6: %Item% &afrom &6: %Player% &ahas been repaired!'
+  OtherFailed: "&cThe item &6: %Item% &cfrom &6: %Player% &cdoesn't have to be repaired!"
+  Irreparable: "&cThe Item &6: %Item% &cfrom &6: %Player% &ccan't be repaired"
+
+Mute:
+  Self:
+    Activate: '&cYou have been muted!'
+    Deactivate: "&aYou have been unmuted!"
+  Other:
+    Activate: '&6%Player% &chas been muted!'
+    Deactivate: '&6%Player% &ahas been unmuted!'
+
+ChangeFlySpeed: '&aYour flight speed has changed to &6%flyspeed%'
+ChangeFlySpeedOther: "&6%player%'s &aflight speed has been changed to &6%flyspeed%"
+
+WalkSpeed: '&aYour walk speed has been changed to &6%WalkSpeed%'
+
+MsgToggle:
+  Activated: '&cNo more messages will be sent to you anymore!'
+  Deactivated: '&aMessages will be sent to you again!'
+  Message: "&cThis player doesn't allow messages!"
+
+SkipNight: '&6%Player% &ahas skipped the night!'
+
+Experience:
+  Self:
+    Level: '&aYour current level is &6%Level%'
+    XP: '&aYou currently have &6%XP% &aExperience'
+  Other:
+    Level: '&aYour current Level is &6%Level%'
+    XP: '&aYou currently have &6%XP% &aExperience'
+
+Bank:
+  NotFound: "&cThis Bank doesn't exist!"
+  Created: '&aBank Successfully Created!'
+  Deleted: '&cBank successfully Deleted!'
+  Error: '&cError while &6%Reason% %Error%'
+  Deposit: '&6%Amount% &awas successfully transferred to the Bank!'
+  Withdraw: '&aYou successfully withdrew &6%Amount% &afrom the Bank!'
+  Balance: '&aThe Bank balance is &6%Balance%!'
+  NotOwnerOrMember: '&cYou are not a Bank Member or the Owner!'
+  NotOwner: '&cYou are not the Owner!'
+
+JoinMessage: '&aWelcome &6%Player% &aon this Server!'
+LeaveMessage: '&6%Player% &ahas left the Server!'

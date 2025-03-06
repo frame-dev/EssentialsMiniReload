@@ -1,0 +1,20 @@
+Items:
+  StarterKit:
+    Content:
+      - STONE_SWORD,1
+      - STONE_PICKAXE,1
+      - STONE_AXE,1
+      - STONE_SHOVEL,1
+      - TORCH,32
+      - LEATHER_LEGGINGS,1
+      - LEATHER_CHESTPLATE,1
+      - LEATHER_HELMET,1
+      - LEATHER_BOOTS,1
+      - APPLE,16
+    Cooldown: 32
+    Cost: 0
+  YourKit:
+    Content:
+      - MATERIAL,Amount
+    Cooldown: 0
+    Cost: 0
