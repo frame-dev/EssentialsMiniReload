@@ -121,3 +121,18 @@ Experience:
   Other:
     Level: '&aIl livello di &6%Player% &aè &6%Level%'
     XP: '&a%Player% ha attualmente &6%XP% &adi esperienza'
+
+Bank:
+  NotFound: "&cThis Bank doesn't exist!"
+  Created: '&aBank Successfully Created!'
+  Deleted: '&cBank successfully Deleted!'
+  Error: '&cError while &6%Reason% %Error%'
+  Deposit: '&6%Amount% &awas successfully transferred to the Bank!'
+  Withdraw: '&aYou successfully withdrew &6%Amount% &afrom the Bank!'
+  Balance: '&aThe Bank balance is &6%Balance%!'
+  NotOwnerOrMember: '&cYou are not a Bank Member or the Owner!'
+  NotOwner: '&cYou are not the Owner!'
+
+PlayerWeather:
+  Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
+  Reset: "&aYour Player weather has been reset!"

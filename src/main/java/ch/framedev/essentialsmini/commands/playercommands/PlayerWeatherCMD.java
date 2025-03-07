@@ -26,23 +26,33 @@ public class PlayerWeatherCMD extends CommandBase {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        String playerWeatherMessageKey = "PlayerWeather";
         if(!(sender instanceof Player player)) {
             sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
             return true;
         }
         if(command.getName().equalsIgnoreCase("playerweather")) {
             if(!player.hasPermission(getPlugin().getPermissionBase() + "playerweather")) {
-                player.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
+                player.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms(player));
                 return true;
             }
             if(args.length != 1) {
-                player.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getWrongArgs("/playerweather (CLEAR/DOWNFALL)"));
+                player.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs(player,"/playerweather (CLEAR/DOWNFALL)"));
                 return true;
             }
            try {
                WeatherType weatherType = WeatherType.valueOf(args[0].toUpperCase());
                player.setPlayerWeather(weatherType);
-               player.sendMessage(getPlugin().getPrefix() + "You set your weather to " + args[0].toLowerCase() + ".");
+               String playerWeatherMessage = getPlugin().getLanguageConfig(player).getString(playerWeatherMessageKey + ".Set");
+               if(playerWeatherMessage == null) {
+                   player.sendMessage(getPlugin().getPrefix() + "§cConfig '" + playerWeatherMessageKey + ".Set' not found! Please contact the Admin!");
+                   return true;
+               }
+               playerWeatherMessage = playerWeatherMessage.replace("%WEATHER%", args[0].toLowerCase());
+               if(playerWeatherMessage.contains("&")) {
+                   playerWeatherMessage = playerWeatherMessage.replace('&', '§');
+               }
+               player.sendMessage(getPlugin().getPrefix() + playerWeatherMessage);
                return true;
            } catch (Exception e) {
                player.sendMessage(getPlugin().getPrefix() + "Please use valid Weather Types (clear/downfall)!");
@@ -50,11 +60,19 @@ public class PlayerWeatherCMD extends CommandBase {
            }
         } else if(command.getName().equalsIgnoreCase("resetplayerweather")) {
             if(!player.hasPermission(getPlugin().getPermissionBase() + "playerweather")) {
-                player.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
+                player.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms(player));
                 return true;
             }
             player.resetPlayerWeather();
-            player.sendMessage(getPlugin().getPrefix() + "Your player weather has been reset.");
+            String playerWeatherMessage = getPlugin().getLanguageConfig(player).getString(playerWeatherMessageKey +".Reset");
+            if(playerWeatherMessage == null) {
+                player.sendMessage(getPlugin().getPrefix() + "§cConfig '" + playerWeatherMessageKey + ".Reset' not found! Please contact the Admin!");
+                return true;
+            }
+            if(playerWeatherMessage.contains("&")) {
+                playerWeatherMessage = playerWeatherMessage.replace('&', '§');
+            }
+            player.sendMessage(getPlugin().getPrefix() + playerWeatherMessage);
             return true;
         }
         return super.onCommand(sender, command, label, args);

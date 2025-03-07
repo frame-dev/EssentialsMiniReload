@@ -162,3 +162,6 @@ Bank:
 
 JoinMessage: '&aWillkommen &6%Player% &aauf dem Server!'
 LeaveMessage: '&6%Player% &ahat den Server verlassen!'
+PlayerWeather:
+  Set: "&aDein Wetter wurde auf &6%WEATHER% &agesetzt!"
+  Reset: "&aDein Wetter wurde zurückgesetzt!"

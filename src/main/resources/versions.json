@@ -67,7 +67,8 @@
       "version": "1.0.1-1.20.6-HIGHER-PRE-RELEASE",
       "description": [
         "MySQL changed to hikaricp for better performance",
-        "Tempban, tempmute, permaban added to MongoDB"
+        "Tempban, tempmute, permaban added to MongoDB",
+        "New messages added"
       ]
     }
   ]

@@ -113,3 +113,18 @@ VanishOff:
 
 JoinMessage: '&aWitaj &6%Player% &ana serwerze!'
 LeaveMessage: '&6%Player% &aopuścił serwer!'
+
+Bank:
+  NotFound: "&cThis Bank doesn't exist!"
+  Created: '&aBank Successfully Created!'
+  Deleted: '&cBank successfully Deleted!'
+  Error: '&cError while &6%Reason% %Error%'
+  Deposit: '&6%Amount% &awas successfully transferred to the Bank!'
+  Withdraw: '&aYou successfully withdrew &6%Amount% &afrom the Bank!'
+  Balance: '&aThe Bank balance is &6%Balance%!'
+  NotOwnerOrMember: '&cYou are not a Bank Member or the Owner!'
+  NotOwner: '&cYou are not the Owner!'
+
+PlayerWeather:
+  Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
+  Reset: "&aYour Player weather has been reset!"

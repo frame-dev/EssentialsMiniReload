@@ -158,3 +158,10 @@ Bank:
   Balance: '&aThe Bank balance is &6%Balance%!'
   NotOwnerOrMember: '&cYou are not a Bank Member or the Owner!'
   NotOwner: '&cYou are not the Owner!'
+
+JoinMessage: '&aWelcome &6%Player% &aon this Server!'
+LeaveMessage: '&6%Player% &ahas left the Server!'
+
+PlayerWeather:
+  Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
+  Reset: "&aYour Player weather has been reset!"
