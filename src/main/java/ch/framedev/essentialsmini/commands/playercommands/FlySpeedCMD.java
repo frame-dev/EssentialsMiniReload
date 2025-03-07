@@ -39,6 +39,10 @@ public class FlySpeedCMD extends CommandBase {
                 return true;
             }
             float flySpeed = Float.parseFloat(args[0]) / 10F;
+            if(flySpeed > 1.0) {
+                sender.sendMessage(plugin.getPrefix() + "§cFly speed must be lower than 10!");
+                return true;
+            }
             player.setFlySpeed(flySpeed);
             String flySpeedMessage = plugin.getLanguageConfig(player).getString("ChangeFlySpeed");
             flySpeedMessage = new TextUtils().replaceObject(flySpeedMessage, "%flyspeed%", String.valueOf(flySpeed * 10F));
@@ -50,21 +54,25 @@ public class FlySpeedCMD extends CommandBase {
                 sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 return true;
             }
-            float flyspeed = Float.parseFloat(args[0]) / 10F;
+            float flySpeed = Float.parseFloat(args[0]) / 10F;
+            if(flySpeed > 1.0) {
+                sender.sendMessage(plugin.getPrefix() + "§cFly speed must be lower than 10!");
+                return true;
+            }
             Player player = Bukkit.getPlayer(args[1]);
             if (player == null) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
                 return true;
             }
-            player.setFlySpeed(flyspeed);
-            String flySpeed = plugin.getLanguageConfig(player).getString("ChangeFlySpeed");
-            flySpeed = new TextUtils().replaceObject(flySpeed, "%flyspeed%", String.valueOf(flyspeed * 10F));
-            flySpeed = new TextUtils().replaceAndWithParagraph(flySpeed);
-            player.sendMessage(flySpeed);
+            player.setFlySpeed(flySpeed);
+            String flySpeedText = plugin.getLanguageConfig(player).getString("ChangeFlySpeed");
+            flySpeedText = new TextUtils().replaceObject(flySpeedText, "%flyspeed%", String.valueOf(flySpeed * 10F));
+            flySpeedText = new TextUtils().replaceAndWithParagraph(flySpeedText);
+            player.sendMessage(flySpeedText);
             String other = plugin.getLanguageConfig(sender).getString("ChangeFlySpeedOther");
             other = new TextUtils().replaceAndWithParagraph(other);
             other = new TextUtils().replaceObject(other, "%player%", player.getName());
-            other = new TextUtils().replaceObject(other, "%flyspeed%", String.valueOf(flyspeed * 10F));
+            other = new TextUtils().replaceObject(other, "%flyspeed%", String.valueOf(flySpeed * 10F));
             sender.sendMessage(other);
             return true;
         }

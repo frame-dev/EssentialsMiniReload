@@ -96,7 +96,6 @@ public class FlyCMD extends CommandBase {
                             if (flySelfOff.contains("&"))
                                 flySelfOff = flySelfOff.replace('&', '§');
                             target.sendMessage(getPlugin().getPrefix() + flySelfOff);
-                            target.sendMessage(getPlugin().getPrefix() + "§cDu kannst nun nicht mehr Fliegen!");
                         }
                         String flyOtherOff = getPlugin().getLanguageConfig(sender).getString("FlyOtherOff");
                         if (flyOtherOff == null) {

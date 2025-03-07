@@ -185,7 +185,7 @@ commands:
       - god
   spawnmob:
     description: Spawn a Custom Mob
-  speed:
+  walkspeed:
     description: Change your Walk Speed
   chatclear:
     aliases:

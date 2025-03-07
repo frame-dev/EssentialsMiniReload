@@ -23,7 +23,7 @@ public class SpeedCMD extends CommandBase {
     private final Main plugin;
 
     public SpeedCMD(Main plugin) {
-        super(plugin, "speed");
+        super(plugin, "walkspeed");
         this.plugin = plugin;
     }
 
@@ -32,12 +32,20 @@ public class SpeedCMD extends CommandBase {
         if (args.length == 1) {
             if (sender instanceof Player) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "speed")) {
-                    ((Player) sender).setWalkSpeed(Integer.parseInt(args[0]) / 10F);
-                    int walkSpeed = Integer.parseInt(args[0]);
-                    String message = plugin.getLanguageConfig(sender).getString("WalkSpeed");
-                    message = new TextUtils().replaceAndWithParagraph(message);
-                    message = new TextUtils().replaceObject(message, "%WalkSpeed%", String.valueOf(walkSpeed));
-                    sender.sendMessage(plugin.getPrefix() + message);
+                    try {
+                        float walkSpeed = Float.parseFloat(args[0]);
+                        if(walkSpeed > 10F) {
+                            sender.sendMessage(plugin.getPrefix() + "§cWalk speed must be lower than 10!");
+                            return true;
+                        }
+                        ((Player) sender).setWalkSpeed(walkSpeed / 10F);
+                        String message = plugin.getLanguageConfig(sender).getString("WalkSpeed");
+                        message = new TextUtils().replaceAndWithParagraph(message);
+                        message = new TextUtils().replaceObject(message, "%WalkSpeed%", String.valueOf(walkSpeed));
+                        sender.sendMessage(plugin.getPrefix() + message);
+                    } catch (Exception ex) {
+                        sender.sendMessage(plugin.getPrefix() + "§cInvalid number!");
+                    }
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
