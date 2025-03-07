@@ -26,7 +26,7 @@ public class BanListener extends ListenerBase {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(AsyncPlayerPreLoginEvent e) {
-        if (getPlugin().isMysql() || getPlugin().isSQL()) {
+        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
             if (!new BanMuteManager().isExpiredTempBan(Bukkit.getOfflinePlayer(e.getUniqueId()))) {
                 final String[] reason = new String[1];
                 if (new BanMuteManager().getTempBan(Bukkit.getOfflinePlayer(e.getUniqueId())) != null) {
@@ -50,7 +50,7 @@ public class BanListener extends ListenerBase {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.ALLOWED);
             }
         }
-        if (getPlugin().isMysql() || getPlugin().isSQL()) {
+        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
             if (new BanMuteManager().isPermBan(Bukkit.getOfflinePlayer(e.getUniqueId()))) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
                 e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + new BanMuteManager().getPermBanReason(Bukkit.getOfflinePlayer(e.getUniqueId())));

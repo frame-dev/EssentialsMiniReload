@@ -25,7 +25,7 @@ public class BanCMD extends CommandBase {
             if (args.length == 3) {
                 if (args[0].equalsIgnoreCase("type")) {
                     BanType type = BanType.valueOf(args[2].toUpperCase());
-                    if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                    if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                         if (Bukkit.getPlayer(args[1]) != null)
                             Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + type.getReason());
                         new BanMuteManager().setPermBan(PlayerUtils.getOfflinePlayerByName(args[1]), type, true);
@@ -39,7 +39,7 @@ public class BanCMD extends CommandBase {
                     }
                 } else {
                     if (args[0].equalsIgnoreCase("own")) {
-                        if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                             if (Bukkit.getPlayer(args[1]) != null)
                                 Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + args[2]);
                             new BanMuteManager().setPermBan(PlayerUtils.getOfflinePlayerByName(args[1]), args[2], true);

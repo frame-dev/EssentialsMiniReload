@@ -107,7 +107,7 @@ public class MuteCMD extends CommandBase implements Listener {
                     long newValue = current + millis;
                     Date date = new Date(newValue);
                     OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                    if (plugin.isMysql() || plugin.isSQL()) {
+                    if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                         new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
@@ -147,7 +147,7 @@ public class MuteCMD extends CommandBase implements Listener {
                     long newValue = current + millis;
                     Date date = new Date(newValue);
                     OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                    if (plugin.isMysql() || plugin.isSQL()) {
+                    if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                         new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
@@ -193,7 +193,7 @@ public class MuteCMD extends CommandBase implements Listener {
                     System.out.println("Player Name is Null; MuteCMD.java:189");
                     return true;
                 }
-                if (plugin.isMysql() || plugin.isSQL()) {
+                if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                     new BanMuteManager().removeTempMute(player);
                     if (player.isOnline()) {
                         String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
@@ -233,7 +233,7 @@ public class MuteCMD extends CommandBase implements Listener {
             }
 
             ArrayList<OfflinePlayer> players = new ArrayList<>();
-            if (!plugin.isMysql() || !plugin.isSQL()) {
+            if (!getPlugin().isMysql() || !getPlugin().isSQL() || !getPlugin().isMongoDB()) {
                 for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
                     if(offlinePlayer == null) {
                         System.out.println("OfflinePlayer is Null; MuteCMD.java:238");
@@ -271,7 +271,7 @@ public class MuteCMD extends CommandBase implements Listener {
     }
 
     public CompletableFuture<Boolean> isExpiredAsync(OfflinePlayer player) {
-        if (plugin.isMysql() || plugin.isSQL()) {
+        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
             BanMuteManager banMuteManager = new BanMuteManager();
 
             // Check if the player is temp-muted
@@ -320,7 +320,7 @@ public class MuteCMD extends CommandBase implements Listener {
     @EventHandler
     public void onChatWrite(AsyncPlayerChatEvent event) {
         if (!isExpired(event.getPlayer())) {
-            if (plugin.isMysql() || plugin.isSQL()) {
+            if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                 if (new BanMuteManager().isTempMute(event.getPlayer())) {
                     final Date[] date = {new Date()};
                     final String[] reason = {""};
@@ -343,7 +343,7 @@ public class MuteCMD extends CommandBase implements Listener {
             event.setCancelled(true);
         } else {
             Player player = event.getPlayer();
-            if (plugin.isMysql() || plugin.isSQL()) {
+            if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                 new BanMuteManager().removeTempMute(player);
             } else {
                 if (cfg.contains(player.getName() + ".reason")) {

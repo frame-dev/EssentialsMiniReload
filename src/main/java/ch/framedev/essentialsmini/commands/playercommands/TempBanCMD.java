@@ -44,7 +44,7 @@ public class TempBanCMD extends CommandBase {
                         long millis = value * unit.getToSec() * 1000;
                         long newValue = current + millis;
                         Date date = new Date(newValue);
-                        if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                             new BanMuteManager().setTempBan(target, reason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         } else {
                             Bukkit.getServer().getBanList(BanList.Type.NAME).addBan(Objects.requireNonNull(target.getName()), "§aYou are Banned. Reason:§c " + reason.getReason(), date, "true");
@@ -62,7 +62,7 @@ public class TempBanCMD extends CommandBase {
                         long millis = value * unit.getToSec() * 1000;
                         long newValue = current + millis;
                         Date date = new Date(newValue);
-                        if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                             new BanMuteManager().setTempBan(target, reason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         } else {
                             Bukkit.getServer().getBanList(BanList.Type.NAME).addBan(Objects.requireNonNull(target.getName()), "§aYou are Banned. Reason:§c " + reason, date, "true");
@@ -81,7 +81,7 @@ public class TempBanCMD extends CommandBase {
         if (cmd.getName().equalsIgnoreCase("removetempban")) {
             OfflinePlayer target = PlayerUtils.getOfflinePlayerByName(args[0]);
             if (sender.hasPermission(getPlugin().getPermissionBase() + "tempban")) {
-                if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                     new BanMuteManager().removeTempBan(target);
                     Bukkit.getServer().getBanList(BanList.Type.NAME).pardon(target.getName());
                 } else {
@@ -159,7 +159,7 @@ public class TempBanCMD extends CommandBase {
             if (args.length == 1) {
                 List<String> playerNames = new ArrayList<>();
                 List<String> empty = new ArrayList<>();
-                if (getPlugin().isMysql() || getPlugin().isSQL()) {
+                if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                     playerNames = new BanMuteManager().getAllTempBannedPlayers();
                 } else {
                     List<OfflinePlayer> players = (List<OfflinePlayer>) getPlugin().getServer().getBannedPlayers();
