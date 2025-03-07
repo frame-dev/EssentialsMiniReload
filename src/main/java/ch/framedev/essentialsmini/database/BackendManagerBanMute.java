@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class BackendManagerBanMute {
 
-    private static BackendManagerBanMute instance;
+    private static volatile BackendManagerBanMute instance;
     private final String COLLECTION = "essentialsmini_banmute";
     private final Main plugin;
 

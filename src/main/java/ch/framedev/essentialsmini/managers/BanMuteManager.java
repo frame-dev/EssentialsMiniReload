@@ -36,6 +36,16 @@ public class BanMuteManager {
     // Database table for MySQL / SQLite
     private final String table = "essentialsmini_banmute";
 
+    public BanMuteManager() {
+        if (Main.getInstance().isMongoDB()) {
+            for(OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                if(!BackendManagerBanMute.getInstance(Main.getInstance()).existsUser(player)) {
+                    BackendManagerBanMute.getInstance(Main.getInstance()).createUser(player);
+                }
+            }
+        }
+    }
+
     private void ensureTableExists() {
         SQL.isTableExistsAsync(table, new SQL.Callback<>() {
             @Override
