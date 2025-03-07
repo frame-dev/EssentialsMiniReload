@@ -73,22 +73,26 @@ public class KitManager {
             for (ItemStack items : this.kitName.getContents()) {
                 if (items != null) {
                     if (items.getType() == Material.LEATHER_BOOTS || items.getType() == Material.CHAINMAIL_BOOTS
-                            || items.getType() == Material.IRON_BOOTS || items.getType() == Material.GOLDEN_BOOTS || items.getType() == Material.DIAMOND_BOOTS) {
+                            || items.getType() == Material.IRON_BOOTS || items.getType() == Material.GOLDEN_BOOTS || items.getType() == Material.DIAMOND_BOOTS ||
+                            items.getType() == Material.NETHERITE_BOOTS) {
                         player.getInventory().setBoots(items);
                         items = new ItemStack(Material.AIR);
                     }
                     if (items.getType() == Material.LEATHER_HELMET || items.getType() == Material.CHAINMAIL_HELMET
-                            || items.getType() == Material.IRON_HELMET || items.getType() == Material.GOLDEN_HELMET || items.getType() == Material.DIAMOND_HELMET) {
+                            || items.getType() == Material.IRON_HELMET || items.getType() == Material.GOLDEN_HELMET || items.getType() == Material.DIAMOND_HELMET
+                    || items.getType() == Material.NETHERITE_HELMET) {
                         player.getInventory().setHelmet(items);
                         items = new ItemStack(Material.AIR);
                     }
                     if (items.getType() == Material.LEATHER_LEGGINGS || items.getType() == Material.CHAINMAIL_LEGGINGS
-                            || items.getType() == Material.IRON_LEGGINGS || items.getType() == Material.GOLDEN_LEGGINGS || items.getType() == Material.DIAMOND_LEGGINGS) {
+                            || items.getType() == Material.IRON_LEGGINGS || items.getType() == Material.GOLDEN_LEGGINGS || items.getType() == Material.DIAMOND_LEGGINGS
+                    || items.getType() == Material.NETHERITE_LEGGINGS) {
                         player.getInventory().setLeggings(items);
                         items = new ItemStack(Material.AIR);
                     }
                     if (items.getType() == Material.LEATHER_CHESTPLATE || items.getType() == Material.CHAINMAIL_CHESTPLATE
-                            || items.getType() == Material.IRON_CHESTPLATE || items.getType() == Material.GOLDEN_CHESTPLATE || items.getType() == Material.DIAMOND_CHESTPLATE) {
+                            || items.getType() == Material.IRON_CHESTPLATE || items.getType() == Material.GOLDEN_CHESTPLATE ||
+                            items.getType() == Material.DIAMOND_CHESTPLATE || items.getType() == Material.NETHERITE_CHESTPLATE) {
                         player.getInventory().setChestplate(items);
                         items = new ItemStack(Material.AIR);
                     }
