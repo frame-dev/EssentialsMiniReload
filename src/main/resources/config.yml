@@ -6,6 +6,7 @@ JoinMessage: '&aWelcome &6%Player% &aon this Server!'
 LeaveBoolean: true
 LeaveMessage: '&6%Player% &ahas left the Server!'
 Backpack: false
+BackPackSize: 36
 SpawnTP: false
 SkipNight: false
 BedColor: 'BLUE'

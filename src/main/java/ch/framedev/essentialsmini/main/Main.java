@@ -11,6 +11,7 @@ package ch.framedev.essentialsmini.main;
  * This Class was created at 06.03.2025 12:39
  */
 
+import ch.framedev.essentialsmini.commands.playercommands.BackpackCMD;
 import ch.framedev.essentialsmini.database.BackendManager;
 import ch.framedev.essentialsmini.database.DatabaseManager;
 import ch.framedev.essentialsmini.managers.KitManager;
@@ -130,6 +131,13 @@ public class Main extends JavaPlugin {
                 Bukkit.getConsoleSender().sendMessage(getPrefix() + "§c§lPlease check your internet connection.");
             }
         }
+
+        Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::restore);
+    }
+
+    @Override
+    public void onDisable() {
+        Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::save);
     }
 
     public void moveExampleMessages() {

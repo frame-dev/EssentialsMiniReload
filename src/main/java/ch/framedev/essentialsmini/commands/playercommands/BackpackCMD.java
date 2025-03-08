@@ -89,7 +89,7 @@ public class BackpackCMD extends CommandListenerBase {
             if (args.length == 0) {
                 Player player = (Player) sender;
                 if (plugin.getConfig().getBoolean("Backpack")) {
-                    Inventory inventory = Bukkit.createInventory(null, 3 * 9, player.getName() + "'s Inventory");
+                    Inventory inventory = Bukkit.createInventory(null, plugin.getConfig().getInt("BackPackSize", 3*9), player.getName() + "'s Inventory");
                     if (itemsStringHashMap.containsKey(player.getUniqueId().toString()) && !(itemsStringHashMap.get(player.getUniqueId().toString()) == null)) {
                         try {
                             inventory.setContents(InventoryStringDeSerializer.itemStackArrayFromBase64(itemsStringHashMap.get(player.getUniqueId().toString())));
