@@ -1,7 +1,7 @@
 package ch.framedev.essentialsmini.utils;
 
-import ch.framedev.essentialsmini.database.BackendManager;
-import ch.framedev.essentialsmini.database.MongoManager;
+import ch.framedev.essentialsmini.database.mongodb.BackendManager;
+import ch.framedev.essentialsmini.database.mongodb.MongoManager;
 import ch.framedev.essentialsmini.main.Main;
 
 import java.util.logging.Level;

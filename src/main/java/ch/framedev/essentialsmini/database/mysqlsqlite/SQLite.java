@@ -1,4 +1,4 @@
-package ch.framedev.essentialsmini.database;
+package ch.framedev.essentialsmini.database.mysqlsqlite;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

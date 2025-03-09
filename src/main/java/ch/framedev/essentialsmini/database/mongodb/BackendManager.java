@@ -1,4 +1,4 @@
-package ch.framedev.essentialsmini.database;
+package ch.framedev.essentialsmini.database.mongodb;
 
 import ch.framedev.essentialsmini.main.Main;
 import com.mongodb.client.FindIterable;

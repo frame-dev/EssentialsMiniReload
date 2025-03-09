@@ -12,8 +12,8 @@ package ch.framedev.essentialsmini.main;
  */
 
 import ch.framedev.essentialsmini.commands.playercommands.BackpackCMD;
-import ch.framedev.essentialsmini.database.BackendManager;
-import ch.framedev.essentialsmini.database.DatabaseManager;
+import ch.framedev.essentialsmini.database.mongodb.BackendManager;
+import ch.framedev.essentialsmini.database.mongodb.DatabaseManager;
 import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.managers.RegisterManager;
 import ch.framedev.essentialsmini.managers.VaultManager;

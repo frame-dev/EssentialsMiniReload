@@ -1,8 +1,8 @@
 package ch.framedev.essentialsmini.api;
 
-import ch.framedev.essentialsmini.database.MySQL;
-import ch.framedev.essentialsmini.database.SQL;
-import ch.framedev.essentialsmini.database.SQLite;
+import ch.framedev.essentialsmini.database.mysqlsqlite.MySQL;
+import ch.framedev.essentialsmini.database.mysqlsqlite.SQL;
+import ch.framedev.essentialsmini.database.mysqlsqlite.SQLite;
 import ch.framedev.essentialsmini.main.Main;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

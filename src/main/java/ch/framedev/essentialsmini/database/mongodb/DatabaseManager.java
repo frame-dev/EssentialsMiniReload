@@ -1,4 +1,4 @@
-package ch.framedev.essentialsmini.database;
+package ch.framedev.essentialsmini.database.mongodb;
 
 
 
@@ -12,6 +12,8 @@ package ch.framedev.essentialsmini.database;
  */
 
 import ch.framedev.essentialsmini.api.VaultAPI;
+import ch.framedev.essentialsmini.database.mysqlsqlite.MySQL;
+import ch.framedev.essentialsmini.database.mysqlsqlite.SQLite;
 import ch.framedev.essentialsmini.main.Main;
 
 public class DatabaseManager {

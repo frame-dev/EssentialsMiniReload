@@ -1,4 +1,4 @@
-package ch.framedev.essentialsmini.database;
+package ch.framedev.essentialsmini.database.mysqlsqlite;
 
 import ch.framedev.essentialsmini.main.Main;
 import org.apache.log4j.Level;

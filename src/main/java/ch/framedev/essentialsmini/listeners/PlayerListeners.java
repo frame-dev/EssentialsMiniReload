@@ -13,7 +13,7 @@ import ch.framedev.essentialsmini.api.events.*;
 import ch.framedev.essentialsmini.commands.playercommands.KillCMD;
 import ch.framedev.essentialsmini.commands.playercommands.SpawnCMD;
 import ch.framedev.essentialsmini.commands.playercommands.VanishCMD;
-import ch.framedev.essentialsmini.database.BackendManager;
+import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import org.bukkit.Bukkit;

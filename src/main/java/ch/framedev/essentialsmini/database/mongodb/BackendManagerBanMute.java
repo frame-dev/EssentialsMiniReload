@@ -1,4 +1,4 @@
-package ch.framedev.essentialsmini.database;
+package ch.framedev.essentialsmini.database.mongodb;
 
 /*
  * ch.framedev.essentialsmini.database
@@ -19,7 +19,6 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BackendManagerBanMute {
 

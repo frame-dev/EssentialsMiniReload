@@ -1,6 +1,6 @@
 package ch.framedev.essentialsmini.api;
 
-import ch.framedev.essentialsmini.database.BackendManager;
+import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.FileManager;
 import ch.framedev.essentialsmini.utils.UUIDFetcher;

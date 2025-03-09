@@ -343,7 +343,7 @@ public class HomeCMD extends CommandListenerBase {
     public void onClickInventory(InventoryClickEvent event) {
         if (event.getView().getTitle().equalsIgnoreCase("§aHomes")) {
             Player player = (Player) event.getWhoClicked();
-            List<String> homess = new ArrayList<>();
+            List<String> homes = new ArrayList<>();
             ConfigurationSection cs = new LocationsManager().getCfg().getConfigurationSection(player.getName() + ".home");
             if (new LocationsManager().getCfg().contains(player.getName() + ".home")) {
                 if (cs != null) {
@@ -351,7 +351,7 @@ public class HomeCMD extends CommandListenerBase {
                         if (s != null)
                             if (new LocationsManager().getCfg().get(player.getName() + ".home." + s) != null) {
                                 if (!new LocationsManager().getCfg().get(player.getName() + ".home." + s).equals(" ")) {
-                                    homess.add(s);
+                                    homes.add(s);
                                 }
                             }
                     }
@@ -362,10 +362,14 @@ public class HomeCMD extends CommandListenerBase {
             if (!event.getCurrentItem().hasItemMeta()) return;
             if (event.getCurrentItem().getItemMeta() == null) return;
             if (!event.getCurrentItem().getItemMeta().hasDisplayName()) return;
-            for (String s : homess) {
+            for (String s : homes) {
                 if (event.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§6" + s)) {
                     player.teleport(new LocationsManager(player.getName() + ".home." + s).getLocation());
                     String homeTeleport = plugin.getLanguageConfig(player).getString("HomeTeleportOther");
+                    if(homeTeleport == null) {
+                        event.getWhoClicked().sendMessage(plugin.getPrefix() + "§cCould not find HomeTeleportOther in messages");
+                        return;
+                    }
                     homeTeleport = ReplaceCharConfig.replaceParagraph(homeTeleport);
                     homeTeleport = ReplaceCharConfig.replaceObjectWithData(homeTeleport, "%Name%", s);
                     player.sendMessage(plugin.getPrefix() + homeTeleport);
