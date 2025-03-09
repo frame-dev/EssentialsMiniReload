@@ -132,12 +132,26 @@ public class Main extends JavaPlugin {
             }
         }
 
+        // Restore Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::restore);
+
+        getLogger4J().info("EssentialsMini has been enabled!");
     }
 
     @Override
     public void onDisable() {
+        // Save Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::save);
+        instance = null;
+        listeners.clear();
+        commands.clear();
+        tabCompleters.clear();
+        vaultManager = null;
+        mongoDBUtils = null;
+        variables = null;
+        silent.clear();
+        databaseManager = null;
+        getLogger4J().info("EssentialsMini has been disabled!");
     }
 
     public void moveExampleMessages() {
