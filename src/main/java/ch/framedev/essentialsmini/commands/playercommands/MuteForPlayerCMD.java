@@ -18,6 +18,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.*;
@@ -76,7 +77,7 @@ public class MuteForPlayerCMD extends CommandListenerBase {
         return Collections.emptyList();
     }
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.HIGHEST)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player sender = event.getPlayer(); // The player sending the message
 
