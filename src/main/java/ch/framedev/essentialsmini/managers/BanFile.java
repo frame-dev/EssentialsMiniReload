@@ -14,7 +14,7 @@ public class BanFile {
     public static File file = new File(Main.getInstance().getDataFolder(), "Banned.yml");
     public static FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 
-    public static void saveCFG() {
+    public static void saveCfg() {
         try {
             cfg.save(file);
         } catch (IOException e) {
@@ -39,7 +39,7 @@ public class BanFile {
         } else {
             cfg.set("Ban." + playerName + ".isBanned", true);
             cfg.set("Ban." + playerName + ".reason", reason);
-            saveCFG();
+            saveCfg();
             if (!file.exists()) {
                 try {
                     if (!file.mkdir())
@@ -55,7 +55,7 @@ public class BanFile {
             Bukkit.getConsoleSender().sendMessage("Ban." + playerName + " ist nicht gebannt!");
         } else {
             cfg.set("Ban." + playerName + ".isBanned", false);
-            saveCFG();
+            saveCfg();
         }
     }
 

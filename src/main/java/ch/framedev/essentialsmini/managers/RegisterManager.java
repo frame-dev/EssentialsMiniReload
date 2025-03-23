@@ -33,6 +33,7 @@ public class RegisterManager {
      */
     public RegisterManager(Main plugin) {
         this.plugin = plugin;
+        plugin.getLogger4J().info("Registering Events and Commands starting!");
 
         // Register Commands
         registerCommands();
@@ -42,6 +43,7 @@ public class RegisterManager {
 
         // Register TabCompleters
         registerTabCompleters();
+        plugin.getLogger4J().info("Registering Events and Commands finished!");
     }
 
     /**

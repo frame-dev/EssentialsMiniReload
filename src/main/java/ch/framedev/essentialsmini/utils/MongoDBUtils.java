@@ -3,8 +3,7 @@ package ch.framedev.essentialsmini.utils;
 import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.database.mongodb.MongoManager;
 import ch.framedev.essentialsmini.main.Main;
-
-import java.util.logging.Level;
+import org.apache.log4j.Level;
 
 /**
  * This Plugin was Created by FrameDev
@@ -30,12 +29,12 @@ public class MongoDBUtils {
             if (plugin.getConfig().getBoolean("MongoDB.LocalHost")) {
                 this.mongoManager = new MongoManager();
                 this.mongoManager.connectLocalHost();
-                Main.getInstance().getLogger().log(Level.INFO, "MongoDB Enabled");
+                Main.getInstance().getLogger4J().log(Level.INFO, "MongoDB Enabled");
             }
             if (plugin.getConfig().getBoolean("MongoDB.Boolean")) {
                 this.mongoManager = new MongoManager();
                 this.mongoManager.connect();
-                Main.getInstance().getLogger().log(Level.INFO, "MongoDB Enabled");
+                Main.getInstance().getLogger4J().log(Level.INFO, "MongoDB Enabled");
             }
             if (plugin.getConfig().getBoolean("MongoDB.LocalHost")) {
                 this.backendManager = new BackendManager(Main.getInstance());
