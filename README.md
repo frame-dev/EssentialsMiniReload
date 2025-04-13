@@ -104,7 +104,6 @@ Use with LuckPerms or any standard permission manager.
 | Plugin              | Purpose                     |
 |---------------------|-----------------------------|
 | Vault               | Economy system              |
-| SpigotMongoDBUtils  | MongoDB support             |
 | LuckPerms           | Permissions (recommended)   |
 | ProtocolLib         | Optional extended features  |
 
