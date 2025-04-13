@@ -66,7 +66,7 @@ public class UpdateChecker {
             String oldVersion = Main.getInstance().getDescription().getVersion();
             String newVersion = JsonParser.parseReader(br).getAsJsonObject().get("latest").getAsString();
             if (!newVersion.equalsIgnoreCase(oldVersion))
-                if (!oldVersion.contains("PRE-RELEASE"))
+                if (!oldVersion.contains("PRE-RELEASE") || !oldVersion.contains("1.20.6-HIGHER-RELEASE"))
                     return true;
         } catch (IOException ignored) {
         }
@@ -75,7 +75,7 @@ public class UpdateChecker {
 
     public boolean isOldVersionPreRelease() {
         String oldVersion = Main.getInstance().getDescription().getVersion();
-        return oldVersion.contains("PRE-RELEASE");
+        return oldVersion.contains("PRE-RELEASE") || oldVersion.contains("1.20.6-HIGHER-RELEASE");
     }
 
     public boolean hasPreReleaseUpdate() {
@@ -84,7 +84,7 @@ public class UpdateChecker {
                 URLConnection conn = new URL("https://framedev.ch/others/versions/essentialsmini-versions.json").openConnection();
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String oldVersion = Main.getInstance().getDescription().getVersion();
-                String newVersion = JsonParser.parseReader(br).getAsJsonObject().get("latest-pre-release").getAsString();
+                String newVersion = JsonParser.parseReader(br).getAsJsonObject().get("1.20.6-higher-release").getAsString();
                 if (!newVersion.equalsIgnoreCase(oldVersion))
                     return true;
             } catch (IOException ignored) {
@@ -97,7 +97,7 @@ public class UpdateChecker {
         try {
             URLConnection conn = new URL("https://framedev.ch/others/versions/essentialsmini-versions.json").openConnection();
             BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            return JsonParser.parseReader(br).getAsJsonObject().get("latest-pre-release").getAsString();
+            return JsonParser.parseReader(br).getAsJsonObject().get("1.20.6-higher-release").getAsString();
         } catch (IOException ignored) {
         }
         return "";
