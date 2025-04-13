@@ -103,6 +103,13 @@ Use with LuckPerms or any standard permission manager.
 
 ---
 
+---
+
+## In Progress
+
+- [ ] **SkinChanger**: Add option to change Skin and Playername
+- [ ] **NameChanger**: Add option to change Playername
+
 ## 🛠️ Development Info
 
 - Language: Java
