@@ -1,3 +1,5 @@
+[![Java CI with Maven](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml)
+
 # EssentialsMiniReload
 
 A powerful, modular Essentials plugin for Minecraft 1.20+ servers. EssentialsMiniReload provides all the critical features you need — homes, warps, economy, kits, chat moderation, and more — without the bloat.
