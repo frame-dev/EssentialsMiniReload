@@ -4,8 +4,8 @@ on:
   push:
     tags:
       - 'v*'  # Triggers on tags like v1.0.0, v2.3.1, etc.
-    branches:
-      - master  # Optional: also run on push to master
+    #branches:
+    #  - master  # Optional: also run on push to master
 
 jobs:
   release:
