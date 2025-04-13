@@ -1,8 +1,10 @@
 # EssentialsMiniReload
 
-# ***Require Paper or Purpur Server***
-
 A powerful, modular Essentials plugin for Minecraft 1.20+ servers. EssentialsMiniReload provides all the critical features you need — homes, warps, economy, kits, chat moderation, and more — without the bloat.
+
+---
+
+# ***Require Paper or Purpur Server***
 
 ---
 
