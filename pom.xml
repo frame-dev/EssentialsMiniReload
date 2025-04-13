@@ -38,7 +38,7 @@
         <repository>
             <id>framedev-repository</id>
             <name>FrameDev Repository</name>
-            <url>https://repository.framedev.ch:444/${repo_version}s</url>
+            <url>https://repository.framedev.ch:444/#/${repo_version}s</url>
         </repository>
     </distributionManagement>
 
