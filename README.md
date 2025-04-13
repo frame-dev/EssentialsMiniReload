@@ -1,4 +1,5 @@
 [![Java CI with Maven](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml)
+[![Release on Push](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release.yml)
 
 # EssentialsMiniReload
 
