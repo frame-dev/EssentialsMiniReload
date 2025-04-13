@@ -15,6 +15,7 @@ libraries:
   - com.zaxxer:HikariCP:6.2.1
   - com.google.code.gson:gson:2.10.1
   - commons-io:commons-io:2.14.0
+  - org.mongodb:mongodb-driver-sync:5.1.0
 commands:
   signremove:
     description: Sign remove

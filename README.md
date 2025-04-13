@@ -35,7 +35,7 @@ Set your preferred storage type in `config.yml`:
 - `file` *(default)* — lightweight local storage
 - `sqlite` — flat-file SQL backend
 - `mysql` — remote SQL database
-- `mongodb` — requires [SpigotMongoDBUtils](https://github.com/frame-dev/SpigotMongoDBUtils)
+- `mongodb` - MongoDB support
 
 ---
 

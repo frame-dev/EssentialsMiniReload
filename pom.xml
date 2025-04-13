@@ -6,7 +6,7 @@
 
     <groupId>ch.framedev</groupId>
     <artifactId>EssentialsMini</artifactId>
-    <version>1.0.4.1-1.20.6-HIGHER-RELEASE</version>
+    <version>1.0.5-1.20.6-HIGHER-RELEASE</version>
     <url>https://framedev.ch</url>
 
     <properties>
@@ -80,12 +80,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>ch.framedev</groupId>
-            <artifactId>SpigotMongoDBUtils</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
@@ -107,6 +101,12 @@
             <groupId>net.luckperms</groupId>
             <artifactId>api</artifactId>
             <version>5.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>5.1.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
