@@ -96,6 +96,12 @@
         "Signs click events have been improved for the new Version",
         "Enchantments added (some are missing)"
       ]
+    },
+    {
+      "version": "1.0.5-1.20.6-HIGHER-RELEASE",
+      "description": [
+        "Update method updated for the new Version names"
+      ]
     }
   ]
 }
