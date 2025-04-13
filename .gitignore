@@ -19,3 +19,4 @@ EssentialsMini.jar
 write.sh
 dependency-reduced-pom.xml
 *.iml
+/actions-runner/
