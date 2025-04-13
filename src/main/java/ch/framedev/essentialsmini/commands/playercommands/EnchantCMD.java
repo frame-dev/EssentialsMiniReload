@@ -150,9 +150,21 @@ public class EnchantCMD extends CommandBase {
 
         static {
 
+            // Depth Strider
+            ENCHANTMENTS.put("depthstrider", Enchantment.DEPTH_STRIDER);
+            ALIASENCHANTMENTS.put("dswim", Enchantment.DEPTH_STRIDER);
+
+            // Soul Speed
+            ENCHANTMENTS.put("soulspeed", Enchantment.SOUL_SPEED);
+            ALIASENCHANTMENTS.put("ss", Enchantment.SOUL_SPEED);
+
             // Power
             ENCHANTMENTS.put("power", Enchantment.POWER);
             ALIASENCHANTMENTS.put("p", Enchantment.POWER);
+
+            // Swift Sneak
+            ENCHANTMENTS.put("swiftsneak", Enchantment.SWIFT_SNEAK);
+            ALIASENCHANTMENTS.put("sneak", Enchantment.SWIFT_SNEAK);
 
             // Punch
             ENCHANTMENTS.put("punch", Enchantment.PUNCH);
@@ -258,6 +270,38 @@ public class EnchantCMD extends CommandBase {
 
             // Fortune
             ENCHANTMENTS.put("fortune", Enchantment.FORTUNE);
+
+            // PROJECTILE_PROTECTION
+            ENCHANTMENTS.put("projectileprotection", Enchantment.PROJECTILE_PROTECTION);
+            ALIASENCHANTMENTS.put("projprot", Enchantment.PROJECTILE_PROTECTION);
+
+            // Blast Protection
+            ENCHANTMENTS.put("blastprotection", Enchantment.BLAST_PROTECTION);
+            ALIASENCHANTMENTS.put("blastprot", Enchantment.BLAST_PROTECTION);
+
+            // Fire Protection
+            ENCHANTMENTS.put("fireprotection", Enchantment.FIRE_PROTECTION);
+            ALIASENCHANTMENTS.put("fireprot", Enchantment.FIRE_PROTECTION);
+
+            // Loyalty
+            ENCHANTMENTS.put("loyalty", Enchantment.LOYALTY);
+            ALIASENCHANTMENTS.put("return", Enchantment.LOYALTY);
+
+            // Impaling
+            ENCHANTMENTS.put("impaling", Enchantment.IMPALING);
+
+            // Riptide
+            ENCHANTMENTS.put("riptide", Enchantment.RIPTIDE);
+
+            // Channeling
+            ENCHANTMENTS.put("channeling", Enchantment.CHANNELING);
+
+            // Lure
+            ENCHANTMENTS.put("lure", Enchantment.LURE);
+
+            // Luck of the Sea
+            ENCHANTMENTS.put("luckofthesea", Enchantment.LUCK_OF_THE_SEA);
+            ALIASENCHANTMENTS.put("luck", Enchantment.LUCK_OF_THE_SEA);
         }
 
         /**

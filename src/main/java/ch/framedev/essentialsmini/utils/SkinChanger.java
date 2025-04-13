@@ -13,8 +13,6 @@ import java.io.InputStream;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SkinChanger {
