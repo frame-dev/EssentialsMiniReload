@@ -31,11 +31,10 @@ public class GodCMD implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            if (!(sender instanceof Player)) {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                 return true;
             }
-            Player player = (Player) sender;
             if (!player.hasPermission(new Permission(plugin.getPermissionBase() + "god", PermissionDefault.OP))) {
                 player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 return true;

@@ -29,7 +29,7 @@ import java.util.HashMap;
 
 /**
  * This Plugin was Created by FrameDev
- * Package : de.framedev.essentialsmin.listeners
+ * Package : de.framedev.essentialsmini.listeners
  * Date: 28.10.2020
  * Project: EssentialsMini
  * Copyrighted by FrameDev

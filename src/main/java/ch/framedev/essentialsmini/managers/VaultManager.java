@@ -44,6 +44,7 @@ public class VaultManager {
                 } catch (IOException e) {
                     plugin.getLogger4J().error(e.getMessage(), e);
                 }
+                plugin.getLogger4J().info("Economy Accounts created!");
             }
         } else {
             if (!cfg.contains("accounts")) {
@@ -55,6 +56,7 @@ public class VaultManager {
                 } catch (IOException e) {
                     plugin.getLogger4J().error(e.getMessage(), e);
                 }
+                plugin.getLogger4J().info("Economy Accounts created!");
             }
         }
         plugin.getServer().getServicesManager().register(Economy.class, new VaultAPI(), plugin, ServicePriority.High);

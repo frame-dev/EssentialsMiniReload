@@ -12,12 +12,14 @@ package ch.framedev.essentialsmini.abstracts;
 
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class ListenerBase implements Listener {
 
     /**
      * The main instance of the plugin.
      */
+    @NotNull
     private final Main plugin;
 
     /**
@@ -34,7 +36,7 @@ public abstract class ListenerBase implements Listener {
      *
      * @param plugin the main instance of the plugin
      */
-    public ListenerBase(Main plugin) {
+    public ListenerBase(@NotNull Main plugin) {
         this.plugin = plugin;
         setupListener(this);
     }
@@ -48,7 +50,7 @@ public abstract class ListenerBase implements Listener {
         return plugin.getPrefix();
     }
 
-    public Main getPlugin() {
+    public @NotNull Main getPlugin() {
         return plugin;
     }
 }

@@ -35,8 +35,7 @@ public class VanishCMD extends CommandListenerBase {
         if (command.getName().equalsIgnoreCase("vanish")) {
             if (sender.hasPermission("essentialsmini.vanish")) {
                 if (args.length == 0) {
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
+                    if (sender instanceof Player player) {
                         if (hided.contains(player.getName())) {
                             Bukkit.getOnlinePlayers().forEach(o -> {
                                 o.showPlayer(this.plugin, player);
@@ -62,7 +61,6 @@ public class VanishCMD extends CommandListenerBase {
                                     joinMessage = joinMessage.replace("%Player%", player.getName());
                                 Bukkit.broadcastMessage(joinMessage);
                             }
-                            return true;
                         } else {
                             Bukkit.getOnlinePlayers().forEach(o -> {
                                 if (!o.hasPermission("essentialsmini.vanish.see")) {
@@ -90,8 +88,8 @@ public class VanishCMD extends CommandListenerBase {
                                     leaveMessage = leaveMessage.replace("%Player%", player.getName());
                                 Bukkit.broadcastMessage(leaveMessage);
                             }
-                            return true;
                         }
+                        return true;
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                     }

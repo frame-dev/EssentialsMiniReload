@@ -121,6 +121,8 @@ public class RegisterManager {
         new TimePlayedCMD(plugin);
         new MuteForPlayerCMD(plugin);
 
+        new NickCMD(plugin);
+
         new PlayerWeatherCMD(plugin);
         new MaintenanceCMD(plugin);
 

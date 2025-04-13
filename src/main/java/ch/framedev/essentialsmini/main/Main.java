@@ -165,7 +165,7 @@ public class Main extends JavaPlugin {
         }
 
         for (String locale : locales) {
-            File sourceFile = utils.getFromResourceFile("messages_" + locale + "-examples.yml", Main.class);
+            File sourceFile = utils.getFromResourceFile("locale-examples/" + "messages_" + locale + "-examples.yml", Main.class);
 
             File destinationFile = new File(destinationDir, "messages_" + locale + "-examples.yml");
             if (destinationFile.exists()) continue;

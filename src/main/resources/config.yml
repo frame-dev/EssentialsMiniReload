@@ -76,4 +76,4 @@ spawnTpIgnoreWorlds:
   - world_nether
   - world_the_end
 maintenanceMotd: "%PREFIX%&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«"
-playerPingServerMessage: true
+playerPingServerMessage: false

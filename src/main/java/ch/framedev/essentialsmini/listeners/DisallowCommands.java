@@ -280,6 +280,7 @@ public class DisallowCommands extends ListenerBase {
             event.getCommands().removeIf(string -> string.contains(":"));
         }
     }
+
     @EventHandler
     public void onSendCommand(PlayerCommandPreprocessEvent event) {
         if (!event.getPlayer().hasPermission("essentialsmini.plugins")) {
@@ -326,6 +327,12 @@ public class DisallowCommands extends ListenerBase {
             if (topic == null) {
                 if (plugin.getLanguageConfig(player).contains("UnknownCommand")) {
                     String notFound = plugin.getLanguageConfig(player).getString("UnknownCommand");
+                    if (notFound == null) {
+                        if (player.isOp()) {
+                            player.sendMessage("§cCould not find Config Key 'UnknownCommand' in the language Config");
+                        }
+                        return;
+                    }
                     notFound = notFound.replace('&', '§');
                     notFound = notFound.replace("%CMD%", msg);
                     player.sendMessage(plugin.getPrefix() + notFound);

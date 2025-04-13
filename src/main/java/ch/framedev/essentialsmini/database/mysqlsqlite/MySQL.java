@@ -3,6 +3,8 @@ package ch.framedev.essentialsmini.database.mysqlsqlite;
 import ch.framedev.essentialsmini.main.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.sql.Connection;
@@ -17,7 +19,7 @@ public class MySQL {
     public static String database;
     public static String port;
     public static Connection con;
-    private static HikariDataSource ds;
+    private static HikariDataSource hikariDataSource;
 
     public MySQL() {
         FileConfiguration cfg = Main.getInstance().getConfig();
@@ -29,15 +31,15 @@ public class MySQL {
     }
 
     public static Connection getConnection() throws SQLException {
-        if (ds == null) {
+        if (hikariDataSource == null) {
             connect();
         }
-        return ds.getConnection();
+        return hikariDataSource.getConnection();
     }
 
     // connect
     public static void connect() {
-        if (ds == null) {
+        if (hikariDataSource == null) {
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
             config.setUsername(user);
@@ -48,13 +50,13 @@ public class MySQL {
             config.setMaximumPoolSize(15);
             config.setMinimumIdle(5);
 
-            ds = new HikariDataSource(config);
+            hikariDataSource = new HikariDataSource(config);
         }
     }
 
     public static void close() {
-        if (ds != null && !ds.isClosed()) {
-            ds.close();  // Properly close the pool
+        if (hikariDataSource != null && !hikariDataSource.isClosed()) {
+            hikariDataSource.close();  // Properly close the pool
         }
     }
 }

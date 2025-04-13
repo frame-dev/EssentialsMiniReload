@@ -14,6 +14,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -51,7 +52,7 @@ public abstract class CommandBase implements CommandExecutor, TabCompleter {
         this.cmdNames = null;
     }
 
-    public CommandBase(Main plugin, String... cmdNames) {
+    public CommandBase(Main plugin, @NotNull String... cmdNames) {
         this.plugin = plugin;
         this.cmdName = cmdNames[0];
         this.cmdNames = cmdNames;
@@ -77,7 +78,7 @@ public abstract class CommandBase implements CommandExecutor, TabCompleter {
         setupTabCompleter(this);
     }
 
-    public CommandBase(Main plugin, CommandExecutor executor, String... cmdNames) {
+    public CommandBase(Main plugin, CommandExecutor executor, @NotNull String... cmdNames) {
         this.plugin = plugin;
         this.cmdNames = cmdNames;
         for (String cmd : cmdNames) {
@@ -86,7 +87,7 @@ public abstract class CommandBase implements CommandExecutor, TabCompleter {
         }
     }
 
-    public CommandBase(Main plugin, CommandExecutor executor, TabCompleter completer, String... cmdNames) {
+    public CommandBase(Main plugin, CommandExecutor executor, TabCompleter completer, @NotNull String... cmdNames) {
         this.plugin = plugin;
         this.cmdNames = cmdNames;
         for (String cmd : cmdNames) {

@@ -31,7 +31,7 @@ public class Variables {
     private String playerNameNotOnline;
     private String playerNotOnline;
 
-    private List<OfflinePlayer> mutedPlayers;
+    private final List<OfflinePlayer> mutedPlayers;
 
     public static final String TP_MESSAGES = "TpaMessages";
     public static final String MONEY_MESSAGE = "Money";
@@ -39,6 +39,7 @@ public class Variables {
     public static final String EXPERIENCE = "Experience";
     public static final String ADMIN_BROADCAST = "AdminCommandBroadCast";
     public static final String BANK = "Bank";
+    public static final String MESSAGES = "Bank";
 
     public Variables() {
         this.instance = Main.getInstance();

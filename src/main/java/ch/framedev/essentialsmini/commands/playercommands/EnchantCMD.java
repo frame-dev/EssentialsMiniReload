@@ -252,6 +252,12 @@ public class EnchantCMD extends CommandBase {
             // Sweeping Edge
             ENCHANTMENTS.put("sweepingedge", Enchantment.SWEEPING_EDGE);
             ALIASENCHANTMENTS.put("se", Enchantment.SWEEPING_EDGE);
+
+            // Looting
+            ENCHANTMENTS.put("looting", Enchantment.LOOTING);
+
+            // Fortune
+            ENCHANTMENTS.put("fortune", Enchantment.FORTUNE);
         }
 
         /**

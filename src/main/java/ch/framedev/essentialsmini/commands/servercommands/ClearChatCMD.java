@@ -6,6 +6,7 @@ import ch.framedev.simplejavautils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 /**
  * This Plugin was Created by FrameDev
@@ -38,11 +39,22 @@ public class ClearChatCMD extends CommandBase {
         for (int i = 0; i <= 500; i++) {
             Bukkit.broadcastMessage(" ");
         }
-        String message = plugin.getLanguageConfig(sender).getString("ChatClear");
-        if (message != null) {
-            message = new TextUtils().replaceAndWithParagraph(message);
-            message = new TextUtils().replaceObject(message, "%Player%", sender.getName());
+
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            String message = plugin.getLanguageConfig(player).getString("ChatClear");
+            if (message != null) {
+                message = new TextUtils().replaceAndWithParagraph(message);
+                message = new TextUtils().replaceObject(message, "%Player%", sender.getName());
+                player.sendMessage(message);
+            }
+        });
+        if (!(sender instanceof Player)) {
+            String message = plugin.getLanguageConfig(sender).getString("ChatClear");
+            if (message != null) {
+                message = new TextUtils().replaceAndWithParagraph(message);
+                message = new TextUtils().replaceObject(message, "%Player%", sender.getName());
+                sender.sendMessage(message);
+            }
         }
-        Bukkit.broadcastMessage(plugin.getPrefix() + message);
     }
 }
