@@ -43,8 +43,10 @@ import java.util.*;
 
 public class Main extends JavaPlugin {
 
+    // Singleton instance of the plugin
     private static Main instance;
 
+    // Logger for the plugin (log4j)
     private Logger logger;
 
     private Map<String, CommandExecutor> commands;
@@ -55,11 +57,14 @@ public class Main extends JavaPlugin {
 
     private static List<String> silent;
 
+    // Database variables
     private DatabaseManager databaseManager;
     private MongoDBUtils mongoDBUtils;
 
+    // Vault variables
     private VaultManager vaultManager;
 
+    // Variables for the plugin
     private Variables variables;
 
     @Override
