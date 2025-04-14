@@ -468,7 +468,7 @@ public class Main extends JavaPlugin {
             String latestVersion = jsonElement.getAsJsonObject().get("latest").getAsString();
             String oldVersion = Main.getInstance().getDescription().getVersion();
             if (!latestVersion.equalsIgnoreCase(oldVersion)) {
-                if (!oldVersion.contains("PRE-RELEASE")) {
+                if (!oldVersion.contains("PRE-RELEASE") || !oldVersion.contains("1.20.6-HIGHER-RELEASE")) {
                     if (download) {
                         downloadLatest();
                         Bukkit.getConsoleSender().sendMessage(getPrefix() + "Latest Version will be Downloaded : New Version : " + latestVersion);
