@@ -8,14 +8,18 @@ softdepend:
   - SpigotMongoDBUtils
   - ProtocolLib
   - LuckPerms
+
 loadbefore:
   - Vault
+
 website: https://framedev.ch
+
 libraries:
   - com.zaxxer:HikariCP:6.2.1
   - com.google.code.gson:gson:2.10.1
   - commons-io:commons-io:2.14.0
   - org.mongodb:mongodb-driver-sync:5.1.0
+
 commands:
   signremove:
     description: Sign remove
@@ -25,9 +29,6 @@ commands:
       - bal
   eco:
     description: Main Command for all Economy Commands
-  srestart:
-    permission: essentialsmini.restart
-    description: Custom restart feature
   tpaheredeny:
     description: Disallow the Teleport Request
   home:
@@ -64,8 +65,6 @@ commands:
     description: show your enderchest or from other Players
   back:
     description: Teleports to your last death location
-  backup:
-    description: Create a World Backup
   gamemode:
     aliases:
       - gm
@@ -117,8 +116,6 @@ commands:
     description: killall monsters,items,animals
   suicid:
     description: make suicid
-  showcrafting:
-    description: shows you the Crafting from the Item you have entered as args
   signitem:
     description: sign your custom Item
   playerheads:
@@ -142,8 +139,6 @@ commands:
     aliases:
       - ent
     description: Enchant your item
-  workbench:
-    description: opens an portable Workbench
   sun:
     aliases:
       - sunny
@@ -176,14 +171,8 @@ commands:
     aliases:
       - feedme
     description: fill your saturation or our Hunger
-  key:
-    description: this is used for Generate key to connect to protected Worlds
   kits:
     description: Select your kit if you has the Permissions
-  worldtp:
-    description: Teleports you to an Protected World
-  addworld:
-    description: add a new Protected World
   godmode:
     aliases:
       - god
@@ -206,10 +195,6 @@ commands:
     description: Change the Playertime
   resetpltime:
     description: Reset the Playertime
-  fuck:
-    description: Spawn Firework
-  lag:
-    description: Show statistics about the Server
   delwarp:
     description: Delete a Warp Location
   msgtoggle:
@@ -254,11 +239,6 @@ commands:
     description: Spawn a Firework
   createkit:
     description: Create a new Kit, Place all your Items in your Inventory.This Command will delete your Inventory after execute
-  globalmute:
-    aliases:
-      - gmute
-      - glmute
-    description: Mute all Messages
   offline:
     aliases:
       - offlineplayers
@@ -269,10 +249,6 @@ commands:
       - exp
       - experience
     description: Base Command to change your XP or Level
-  register:
-    description: Register to the Server
-  login:
-    description: Login to the Server
   plweather:
     aliases:
       - playerweather

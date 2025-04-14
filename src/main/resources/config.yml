@@ -75,5 +75,16 @@ msg:
 spawnTpIgnoreWorlds:
   - world_nether
   - world_the_end
-maintenanceMotd: "%PREFIX%&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«"
+maintenance:
+  enabled: false
+  kickMessage: '%Prefix%&cThis server is currently in maintenance mode!'
+  motd: "%PREFIX%&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«"
+  list:
+    added: '%Prefix%&6%Player% &cadded %Target% to the maintenance list!'
+    removed: '%Prefix%&6%Player% &cremoved %Target% from the maintenance list!'
+    notInList: '%Prefix%&c%Player% is not in the maintenance list!'
+  joinMessage: '%Prefix%&6%Player% &cjoined the server in maintenance mode!'
+  tabList:
+    header: '&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«'
+    footer: '&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«'
 playerPingServerMessage: false
