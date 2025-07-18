@@ -16,10 +16,9 @@ import ch.framedev.essentialsmini.database.mysqlsqlite.MySQL;
 import ch.framedev.essentialsmini.database.mysqlsqlite.SQLite;
 import ch.framedev.essentialsmini.main.Main;
 
-public class DatabaseManager {
+public record DatabaseManager(Main plugin) {
 
-    private final Main plugin;
-
+    @SuppressWarnings("InstantiationOfUtilityClass")
     public DatabaseManager(Main plugin) {
         this.plugin = plugin;
         // MySQL Database
@@ -32,7 +31,7 @@ public class DatabaseManager {
             new SQLite(plugin.getConfig().getString("SQLite.Path", "path"), plugin.getConfig().getString("SQLite.FileName", "database"));
         }
 
-        if(plugin.isMongoDB()) {
+        if (plugin.isMongoDB()) {
             VaultAPI.init();
         }
     }

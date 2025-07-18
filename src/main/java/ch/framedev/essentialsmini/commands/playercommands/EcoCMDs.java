@@ -6,12 +6,13 @@ import ch.framedev.essentialsmini.utils.Language;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.UUIDFetcher;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -39,12 +40,11 @@ public class EcoCMDs extends CommandBase {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("pay")) {
-            if (sender instanceof Player) {
+            if (sender instanceof Player p) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "pay")) {
                     if (args.length == 2) {
-                        Player p = (Player) sender;
                         if (isDouble(args[0])) {
                             double amount = Double.parseDouble(args[0]);
                             if (args[1].equalsIgnoreCase("**")) {
@@ -68,15 +68,19 @@ public class EcoCMDs extends CommandBase {
                                             sender.sendMessage(plugin.getPrefix() + send);
                                         } else {
                                             String moneySet = plugin.getLanguageConfig(player).getString("Money.MSG.NotEnough");
+                                            if (moneySet == null) {
+                                                player.sendMessage(plugin.getPrefix() + "§cMessage config 'Money.MSG.NotEnough' is missing!");
+                                                return true;
+                                            }
                                             moneySet = ReplaceCharConfig.replaceParagraph(moneySet);
-                                            moneySet = ReplaceCharConfig.replaceObjectWithData(moneySet, "%Money%", plugin.getVaultManager().getEco().getBalance((Player) sender) + plugin.getCurrencySymbol());
+                                            moneySet = ReplaceCharConfig.replaceObjectWithData(moneySet, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
                                             sender.sendMessage(plugin.getPrefix() + moneySet);
                                         }
                                     }
                                 }
                             } else {
                                 OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                                if (player.hasPlayedBefore()) {
+                                if (player.hasPlayedBefore() && player.getName() != null) {
                                     if (plugin.getVaultManager().getEco().has(p, amount)) {
                                         plugin.getVaultManager().getEco().withdrawPlayer(p, amount);
                                         plugin.getVaultManager().getEco().depositPlayer(player, amount);
@@ -97,8 +101,12 @@ public class EcoCMDs extends CommandBase {
                                         sender.sendMessage(plugin.getPrefix() + send);
                                     } else {
                                         String moneySet = plugin.getLanguageConfig(sender).getString("Money.MSG.NotEnough");
+                                        if (moneySet == null) {
+                                            sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Money.MSG.NotEnough' is missing!");
+                                            return true;
+                                        }
                                         moneySet = ReplaceCharConfig.replaceParagraph(moneySet);
-                                        moneySet = ReplaceCharConfig.replaceObjectWithData(moneySet, "%Money%", plugin.getVaultManager().getEco().getBalance((Player) sender) + plugin.getCurrencySymbol());
+                                        moneySet = ReplaceCharConfig.replaceObjectWithData(moneySet, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
                                         sender.sendMessage(plugin.getPrefix() + moneySet);
                                     }
                                 } else {
@@ -127,8 +135,7 @@ public class EcoCMDs extends CommandBase {
         if (command.getName().equalsIgnoreCase("balance")) {
             if (args.length == 0) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "balance")) {
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
+                    if (sender instanceof Player player) {
                         String balance = plugin.getLanguageConfig(player).getString("Money.MSG.Balance");
                         balance = new TextUtils().replaceAndWithParagraph(balance);
                         balance = new TextUtils().replaceObject(balance, "[Money]", plugin.getVaultManager().getEco().format(plugin.getVaultManager().getEco().getBalance(player)) + plugin.getCurrencySymbol());
@@ -166,8 +173,7 @@ public class EcoCMDs extends CommandBase {
                         if (isDouble(args[1])) {
                             double amount = Double.parseDouble(args[1]);
                             if (sender.hasPermission(plugin.getPermissionBase() + "eco.add")) {
-                                if (sender instanceof Player) {
-                                    Player player = (Player) sender;
+                                if (sender instanceof Player player) {
                                     plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                     String set = plugin.getLanguageConfig(player).getString("Money.MSG.Set");
                                     if (set != null) {
@@ -228,8 +234,7 @@ public class EcoCMDs extends CommandBase {
                         if (isDouble(args[1])) {
                             double amount = Double.parseDouble(args[1]);
                             if (sender.hasPermission(plugin.getPermissionBase() + "eco.add")) {
-                                if (sender instanceof Player) {
-                                    Player player = (Player) sender;
+                                if (sender instanceof Player player) {
                                     plugin.getVaultManager().getEco().withdrawPlayer(player, amount);
                                     String set = plugin.getLanguageConfig(player).getString("Money.MSG.Set");
                                     if (set != null) {
@@ -282,8 +287,7 @@ public class EcoCMDs extends CommandBase {
                         if (isDouble(args[1])) {
                             double amount = Double.parseDouble(args[1]);
                             if (sender.hasPermission(plugin.getPermissionBase() + "eco.set")) {
-                                if (sender instanceof Player) {
-                                    Player player = (Player) sender;
+                                if (sender instanceof Player player) {
                                     plugin.getVaultManager().getEco().withdrawPlayer(player, plugin.getVaultManager().getEco().getBalance(player));
                                     plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                     String set = plugin.getLanguageConfig(player).getString("Money.MSG.Set");
@@ -395,7 +399,7 @@ public class EcoCMDs extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("pay")) {
             if (args.length == 1) {
                 ArrayList<String> list = new ArrayList<>();

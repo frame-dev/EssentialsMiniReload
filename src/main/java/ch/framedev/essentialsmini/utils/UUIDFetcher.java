@@ -23,6 +23,7 @@ import java.util.function.Consumer;
  * Fetches UUIDs and Player Names via Mojang API.
  * Compatible with Java 11+.
  */
+@SuppressWarnings("unused")
 public class UUIDFetcher {
 
     // ✅ Constants

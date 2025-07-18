@@ -18,7 +18,6 @@ import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.managers.RegisterManager;
 import ch.framedev.essentialsmini.managers.VaultManager;
 import ch.framedev.essentialsmini.utils.*;
-import ch.framedev.simplejavautils.SimpleJavaUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.log4j.BasicConfigurator;
@@ -140,11 +139,9 @@ public class Main extends JavaPlugin {
 
         // Checking for Update and when enabled, Download the Latest Version automatically
         if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
-
-            if (!new SimpleJavaUtils().isOnline("framedev.ch", 443)) {
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§c§lThere was an error downloading or retrieving the new version.");
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§c§lPlease check your internet connection.");
-            }
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
+        } else {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
         }
 
         // Restore Backpacks
@@ -170,7 +167,6 @@ public class Main extends JavaPlugin {
     }
 
     public void moveExampleMessages() {
-        SimpleJavaUtils utils = new SimpleJavaUtils();
         String[] locales = {"de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"};
 
         File destinationDir = new File(getDataFolder(), "messages-examples");
@@ -180,7 +176,7 @@ public class Main extends JavaPlugin {
         }
 
         for (String locale : locales) {
-            File sourceFile = utils.getFromResourceFile("locale-examples/" + "messages_" + locale + "-examples.yml", Main.class);
+            File sourceFile = getFromResourceFile("locale-examples/" + "messages_" + locale + "-examples.yml", Main.class);
 
             File destinationFile = new File(destinationDir, "messages_" + locale + "-examples.yml");
             if (destinationFile.exists()) continue;
@@ -198,6 +194,59 @@ public class Main extends JavaPlugin {
             } catch (IOException e) {
                 getLogger4J().error("Failed to copy example messages file: " + sourceFile.getName(), e);
             }
+        }
+    }
+
+    /**
+     * @param in InputStream
+     * @return the File from the InputStream
+     */
+    protected File streamToFile(InputStream in) {
+        if (in == null) {
+            return null;
+        }
+        FileOutputStream out = null;
+        try {
+            // Create a Temp File
+            File f = File.createTempFile(String.valueOf(in.hashCode()), ".tmp");
+            f.deleteOnExit();
+
+            out = new FileOutputStream(f);
+            byte[] buffer = new byte[1024];
+
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+            // Return the Temp File
+            return f;
+        } catch (IOException e) {
+            logger.log(Level.ERROR, "Error while creating Temp File", e);
+            return null;
+        } finally {
+            if (out != null) try {
+                out.close();
+            } catch (IOException e) {
+                logger.log(Level.ERROR, "Error while closing FileOutputStream", e);
+            }
+        }
+    }
+
+    public File getFromResourceFile(String file) {
+        InputStream resource = this.getClass().getClassLoader().getResourceAsStream(file);
+        if (resource == null) {
+            throw new IllegalArgumentException("File not found!");
+        } else {
+            return streamToFile(resource);
+        }
+    }
+
+    public File getFromResourceFile(String file, Class<?> class_) {
+        InputStream resource = class_.getClassLoader().getResourceAsStream(file);
+        if (resource == null) {
+            throw new IllegalArgumentException("File not found!");
+        } else {
+            return streamToFile(resource);
         }
     }
 

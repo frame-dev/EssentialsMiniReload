@@ -13,7 +13,7 @@ import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.InventoryStringDeSerializer;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,8 +61,8 @@ public class BackpackCMD extends CommandListenerBase {
 
     // Restore BackPack into HashMap
     public static void restore(OfflinePlayer player) {
-        if (cfg.contains(player.getUniqueId().toString() + ".Inventory")) {
-            String content = cfg.getString(player.getUniqueId().toString() + ".Inventory");
+        if (cfg.contains(player.getUniqueId() + ".Inventory")) {
+            String content = cfg.getString(player.getUniqueId() + ".Inventory");
             if (content != null)
                 itemsStringHashMap.put(player.getUniqueId().toString(), content);
         }
@@ -84,10 +85,9 @@ public class BackpackCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (sender instanceof Player player) {
             if (args.length == 0) {
-                Player player = (Player) sender;
                 if (plugin.getConfig().getBoolean("Backpack")) {
                     Inventory inventory = Bukkit.createInventory(null, plugin.getConfig().getInt("BackPackSize", 3*9), player.getName() + "'s Inventory");
                     if (itemsStringHashMap.containsKey(player.getUniqueId().toString()) && !(itemsStringHashMap.get(player.getUniqueId().toString()) == null)) {
@@ -102,7 +102,6 @@ public class BackpackCMD extends CommandListenerBase {
                     }
                 }
             } else if (args.length == 1) {
-                Player player = (Player) sender;
                 OfflinePlayer targetPlayer = PlayerUtils.getOfflinePlayerByName(args[0]);
                 if (args[0].equalsIgnoreCase(targetPlayer.getName()) && !args[0].equalsIgnoreCase("delete")) {
                     if (player.hasPermission("essentialsmini.backpack.see")) {
@@ -167,7 +166,7 @@ public class BackpackCMD extends CommandListenerBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         ArrayList<OfflinePlayer> players = new ArrayList<>(Arrays.asList(Bukkit.getOfflinePlayers()));
         ArrayList<String> playerNames = new ArrayList<>();
         for (OfflinePlayer player : players) {

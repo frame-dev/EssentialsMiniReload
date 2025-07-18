@@ -18,9 +18,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.jetbrains.annotations.NotNull;
 
 import static org.bukkit.Material.AIR;
 
@@ -34,26 +34,32 @@ public class RepairCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("repair")) {
             if (args.length == 0) {
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission(new Permission("essentialsmini.repair", PermissionDefault.OP))) {
                         if (player.getInventory().getItemInMainHand().getType() != AIR) {
                             ItemStack item = player.getInventory().getItemInMainHand();
                             if (item.hasItemMeta()) {
-                                if (item.getItemMeta() instanceof Damageable) {
-                                    Damageable damageable = (Damageable) item.getItemMeta();
+                                if (item.getItemMeta() instanceof Damageable damageable) {
                                     if (damageable.hasDamage()) {
                                         damageable.setDamage(0);
-                                        item.setItemMeta((ItemMeta) damageable);
+                                        item.setItemMeta(damageable);
                                         String repair = plugin.getLanguageConfig(player).getString("Repair.Success");
+                                        if (repair == null) {
+                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Success' is not set!");
+                                            return true;
+                                        }
                                         repair = ReplaceCharConfig.replaceParagraph(repair);
                                         repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
                                         player.sendMessage(plugin.getPrefix() + repair);
                                     } else {
                                         String repair = plugin.getLanguageConfig(player).getString("Repair.Failed");
+                                        if(repair == null) {
+                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Failed' is not set!");
+                                            return true;
+                                        }
                                         repair = ReplaceCharConfig.replaceParagraph(repair);
                                         repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
                                         player.sendMessage(plugin.getPrefix() + repair);
@@ -62,6 +68,10 @@ public class RepairCMD extends CommandBase {
                             }
                         } else {
                             String repair = plugin.getLanguageConfig(player).getString("Repair.AirRepair");
+                            if(repair == null) {
+                                player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.AirRepair' is not set!");
+                                return true;
+                            }
                             repair = ReplaceCharConfig.replaceParagraph(repair);
                             sender.sendMessage(plugin.getPrefix() + repair);
                         }
@@ -81,24 +91,35 @@ public class RepairCMD extends CommandBase {
                     if (player.getInventory().getItemInMainHand().getType() != AIR) {
                         ItemStack item = player.getInventory().getItemInMainHand();
                         if (item.hasItemMeta()) {
-                            if (item.getItemMeta() instanceof Damageable) {
-                                Damageable damageable = (Damageable) item.getItemMeta();
+                            if (item.getItemMeta() instanceof Damageable damageable) {
                                 if (damageable.hasDamage()) {
                                     damageable.setDamage(0);
-                                    item.setItemMeta((ItemMeta) damageable);
+                                    item.setItemMeta(damageable);
                                     if (!Main.getSilent().contains(sender.getName())) {
                                         String repair = plugin.getLanguageConfig(player).getString("Repair.Success");
+                                        if (repair == null) {
+                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Success' is not set!");
+                                            return true;
+                                        }
                                         repair = ReplaceCharConfig.replaceParagraph(repair);
                                         repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
                                         player.sendMessage(plugin.getPrefix() + repair);
                                     }
                                     String repairOther = plugin.getLanguageConfig(player).getString("Repair.OtherSuccess");
+                                    if (repairOther == null) {
+                                        sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.OtherSuccess' is not set!");
+                                        return true;
+                                    }
                                     repairOther = ReplaceCharConfig.replaceParagraph(repairOther);
                                     repairOther = ReplaceCharConfig.replaceObjectWithData(repairOther, "%Item%", item.getType().name());
                                     repairOther = ReplaceCharConfig.replaceObjectWithData(repairOther, "%Player%", player.getName());
                                     sender.sendMessage(plugin.getPrefix() + repairOther);
                                 } else {
                                     String repair = plugin.getLanguageConfig(player).getString("Repair.OtherFailed");
+                                    if (repair == null) {
+                                        sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.OtherFailed' is not set!");
+                                        return true;
+                                    }
                                     repair = ReplaceCharConfig.replaceParagraph(repair);
                                     repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
                                     repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Player%", player.getName());
@@ -106,6 +127,10 @@ public class RepairCMD extends CommandBase {
                                 }
                             } else {
                                 String notAble = plugin.getLanguageConfig(player).getString("Repair.Irreparable");
+                                if (notAble == null) {
+                                    sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Irreparable' is not set!");
+                                    return true;
+                                }
                                 notAble = ReplaceCharConfig.replaceParagraph(notAble);
                                 notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Item%", item.getType().name());
                                 notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Player%", player.getName());
@@ -113,6 +138,10 @@ public class RepairCMD extends CommandBase {
                             }
                         } else {
                             String notAble = plugin.getLanguageConfig(player).getString("Repair.Irreparable");
+                            if (notAble == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Irreparable' is not set!");
+                                return true;
+                            }
                             notAble = ReplaceCharConfig.replaceParagraph(notAble);
                             notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Item%", item.getType().name());
                             notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Player%", player.getName());

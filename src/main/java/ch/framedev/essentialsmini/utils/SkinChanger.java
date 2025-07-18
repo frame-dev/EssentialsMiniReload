@@ -1,8 +1,10 @@
 package ch.framedev.essentialsmini.utils;
 
+import ch.framedev.essentialsmini.main.Main;
 import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -34,7 +36,7 @@ public class SkinChanger {
             value = (String) propsObj.get("value");
             signature = (String) propsObj.get("signature");
         } catch (ParseException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Failed to parse skin data for " + skinName, e);
         }
 
         if (value == null || signature == null) {
@@ -72,10 +74,11 @@ public class SkinChanger {
                 sendPackets(player, online);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Failed to change skin for " + player.getName(), e);
         }
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     private void sendPackets(Player target, Player viewer) throws Exception {
         Object handle = Reflection.getHandle(target);
 
@@ -138,18 +141,7 @@ public class SkinChanger {
         }
 
 // Find matching constructor with int[] or varargs
-        Constructor<?> destroyConstructor = null;
-        for (Constructor<?> ctor : destroyPacketClass.getConstructors()) {
-            Class<?>[] params = ctor.getParameterTypes();
-            if (params.length == 1 && params[0].isArray() && params[0].getComponentType() == int.class) {
-                destroyConstructor = ctor;
-                break;
-            }
-        }
-
-        if (destroyConstructor == null) {
-            throw new RuntimeException("Destroy packet constructor not found.");
-        }
+        Constructor<?> destroyConstructor = getConstructor(destroyPacketClass);
 
 // Create the packet with the entity ID
         destroyPacket = destroyConstructor.newInstance((Object) new int[]{target.getEntityId()});
@@ -160,7 +152,6 @@ public class SkinChanger {
         }
         if (spawnPacketClass == null) {
             Bukkit.getLogger().warning("Spawn packet is not available in this version. Using destroy-only fallback.");
-            spawnPacketClass = null;
         }
         Object spawnPacket = null;
 
@@ -178,6 +169,22 @@ public class SkinChanger {
         sendPacket(viewer, destroyPacket);
     }
 
+    private static @NotNull Constructor<?> getConstructor(Class<?> destroyPacketClass) {
+        Constructor<?> destroyConstructor = null;
+        for (Constructor<?> ctor : destroyPacketClass.getConstructors()) {
+            Class<?>[] params = ctor.getParameterTypes();
+            if (params.length == 1 && params[0].isArray() && params[0].getComponentType() == int.class) {
+                destroyConstructor = ctor;
+                break;
+            }
+        }
+
+        if (destroyConstructor == null) {
+            throw new RuntimeException("Destroy packet constructor not found.");
+        }
+        return destroyConstructor;
+    }
+
     private void sendPacket(Player player, Object packet) {
         try {
             Object handle = Reflection.getHandle(player);
@@ -188,8 +195,7 @@ public class SkinChanger {
                 field.setAccessible(true);
                 try {
                     Object value = field.get(handle);
-                    if (value != null && value.getClass().getName().toLowerCase().contains("connection")
-                        || value.getClass().getSimpleName().toLowerCase().contains("listenerimpl")) {
+                    if (value != null && (value.getClass().getName().toLowerCase().contains("connection") || value.getClass().getSimpleName().toLowerCase().contains("listenerimpl"))) {
                         connection = value;
                         break;
                     }
@@ -210,10 +216,12 @@ public class SkinChanger {
 
             Reflection.callMethod(sendPacket, connection, packet);
         } catch (Exception e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Failed to send packet to " + player.getName(), e);
+            throw new RuntimeException("Failed to send packet to player: " + player.getName(), e);
         }
     }
 
+    @SuppressWarnings("unused")
     public void debugSpawnPacketClasses() {
         String[] names = {
                 "PacketPlayOutNamedEntitySpawn",
@@ -237,7 +245,7 @@ public class SkinChanger {
             encoding = encoding == null ? "UTF-8" : encoding;
             return IOUtils.toString(in, encoding);
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Failed to fetch data from " + _url, e);
         }
         return null;
     }

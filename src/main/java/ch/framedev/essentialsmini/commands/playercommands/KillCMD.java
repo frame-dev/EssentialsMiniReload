@@ -32,12 +32,11 @@ public class KillCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("killall")) {
             if (sender.hasPermission(new Permission(plugin.getPermissionBase() + "killall", PermissionDefault.OP))) {
                 if (args.length == 1) {
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
+                    if (sender instanceof Player player) {
                         if (args[0].equalsIgnoreCase("animals")) {
                             for (Entity entity : player.getWorld().getEntities()) {
                                 if (entity instanceof Animals) {
@@ -113,7 +112,7 @@ public class KillCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("killall")) {
             if (sender.hasPermission(plugin.getPermissionBase() + "killall")) {
                 if (args.length == 1) {

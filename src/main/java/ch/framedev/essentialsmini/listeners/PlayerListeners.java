@@ -172,9 +172,7 @@ public class PlayerListeners implements Listener {
     public void onEntityKill(EntityDeathEvent event) {
         if (plugin.getConfig().getBoolean("PlayerEvents")) {
             if (event.getEntity().getKiller() != null) {
-                if (event.getEntity() instanceof Player) {
-                    getServer().getPluginManager().callEvent(new PlayerKillPlayerEvent((Player) event.getEntity(), event.getEntity().getKiller(), event.getDrops(), event.getDroppedExp()));
-                }
+                event.getEntity();// getServer().getPluginManager().callEvent(new PlayerKillPlayerEvent((Player) event.getEntity(), event.getEntity().getKiller(), event.getDrops(), event.getDroppedExp()));
                 Bukkit.getPluginManager().callEvent(new PlayerKillEntityEvent(event.getEntity().getKiller(), event.getEntity(), event.getDrops(), event.getDroppedExp()));
             }
         }
@@ -219,12 +217,13 @@ public class PlayerListeners implements Listener {
                 if (event.getEntity().getShooter() instanceof Entity)
                     getServer().getPluginManager().callEvent(new PlayerHitByProjectileEvent((Player) event.getHitEntity(), (Entity) event.getEntity().getShooter()));
             }
-            if (event.getHitEntity() != null && event.getHitEntity() != null && event.getEntity().getShooter() != null) {
+            if (event.getHitEntity() != null && event.getEntity().getShooter() != null) {
                 getServer().getPluginManager().callEvent(new EntityHitByProjectileEvent(event.getHitEntity(), (Entity) event.getEntity().getShooter()));
             }
         }
     }
 
+    @SuppressWarnings("unused")
     public BukkitTask getSpawnTask() {
         return spawnTask;
     }

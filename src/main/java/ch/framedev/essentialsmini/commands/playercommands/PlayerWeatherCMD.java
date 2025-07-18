@@ -17,6 +17,7 @@ import org.bukkit.WeatherType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerWeatherCMD extends CommandBase {
 
@@ -25,7 +26,7 @@ public class PlayerWeatherCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         String playerWeatherMessageKey = "PlayerWeather";
         if(!(sender instanceof Player player)) {
             sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());

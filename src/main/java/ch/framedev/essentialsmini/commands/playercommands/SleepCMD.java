@@ -22,6 +22,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +40,9 @@ public class SleepCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (sender instanceof Player player) {
             if (sender.hasPermission("essentialsmini.sleep")) {
-                Player player = (Player) sender;
                 Location location = player.getLocation().subtract(0, 0, 0);
                 block.add(location.getBlock().getType());
                 try {
@@ -91,7 +91,7 @@ public class SleepCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         return super.onTabComplete(sender, command, label, args);
     }
 }

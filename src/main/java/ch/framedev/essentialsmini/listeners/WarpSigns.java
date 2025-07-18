@@ -78,8 +78,7 @@ public class WarpSigns extends ListenerBase {
             EquipmentSlot equipmentSlot = event.getHand();
             if (equipmentSlot == null) return;
             if (event.getHand().equals(EquipmentSlot.HAND) &&
-                    event.getClickedBlock().getState() instanceof Sign) {
-                Sign s = (Sign) event.getClickedBlock().getState();
+                event.getClickedBlock().getState() instanceof Sign s) {
                 String[] lines = s.getTargetSide(event.getPlayer()).getLines();
                 if (lines[0].equalsIgnoreCase("§6[§bWARP§6]")) {
                     if (event.getPlayer().hasPermission("essentialsmini.signs.use")) {

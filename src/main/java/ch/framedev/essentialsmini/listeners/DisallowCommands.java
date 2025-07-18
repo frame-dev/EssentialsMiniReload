@@ -294,6 +294,12 @@ public class DisallowCommands extends ListenerBase {
             if (event.getMessage().startsWith("/me") || event.getMessage().startsWith("/bukkit:me") || event.getMessage().startsWith("/minecraft:me")) {
                 if (!event.getMessage().equalsIgnoreCase("/pltime") || !event.getMessage().equalsIgnoreCase("/resetpltime")) {
                     String message = plugin.getConfig().getString("NotAllowCommand");
+                    if (message == null) {
+                        if (event.getPlayer().isOp()) {
+                            event.getPlayer().sendMessage("§cCould not find Config Key 'NotAllowCommand' in the config.yml");
+                        }
+                        return;
+                    }
                     if (message.contains("&"))
                         message = message.replace('&', '§');
                     event.getPlayer().sendMessage(message);
@@ -304,6 +310,12 @@ public class DisallowCommands extends ListenerBase {
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "fuck")) {
             if (event.getMessage().contains("/fuck") || event.getMessage().contains("/essentialsmini:fuck")) {
                 String message = plugin.getConfig().getString("NotAllowCommand");
+                if (message == null) {
+                    if (event.getPlayer().isOp()) {
+                        event.getPlayer().sendMessage("§cCould not find Config Key 'NotAllowCommand' in the config.yml");
+                    }
+                    return;
+                }
                 if (message.contains("&"))
                     message = message.replace('&', '§');
                 event.getPlayer().sendMessage(message);
@@ -314,6 +326,12 @@ public class DisallowCommands extends ListenerBase {
                 event.getMessage().split(" ")[0].equalsIgnoreCase("/bukkit:help") || event.getMessage().split(" ")[0].equalsIgnoreCase("/bukkit:?")) {
             if (!event.getPlayer().hasPermission("essentialsmini.help")) {
                 String message = plugin.getConfig().getString("NotAllowCommand");
+                if (message == null) {
+                    if (event.getPlayer().isOp()) {
+                        event.getPlayer().sendMessage("§cCould not find Config Key 'NotAllowCommand' in the config.yml");
+                    }
+                    return;
+                }
                 if (message.contains("&"))
                     message = message.replace('&', '§');
                 event.getPlayer().sendMessage(message);

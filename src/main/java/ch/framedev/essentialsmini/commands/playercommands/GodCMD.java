@@ -18,10 +18,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.jetbrains.annotations.NotNull;
 
-public class GodCMD implements CommandExecutor {
-
-    private final Main plugin;
+public record GodCMD(Main plugin) implements CommandExecutor {
 
     public GodCMD(Main plugin) {
         this.plugin = plugin;
@@ -29,7 +28,7 @@ public class GodCMD implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
@@ -42,7 +41,7 @@ public class GodCMD implements CommandExecutor {
             if (player.isInvulnerable()) {
                 player.setInvulnerable(false);
                 String godSelfOff = plugin.getLanguageConfig(player).getString("God.Self.Deactivated");
-                if(godSelfOff == null) {
+                if (godSelfOff == null) {
                     player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Deactivated' not found! Please contact the Admin!");
                     return true;
                 }
@@ -52,7 +51,7 @@ public class GodCMD implements CommandExecutor {
             } else {
                 player.setInvulnerable(true);
                 String godSelfOn = plugin.getLanguageConfig(player).getString("God.Self.Activated");
-                if(godSelfOn == null) {
+                if (godSelfOn == null) {
                     player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Activated' not found! Please contact the Admin!");
                     return true;
                 }
@@ -72,7 +71,7 @@ public class GodCMD implements CommandExecutor {
                     player.setInvulnerable(false);
                     if (!Main.getSilent().contains(sender.getName())) {
                         String godSelfOff = plugin.getLanguageConfig(player).getString("God.Self.Deactivated");
-                        if(godSelfOff == null) {
+                        if (godSelfOff == null) {
                             player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Deactivated' not found! Please contact the Admin!");
                             return true;
                         }
@@ -81,7 +80,7 @@ public class GodCMD implements CommandExecutor {
                         player.sendMessage(plugin.getPrefix() + godSelfOff);
                     }
                     String godOtherOff = plugin.getLanguageConfig(sender).getString("God.Other.Deactivated");
-                    if(godOtherOff == null) {
+                    if (godOtherOff == null) {
                         sender.sendMessage(plugin.getPrefix() + "§cConfig 'God.Other.Deactivated' not found! Please contact the Admin!");
                         return true;
                     }
@@ -94,7 +93,7 @@ public class GodCMD implements CommandExecutor {
                     player.setInvulnerable(true);
                     if (!Main.getSilent().contains(sender.getName())) {
                         String godSelfOn = plugin.getLanguageConfig(player).getString("God.Self.Activated");
-                        if(godSelfOn == null) {
+                        if (godSelfOn == null) {
                             player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Activated' not found! Please contact the Admin!");
                             return true;
                         }
@@ -103,7 +102,7 @@ public class GodCMD implements CommandExecutor {
                         player.sendMessage(plugin.getPrefix() + godSelfOn);
                     }
                     String godOtherOff = plugin.getLanguageConfig(sender).getString("God.Other.Activated");
-                    if(godOtherOff == null) {
+                    if (godOtherOff == null) {
                         sender.sendMessage(plugin.getPrefix() + "§cConfig 'God.Other.Activated' not found! Please contact the Admin!");
                         return true;
                     }

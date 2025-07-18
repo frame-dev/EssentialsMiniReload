@@ -8,7 +8,7 @@ import ch.framedev.essentialsmini.managers.InventoryManager;
 import ch.framedev.essentialsmini.managers.ItemBuilder;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
@@ -27,6 +27,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,8 +57,9 @@ public class HomeCMD extends CommandListenerBase {
 
     private LocationsManager locationsManager;
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
             if (command.getName().equalsIgnoreCase("homegui")) {
                 InventoryManager inventoryManager = new InventoryManager("§aHomes");
@@ -289,8 +291,9 @@ public class HomeCMD extends CommandListenerBase {
 
     final ArrayList<String> homes = new ArrayList<>();
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("home")) {
             ArrayList<String> homes = new ArrayList<>();
             if (args.length == 1) {
@@ -337,6 +340,7 @@ public class HomeCMD extends CommandListenerBase {
         return null;
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @EventHandler
     public void onClickInventory(InventoryClickEvent event) {
         if (event.getView().getTitle().equalsIgnoreCase("§aHomes")) {

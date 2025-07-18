@@ -6,11 +6,10 @@ import ch.framedev.essentialsmini.managers.InventoryManager;
 import ch.framedev.essentialsmini.managers.ItemBuilder;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import ch.framedev.essentialsmini.utils.Variables;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.hover.content.Content;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -19,6 +18,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class WarpCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("setwarp")) {
             if (sender.hasPermission("essentialsmini.setwarp")) {
                 if (sender instanceof Player player) {
@@ -97,7 +97,7 @@ public class WarpCMD extends CommandListenerBase {
                                     if (Main.getInstance().getVaultManager().getEco().has(player, new LocationsManager().getWarpCost(name))) {
                                         Main.getInstance().getVaultManager().getEco().withdrawPlayer(player, new LocationsManager().getWarpCost(name));
                                     } else {
-                                        sender.sendMessage(plugin.getPrefix() + "§cNot enought §6" + plugin.getVaultManager().getEconomy().currencyNamePlural());
+                                        sender.sendMessage(plugin.getPrefix() + "§cNot enough §6" + plugin.getVaultManager().getEconomy().currencyNamePlural());
                                         return true;
                                     }
                             player.teleport(new LocationsManager().getWarp(name.toLowerCase()));
@@ -133,7 +133,9 @@ public class WarpCMD extends CommandListenerBase {
                                 if (cs != null) {
                                     for (String s : cs.getKeys(false)) {
                                         if (s != null) {
-                                            if (!new LocationsManager().getCfg().get("warps." + s).equals(" "))
+                                            String warpName = new LocationsManager().getCfg().getString("warps." + s);
+                                            if(warpName == null) continue;
+                                            if (!warpName.equalsIgnoreCase(" "))
                                                 warps.add(s);
                                         }
                                     }
@@ -173,7 +175,7 @@ public class WarpCMD extends CommandListenerBase {
                                     if(warpName == null) continue;
                                     if (!warpName.equalsIgnoreCase(" ")) {
                                         TextComponent textComponent = new TextComponent("§6" + s);
-                                        textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Content[] { new Text("Click me to add as Warp Command §6(/warp " + s + ")") }));
+                                        textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click me to add as Warp Command §6(/warp " + s + ")")));
                                         textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp " + s));
                                         sender.spigot().sendMessage(textComponent);
                                     }
@@ -218,7 +220,7 @@ public class WarpCMD extends CommandListenerBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("warp")) {
             if (args.length == 1) {
                 if (sender.hasPermission("essentialsmini.warp")) {

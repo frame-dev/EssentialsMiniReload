@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class GlobalMuteCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!sender.hasPermission("essentialsmini.globalmute")) {
             sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
             return true;
@@ -49,7 +50,7 @@ public class GlobalMuteCMD extends CommandListenerBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!command.getName().equalsIgnoreCase("globalmute")) {
             return null;
         }

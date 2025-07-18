@@ -12,13 +12,14 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -34,10 +35,9 @@ public class EnchantCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 2) {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
+            if (sender instanceof Player player) {
                 if (player.hasPermission(plugin.getPermissionBase() + "enchant")) {
                     if (player.getInventory().getItemInMainHand().getType() != AIR) {
                         ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
@@ -127,7 +127,7 @@ public class EnchantCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (sender.hasPermission(plugin.getPermissionBase() + "enchant") || sender.hasPermission(plugin.getPermissionBase() + "enchant.others")) {
                 ArrayList<String> empty = new ArrayList<>();
@@ -145,8 +145,8 @@ public class EnchantCMD extends CommandBase {
 
     public static class Enchantments {
 
-        private static final Map<String, Enchantment> ENCHANTMENTS = new HashMap<String, Enchantment>();
-        private static final Map<String, Enchantment> ALIASENCHANTMENTS = new HashMap<String, Enchantment>();
+        private static final Map<String, Enchantment> ENCHANTMENTS = new HashMap<>();
+        private static final Map<String, Enchantment> ALIASENCHANTMENTS = new HashMap<>();
 
         static {
 

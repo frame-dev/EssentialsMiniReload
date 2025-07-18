@@ -4,6 +4,7 @@ import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This Plugin was Created by FrameDev
@@ -21,7 +22,7 @@ public class SilentCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (sender.hasPermission(getPlugin().getPermissionBase() + "silent")) {
             if (!Main.getSilent().contains(sender.getName())) {
                 Main.getSilent().add(sender.getName());

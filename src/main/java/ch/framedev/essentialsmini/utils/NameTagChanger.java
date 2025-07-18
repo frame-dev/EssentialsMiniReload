@@ -1,5 +1,6 @@
 package ch.framedev.essentialsmini.utils;
 
+import ch.framedev.essentialsmini.main.Main;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -48,7 +49,7 @@ public class NameTagChanger {
             value = (String) propsObj.get("value");
             signature = (String) propsObj.get("signature");
         } catch (ParseException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Error parsing skin data for: " + skinName, e);
         }
         return Map.of("value", value, "signature", signature);
     }
@@ -62,7 +63,7 @@ public class NameTagChanger {
             encoding = encoding == null ? "UTF-8" : encoding;
             return IOUtils.toString(in, encoding);
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Error fetching data from URL: " + _url, e);
         }
         return null;
     }
@@ -114,7 +115,7 @@ public class NameTagChanger {
             sendToAllExcept(target, spawn);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error("Error changing name and skin for player: " + target.getName(), e);
         }
     }
 

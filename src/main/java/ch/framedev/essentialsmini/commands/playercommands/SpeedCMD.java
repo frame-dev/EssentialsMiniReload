@@ -13,10 +13,11 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class SpeedCMD extends CommandBase {
 
@@ -28,7 +29,7 @@ public class SpeedCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (sender instanceof Player) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "speed")) {

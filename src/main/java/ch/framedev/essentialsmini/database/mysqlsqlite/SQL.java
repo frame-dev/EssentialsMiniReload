@@ -9,11 +9,12 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@SuppressWarnings("unused")
 public class SQL {
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(10);
 
-    public static interface Callback<T> {
+    public interface Callback<T> {
         void accept(T value);
 
         void onError(Throwable t);

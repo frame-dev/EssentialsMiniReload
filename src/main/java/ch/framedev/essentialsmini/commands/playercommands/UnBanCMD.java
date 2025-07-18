@@ -7,6 +7,7 @@ import ch.framedev.essentialsmini.managers.BanMuteManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 public class UnBanCMD extends CommandBase {
 
@@ -16,7 +17,7 @@ public class UnBanCMD extends CommandBase {
 
 	@SuppressWarnings("deprecation")
     @Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
 		if(sender.hasPermission(getPlugin().getPermissionBase() + "unban")) {
 			if(args.length == 1) {
                 if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {

@@ -10,13 +10,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author DHZoc
  */
-public class SpawnCMD implements CommandExecutor {
-
-    private final Main plugin;
+public record SpawnCMD(Main plugin) implements CommandExecutor {
 
     public SpawnCMD(Main plugin) {
         this.plugin = plugin;
@@ -25,7 +24,7 @@ public class SpawnCMD implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("setspawn")) {
             if (sender.hasPermission("essentialsmini.setspawn")) {
                 if (sender instanceof Player) {
@@ -39,7 +38,7 @@ public class SpawnCMD implements CommandExecutor {
             }
         }
         if (command.getName().equalsIgnoreCase("spawn")) {
-            if(sender.hasPermission(plugin.getPermissionBase() + "spawn")) {
+            if (sender.hasPermission(plugin.getPermissionBase() + "spawn")) {
                 if (sender instanceof Player) {
                     try {
                         ((Player) sender).teleport(new LocationsManager("spawn").getLocation());

@@ -3,11 +3,12 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.Variables;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +34,7 @@ public class ExperienceCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 4) {
             if (!sender.hasPermission(getPlugin().getPermissionBase() + "xp")) {
                 sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
@@ -180,7 +181,7 @@ public class ExperienceCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         List<String> commands = new ArrayList<>();
         commands.add("set");
         commands.add("add");

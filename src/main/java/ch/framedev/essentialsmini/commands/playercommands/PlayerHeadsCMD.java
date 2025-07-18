@@ -21,6 +21,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerHeadsCMD extends CommandBase {
 
@@ -44,7 +45,7 @@ public class PlayerHeadsCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (sender instanceof Player) {
             if (sender.hasPermission(plugin.getPermissionBase() + "playerhead")) {
                 if (args.length == 1) {
@@ -66,7 +67,12 @@ public class PlayerHeadsCMD extends CommandBase {
                     Player player = Bukkit.getPlayer(args[1]);
                     if (player != null) {
                         player.getInventory().addItem(new SkullBuilder(args[0]).setDisplayName(args[0]).create());
-                        sender.sendMessage(plugin.getPrefix() + "§6" + Bukkit.getPlayer(args[1]).getName() + " §ahat den Player Head von §6" + args[0] + " §abekommen!");
+                        Player target = Bukkit.getPlayer(args[1]);
+                        if (target == null) {
+                            sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
+                            return true;
+                        }
+                        sender.sendMessage(plugin.getPrefix() + "§6" + target.getName() + " §ahat den Player Head von §6" + args[0] + " §abekommen!");
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
                     }

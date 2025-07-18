@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class FlyCMD extends CommandBase {
     public FlyCMD(Main plugin) {
@@ -24,7 +25,7 @@ public class FlyCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());

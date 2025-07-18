@@ -24,6 +24,7 @@ public class BanListener extends ListenerBase {
         super(plugin);
     }
 
+    @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(AsyncPlayerPreLoginEvent e) {
         if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {

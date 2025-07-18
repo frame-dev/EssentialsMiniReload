@@ -21,11 +21,9 @@ public class Variables {
     transient private final Main instance;
     private final String prefix;
     private final String onlyPlayer;
-    private final String noPermission;
     private final String permissionBase;
     private final List<String> authors;
     private final String version;
-    private final String apiVersion;
     private final boolean onlineMode;
     private final boolean jsonFormat;
     private String playerNameNotOnline;
@@ -37,19 +35,15 @@ public class Variables {
     public static final String MONEY_MESSAGE = "Money";
     public static final String WARP_MESSAGE = "Warp";
     public static final String EXPERIENCE = "Experience";
-    public static final String ADMIN_BROADCAST = "AdminCommandBroadCast";
     public static final String BANK = "Bank";
-    public static final String MESSAGES = "Bank";
 
     public Variables() {
         this.instance = Main.getInstance();
         this.prefix = instance.getPrefix();
         this.onlyPlayer = instance.getOnlyPlayer();
-        this.noPermission = instance.getNoPerms();
         this.permissionBase = instance.getPermissionBase();
         this.authors = instance.getDescription().getAuthors();
         this.version = instance.getDescription().getVersion();
-        this.apiVersion = instance.getDescription().getAPIVersion();
         this.onlineMode = instance.getConfig().getBoolean("OnlineMode");
         this.jsonFormat = instance.getConfig().getBoolean("JsonFormat");
         this.playerNameNotOnline = instance.getLanguageConfig(null).getString("PlayerNameNotOnline");
@@ -86,10 +80,6 @@ public class Variables {
         return onlineMode;
     }
 
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
     public List<String> getAuthors() {
         return authors;
     }
@@ -104,10 +94,6 @@ public class Variables {
 
     public String getOnlyPlayer() {
         return onlyPlayer;
-    }
-
-    public String getNoPermission() {
-        return noPermission;
     }
 
     public List<OfflinePlayer> getMutedPlayers() {

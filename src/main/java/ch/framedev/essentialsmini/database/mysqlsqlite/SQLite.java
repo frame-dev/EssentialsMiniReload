@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 /**
  * This Plugin was Created by FrameDev
- * Package : de.framedev.frameeconomy.mysql
+ * Package : de.framedev.essentialsmini.mysql
  * Date: 08.03.21
  * Project: FrameEconomy
  * Copyrighted by FrameDev
@@ -29,7 +29,7 @@ public class SQLite {
     }
 
     public static Connection connect() {
-        Connection conn = null;
+        Connection conn;
         try {
             // db parameters
             Class.forName("org.sqlite.JDBC");

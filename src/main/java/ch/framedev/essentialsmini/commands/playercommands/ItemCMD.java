@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,16 +38,20 @@ public class ItemCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (sender.hasPermission(new Permission("essentialsmini.item", PermissionDefault.OP))) {
             if (args.length == 1) {
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission(new Permission("essentialsmini.item", PermissionDefault.OP))) {
                         String name = args[0];
-                        if (Material.getMaterial(name.toUpperCase()) != null) {
-                            player.getInventory().addItem(new ItemStack(Material.getMaterial(name.toUpperCase())));
+                        Material material = Material.getMaterial(name.toUpperCase());
+                        if (material != null) {
+                            player.getInventory().addItem(new ItemStack(material));
                             String message = plugin.getLanguageConfig(player).getString("Item.Get");
+                            if (message == null) {
+                                player.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Get' not found! Please contact the Admin!");
+                                return true;
+                            }
                             message = ReplaceCharConfig.replaceParagraph(message);
                             message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", name);
                             message = ReplaceCharConfig.replaceObjectWithData(message, "%Amount%", "" + 1);
@@ -59,7 +64,7 @@ public class ItemCMD extends CommandBase {
                             }
                             message = message.replace("&", "§");
                             message = message.replace("%Item%", name);
-                            player.sendMessage(plugin.getPrefix() + "§cDieses Item existiert nicht! §6" + name);
+                            player.sendMessage(plugin.getPrefix() + message);
                         }
                     } else {
                         player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
@@ -70,15 +75,19 @@ public class ItemCMD extends CommandBase {
             } else if (args.length == 2) {
                 try {
                     if (args[1].equalsIgnoreCase(String.valueOf(Integer.parseInt(args[1])))) {
-                        if (sender instanceof Player) {
-                            Player player = (Player) sender;
+                        if (sender instanceof Player player) {
                             if (player.hasPermission(new Permission("essentialsmini.item", PermissionDefault.OP))) {
                                 String name = args[0];
-                                if (Material.getMaterial(name.toUpperCase()) != null) {
+                                Material material = Material.getMaterial(name.toUpperCase());
+                                if (material != null) {
                                     int amount = Integer.parseInt(args[1]);
-                                    player.getInventory().addItem(new ItemStack(Material.getMaterial(name.toUpperCase()), amount));
+                                    player.getInventory().addItem(new ItemStack(material, amount));
                                     if (!Main.getSilent().contains(sender.getName())) {
                                         String message = plugin.getLanguageConfig(player).getString("Item.Get");
+                                        if (message == null) {
+                                            player.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Get' not found! Please contact the Admin!");
+                                            return true;
+                                        }
                                         message = ReplaceCharConfig.replaceParagraph(message);
                                         message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", name);
                                         message = ReplaceCharConfig.replaceObjectWithData(message, "%Amount%", "" + amount);
@@ -97,11 +106,16 @@ public class ItemCMD extends CommandBase {
                 } catch (NumberFormatException ignored) {
                     if (sender.hasPermission(new Permission("essentialsmini.item", PermissionDefault.OP))) {
                         String name = args[0];
-                        if (Material.getMaterial(name.toUpperCase()) != null) {
+                        Material material = Material.getMaterial(name.toUpperCase());
+                        if (material != null) {
                             Player player1 = Bukkit.getPlayer(args[1]);
                             if (player1 != null) {
-                                player1.getInventory().addItem(new ItemStack(Material.getMaterial(name.toUpperCase())));
+                                player1.getInventory().addItem(new ItemStack(material));
                                 String message = plugin.getLanguageConfig(sender).getString("Item.Other");
+                                if (message == null) {
+                                    sender.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Other' not found! Please contact the Admin!");
+                                    return true;
+                                }
                                 message = ReplaceCharConfig.replaceParagraph(message);
                                 message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", name);
                                 message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", player1.getName());
@@ -120,12 +134,17 @@ public class ItemCMD extends CommandBase {
             } else if (args.length == 3) {
                 if (sender.hasPermission(new Permission("essentialsmini.item", PermissionDefault.OP))) {
                     String name = args[0];
-                    if (Material.getMaterial(name.toUpperCase()) != null) {
+                    Material material = Material.getMaterial(name.toUpperCase());
+                    if (material != null) {
                         int amount = Integer.parseInt(args[1]);
                         Player player1 = Bukkit.getPlayer(args[2]);
                         if (player1 != null) {
-                            player1.getInventory().addItem(new ItemStack(Material.getMaterial(name.toUpperCase()), amount));
+                            player1.getInventory().addItem(new ItemStack(material, amount));
                             String message = plugin.getLanguageConfig(sender).getString("Item.Other");
+                            if (message == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Other' not found! Please contact the Admin!");
+                                return true;
+                            }
                             message = ReplaceCharConfig.replaceParagraph(message);
                             message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", name);
                             message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", player1.getName());
@@ -151,7 +170,7 @@ public class ItemCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (sender.hasPermission("essentialsmini.item")) {
                 ArrayList<String> empty = new ArrayList<>();

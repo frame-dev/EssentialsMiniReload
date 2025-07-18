@@ -25,7 +25,7 @@ import java.util.List;
  * Project: EssentialsMini
  * Copyrighted by FrameDev
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "DataFlowIssue"})
 public class VaultAPI extends AbstractEconomy {
     
     private static BackendManager BACKEND_MANAGER;
@@ -130,6 +130,7 @@ public class VaultAPI extends AbstractEconomy {
         return hasAccount(s);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public double getBalance(String playerName) {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {

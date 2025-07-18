@@ -307,10 +307,10 @@ public class MySQLManager {
                     List<String> players = new Gson().fromJson((String) SQL.get(tableName, "BankMembers", "BankName", bankName), type);
                     if (players != null && !players.contains(player.getName())) players.add(player.getName());
                     if (isOnlineMode()) {
-                        SQL.updateData(tableName, "BankOwner", (String) SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
+                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
                         SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getUniqueId() + "'");
                     } else {
-                        SQL.updateData(tableName, "BankOwner", (String) SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
+                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
                         SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getName() + "'");
                     }
                     SQL.updateData(tableName, "BankMembers", new Gson().toJson(players), "BankName = '" + bankName + "'");
@@ -318,10 +318,10 @@ public class MySQLManager {
                     List<String> players = new ArrayList<>();
                     players.add(player.getName());
                     if (isOnlineMode()) {
-                        SQL.updateData(tableName, "BankOwner", (String) SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
+                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
                         SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getUniqueId() + "'");
                     } else {
-                        SQL.updateData(tableName, "BankOwner", (String) SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
+                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
                         SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getName() + "'");
                     }
                     SQL.updateData(tableName, "BankMembers", new Gson().toJson(players), "BankName = '" + bankName + "'");

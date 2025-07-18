@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /*
  * ===================================================
@@ -27,7 +28,7 @@ public class InvseeCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("invsee")) {
             if (args.length == 1) {
                 if (sender.hasPermission("essentialsmini.invsee")) {
@@ -59,8 +60,7 @@ public class InvseeCMD extends CommandBase {
         if (command.getName().equalsIgnoreCase("enderchest")) {
             if (args.length == 0) {
                 if (sender.hasPermission("essentialsmini.enderchest")) {
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
+                    if (sender instanceof Player player) {
                         player.openInventory(player.getEnderChest());
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
@@ -69,9 +69,8 @@ public class InvseeCMD extends CommandBase {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
             } else if (args.length == 1) {
-                if (sender instanceof Player) {
+                if (sender instanceof Player player) {
                     if (sender.hasPermission("essentialsmini.enderchest.others")) {
-                        Player player = (Player) sender;
                         Player target = Bukkit.getPlayer(args[0]);
                         if (target != null) {
                             if (!target.hasPermission(plugin.getPermissionBase() + "enderchest.owner")) {
@@ -91,14 +90,6 @@ public class InvseeCMD extends CommandBase {
                 sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/ec <PlayerName>"));
             }
         }
-        /*if (command.getName().equalsIgnoreCase("resethealth")) {
-            if (sender.hasPermission("essentialsmini.resethealth")) {
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
-                    player.resetMaxHealth();
-                }
-            }
-        }*/
         return false;
     }
 }

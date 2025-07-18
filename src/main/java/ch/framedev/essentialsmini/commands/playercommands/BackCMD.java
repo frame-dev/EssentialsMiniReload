@@ -2,13 +2,14 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 
@@ -33,7 +34,7 @@ public class BackCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("back")) {
             if (plugin.getConfig().getBoolean("Back")) {
                 if (!(sender instanceof Player player)) {

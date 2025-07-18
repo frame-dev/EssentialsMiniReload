@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -31,15 +32,13 @@ public class VanishCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("vanish")) {
             if (sender.hasPermission("essentialsmini.vanish")) {
                 if (args.length == 0) {
                     if (sender instanceof Player player) {
                         if (hided.contains(player.getName())) {
-                            Bukkit.getOnlinePlayers().forEach(o -> {
-                                o.showPlayer(this.plugin, player);
-                            });
+                            Bukkit.getOnlinePlayers().forEach(o -> o.showPlayer(this.plugin, player));
                             hided.remove(player.getName());
                             String message = plugin.getLanguageConfig(player).getString("VanishOff.Single");
                             if(message == null) {
@@ -97,9 +96,7 @@ public class VanishCMD extends CommandListenerBase {
                     Player target = Bukkit.getPlayer(args[0]);
                     if (target != null) {
                         if (hided.contains(target.getName())) {
-                            Bukkit.getOnlinePlayers().forEach(o -> {
-                                o.showPlayer(this.plugin, target);
-                            });
+                            Bukkit.getOnlinePlayers().forEach(o -> o.showPlayer(this.plugin, target));
                             hided.remove(target.getName());
                             String message = plugin.getLanguageConfig(sender).getString("VanishOff.Single");
                             if(message == null) {

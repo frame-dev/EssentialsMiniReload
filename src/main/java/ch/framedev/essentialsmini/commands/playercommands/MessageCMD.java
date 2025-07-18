@@ -25,7 +25,7 @@ public class MessageCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         return switch (command.getName().toLowerCase()) {
             case "msgtoggle" -> {
                 handleMsgToggle(sender);

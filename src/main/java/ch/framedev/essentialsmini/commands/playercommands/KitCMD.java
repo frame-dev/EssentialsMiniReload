@@ -6,12 +6,13 @@ import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.utils.Cooldown;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.Variables;
-import ch.framedev.simplejavautils.TextUtils;
 import org.bukkit.command.Command;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,9 +31,8 @@ public class KitCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) {
-            Player p = (Player) sender;
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (sender instanceof Player p) {
             if (command.getName().equalsIgnoreCase("kits")) {
                 if (args.length != 0) {
                     String name = args[0];
@@ -77,7 +77,7 @@ public class KitCMD extends CommandBase {
                                             if (!plugin.getVaultManager().getEconomy().has(p, kit.getCost(name))) {
                                                 String notEnough = plugin.getLanguageConfig(sender).getString(Variables.MONEY_MESSAGE + ".MSG.NotEnough");
                                                 notEnough = new TextUtils().replaceAndWithParagraph(notEnough);
-                                                notEnough = ReplaceCharConfig.replaceObjectWithData(notEnough, "%Money%", plugin.getVaultManager().getEco().getBalance((Player) sender) + plugin.getCurrencySymbol());
+                                                notEnough = ReplaceCharConfig.replaceObjectWithData(notEnough, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
                                                 p.sendMessage(plugin.getPrefix() + notEnough);
                                                 return true;
                                             }
@@ -100,7 +100,7 @@ public class KitCMD extends CommandBase {
                                             if (!plugin.getVaultManager().getEconomy().has(p, kit.getCost(name))) {
                                                 String notEnough = plugin.getLanguageConfig(sender).getString(Variables.MONEY_MESSAGE + ".MSG.NotEnough");
                                                 notEnough = new TextUtils().replaceAndWithParagraph(notEnough);
-                                                notEnough = ReplaceCharConfig.replaceObjectWithData(notEnough, "%Money%", plugin.getVaultManager().getEco().getBalance((Player) sender) + plugin.getCurrencySymbol());
+                                                notEnough = ReplaceCharConfig.replaceObjectWithData(notEnough, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
                                                 p.sendMessage(plugin.getPrefix() + notEnough);
                                                 return true;
                                             }
@@ -167,7 +167,7 @@ public class KitCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("kits") && args.length == 1) {
             ArrayList<String> list = new ArrayList<>();
             ConfigurationSection cs = KitManager.getCustomConfig().getConfigurationSection("Items");

@@ -6,11 +6,9 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
 
-import java.util.Arrays;
+import java.util.List;
 
 public class MongoManager {
 
@@ -21,7 +19,6 @@ public class MongoManager {
     private final int port = Main.getInstance().getConfig().getInt("MongoDB.Port");
     private MongoClient client;
     private MongoDatabase database;
-    private MongoCollection<Document> players;
 
     public MongoManager() {
 
@@ -31,20 +28,25 @@ public class MongoManager {
         this.client = MongoClients.create(
                 MongoClientSettings.builder()
                         .applyToClusterSettings(builder ->
-                                builder.hosts(Arrays.asList(new ServerAddress(hostname, port))))
+                                builder.hosts(List.of(new ServerAddress(hostname, port))))
                         .build());
-        this.database = this.client.getDatabase(databasestring);
+        this.database = this.client.getDatabase(databasestring != null ? databasestring : "database");
     }
 
     public void connect() {
-        MongoCredential credential = MongoCredential.createCredential(username, databasestring, password.toCharArray());
+        MongoCredential credential;
+        if (password != null) {
+            credential = MongoCredential.createCredential(username != null ? username : "username", databasestring != null ? databasestring : "database", password.toCharArray());
+        } else {
+            credential = MongoCredential.createCredential("username", databasestring != null ? databasestring : "database", new char[0]);
+        }
         this.client = MongoClients.create(
                 MongoClientSettings.builder()
                         .credential(credential)
                         .applyToClusterSettings(builder ->
-                                builder.hosts(Arrays.asList(new ServerAddress(hostname, port))))
+                                builder.hosts(List.of(new ServerAddress(hostname, port))))
                         .build());
-        this.database = this.client.getDatabase(databasestring);
+        this.database = this.client.getDatabase(databasestring != null ? databasestring : "database");
     }
 
 

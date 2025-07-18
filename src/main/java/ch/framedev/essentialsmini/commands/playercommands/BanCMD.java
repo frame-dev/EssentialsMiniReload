@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -20,7 +21,7 @@ public class BanCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (sender.hasPermission(getPlugin().getPermissionBase() + "ban")) {
             if (args.length == 3) {
                 if (args[0].equalsIgnoreCase("type")) {
@@ -61,7 +62,7 @@ public class BanCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             ArrayList<String> types = new ArrayList<>();
             types.add("type");
@@ -102,13 +103,13 @@ public class BanCMD extends CommandBase {
                 return empty;
             }
             if (args[0].equalsIgnoreCase("own")) {
-                return new ArrayList<String>(Collections.singleton("your_Message"));
+                return new ArrayList<>(Collections.singleton("your_Message"));
             }
         }
         return super.onTabComplete(sender, command, label, args);
     }
 
-    public static enum BanType {
+    public enum BanType {
 
         HACKING("hacking"),
         TRY_BYPASSING_BAN("try bypassing a Ban");

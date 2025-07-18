@@ -8,6 +8,7 @@ import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +32,7 @@ public class GameModeCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("gamemode")) {
             if (args.length == 1) {
                 if (sender.hasPermission("essentialsmini.gamemode")) {
@@ -356,6 +357,7 @@ public class GameModeCMD extends CommandBase {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static GameMode getGameModeByQualifier(String qualifier) {
         return switch (qualifier) {
             case "0", "s", "su" -> GameMode.SURVIVAL;
@@ -366,6 +368,7 @@ public class GameModeCMD extends CommandBase {
         };
     }
 
+    @SuppressWarnings("unused")
     public static GameMode getGameModeById(int id) {
         return switch (id) {
             case 0 -> GameMode.SURVIVAL;
@@ -377,7 +380,7 @@ public class GameModeCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             ArrayList<String> gameModes = new ArrayList<>();
             ArrayList<String> empty = new ArrayList<>();

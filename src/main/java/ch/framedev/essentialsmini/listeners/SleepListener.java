@@ -10,7 +10,7 @@ package ch.framedev.essentialsmini.listeners;
  */
 
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;

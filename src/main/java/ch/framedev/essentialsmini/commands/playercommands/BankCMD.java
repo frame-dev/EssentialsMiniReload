@@ -4,13 +4,14 @@ import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import ch.framedev.essentialsmini.utils.Variables;
-import ch.framedev.simplejavautils.TextUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class BankCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("list")) {
                 if (sender.hasPermission("essentialsmini.bank.list")) {
@@ -48,7 +49,7 @@ public class BankCMD extends CommandBase {
                                 }
                             }
                             sender.sendMessage(plugin.getPrefix() + "§6<<<===>>>");
-                            sender.sendMessage(plugin.getPrefix() + "§a" + stringBuilder.toString());
+                            sender.sendMessage(plugin.getPrefix() + "§a" + stringBuilder);
                             sender.sendMessage(plugin.getPrefix() + "§6<<<===>>>");
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
@@ -82,8 +83,7 @@ public class BankCMD extends CommandBase {
                         }
             }
             if (args[0].equalsIgnoreCase("create")) {
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.create")) {
                                 EconomyResponse economyResponse = plugin.getVaultManager().getEconomy().createBank(args[1], player);
                                 if (economyResponse.transactionSuccess()) {
@@ -105,8 +105,7 @@ public class BankCMD extends CommandBase {
             }
             if (args[0].equalsIgnoreCase("balance")) {
                 String bankName = args[1];
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.balance")) {
                                 if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                                     if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess() || plugin.getVaultManager().getEconomy().isBankMember(bankName, player).transactionSuccess()) {
@@ -132,8 +131,7 @@ public class BankCMD extends CommandBase {
             }
             if (args[0].equalsIgnoreCase("remove")) {
                 String bankName = args[1];
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.remove")) {
                         if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                             if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess()) {
@@ -166,8 +164,7 @@ public class BankCMD extends CommandBase {
             }
             if (args[0].equalsIgnoreCase("listmembers")) {
                 String bankName = args[1];
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.listmembers")) {
                         if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                             if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess() || plugin.getVaultManager().getEco().isBankMember(bankName, player).transactionSuccess()) {
@@ -180,7 +177,7 @@ public class BankCMD extends CommandBase {
                                     }
                                 }
                                 player.sendMessage(plugin.getPrefix() + "§6<<<===>>>");
-                                player.sendMessage(plugin.getPrefix() + "§a" + stringBuilder.toString());
+                                player.sendMessage(plugin.getPrefix() + "§a" + stringBuilder);
                                 player.sendMessage(plugin.getPrefix() + "§6<<<===>>>");
                             }
                         }
@@ -194,8 +191,7 @@ public class BankCMD extends CommandBase {
             if (args[0].equalsIgnoreCase("deposit")) {
                 String bankName = args[1];
                 double amount = Double.parseDouble(args[2]);
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.deposit")) {
                                 if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                                     if (plugin.getVaultManager().getEconomy().has(player, amount)) {
@@ -228,8 +224,7 @@ public class BankCMD extends CommandBase {
             } else if (args[0].equalsIgnoreCase("withdraw")) {
                 String bankName = args[1];
                 double amount = Double.parseDouble(args[2]);
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.withdraw")) {
                                 if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                                     if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess() || plugin.getVaultManager().getEconomy().isBankMember(bankName, player).transactionSuccess()) {
@@ -261,8 +256,7 @@ public class BankCMD extends CommandBase {
             } else if (args[0].equalsIgnoreCase("addmember")) {
                 String bankName = args[1];
                 OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(args[2]);
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.addmember")) {
                         if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                             if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess()) {
@@ -288,8 +282,7 @@ public class BankCMD extends CommandBase {
             } else if (args[0].equalsIgnoreCase("removemember")) {
                 String bankName = args[1];
                 OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(args[2]);
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.removemember")) {
                         if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                             if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess()) {
@@ -318,8 +311,7 @@ public class BankCMD extends CommandBase {
                 String bankName = args[1];
                 String otherBankName = args[2];
                 double amount = Double.parseDouble(args[3]);
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
+                if (sender instanceof Player player) {
                     if (player.hasPermission("essentialsmini.bank.transfer")) {
                         if (plugin.getVaultManager().getEconomy().getBanks().contains(bankName)) {
                             if (plugin.getVaultManager().getEconomy().isBankOwner(bankName, player).transactionSuccess()) {
@@ -340,9 +332,9 @@ public class BankCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
-            List<String> commands = new ArrayList<String>(Arrays.asList("remove", "create", "balance", "withdraw", "deposit", "addmember", "removemember", "listmembers", "list", "info", "transfer"));
+            List<String> commands = new ArrayList<>(Arrays.asList("remove", "create", "balance", "withdraw", "deposit", "addmember", "removemember", "listmembers", "list", "info", "transfer"));
             List<String> empty = new ArrayList<>();
             for (String s : commands) {
                 if (s.toLowerCase().startsWith(args[0].toLowerCase())) {

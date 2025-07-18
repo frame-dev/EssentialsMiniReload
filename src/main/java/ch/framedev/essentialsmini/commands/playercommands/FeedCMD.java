@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,26 +31,23 @@ public class FeedCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player) {
+            if (sender instanceof Player player) {
                 if (sender.hasPermission("essentialsmini.feed")) {
-                    Player player = (Player) sender;
                     player.setFoodLevel(20);
                     String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
                     if (feedSet == null) return true;
                     if (feedSet.contains("&"))
                         feedSet = feedSet.replace('&', '§');
                     player.sendMessage(plugin.getPrefix() + feedSet);
-                    return true;
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
                 }
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                return true;
             }
+            return true;
         } else if (args.length == 1) {
             if (sender.hasPermission("essentialsmini.feed.others")) {
                 if (args[0].equalsIgnoreCase("**")) {
@@ -74,7 +72,6 @@ public class FeedCMD extends CommandBase {
                             sender.sendMessage(plugin.getPrefix() + feedOther);
                         }
                     });
-                    return true;
                 } else {
                     Player player = Bukkit.getPlayer(args[0]);
                     if (player != null) {
@@ -100,12 +97,11 @@ public class FeedCMD extends CommandBase {
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
                     }
-                    return true;
                 }
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                return true;
             }
+            return true;
         } else {
             sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/feed §cor §6/feed <PlayerName>"));
             return true;
@@ -113,7 +109,7 @@ public class FeedCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (sender.hasPermission(plugin.getPermissionBase() + "feed.others")) {
                 ArrayList<String> players = new ArrayList<>();

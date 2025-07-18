@@ -16,7 +16,6 @@ public class MySQL {
     public static String password;
     public static String database;
     public static String port;
-    public static Connection con;
     private static HikariDataSource hikariDataSource;
 
     public MySQL() {

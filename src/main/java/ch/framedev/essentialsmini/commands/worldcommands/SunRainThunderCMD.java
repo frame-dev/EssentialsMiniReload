@@ -19,9 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-public class SunRainThunderCMD implements CommandExecutor {
-
-    private final Main plugin;
+public record SunRainThunderCMD(Main plugin) implements CommandExecutor {
 
     public SunRainThunderCMD(Main plugin) {
         this.plugin = plugin;
@@ -32,8 +30,7 @@ public class SunRainThunderCMD implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
+        if (sender instanceof Player player) {
             if (command.getName().equalsIgnoreCase("sun")) {
                 String message = plugin.getLanguageConfig(player).getString("WeatherSun");
                 if (message == null) {
@@ -152,7 +149,7 @@ public class SunRainThunderCMD implements CommandExecutor {
                         @Override
                         public void run() {
                             Bukkit.getWorlds().forEach(world -> {
-                                if(world.getEnvironment() == World.Environment.NORMAL) {
+                                if (world.getEnvironment() == World.Environment.NORMAL) {
                                     world.setStorm(true);
                                     world.setThundering(true);
                                 }

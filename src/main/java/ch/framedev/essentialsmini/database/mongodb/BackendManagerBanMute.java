@@ -20,6 +20,7 @@ import com.mongodb.client.model.UpdateOptions;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class BackendManagerBanMute {
 
     private static volatile BackendManagerBanMute instance;

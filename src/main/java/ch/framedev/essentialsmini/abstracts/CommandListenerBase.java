@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * / Copyrighted by FrameDev
  */
 
+@SuppressWarnings("unused")
 public abstract class CommandListenerBase extends CommandBase implements Listener {
 
     public CommandListenerBase(Main plugin) {

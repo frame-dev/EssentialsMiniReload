@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +31,10 @@ public class HealCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player) {
+            if (sender instanceof Player player) {
                 if (sender.hasPermission("essentialsmini.heal")) {
-                    Player player = (Player) sender;
                     player.setHealth(20);
                     player.setFireTicks(0);
                     player.setFoodLevel(20);
@@ -127,7 +127,7 @@ public class HealCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             if (sender.hasPermission(plugin.getPermissionBase() + "heal.others")) {
                 ArrayList<String> players = new ArrayList<>();

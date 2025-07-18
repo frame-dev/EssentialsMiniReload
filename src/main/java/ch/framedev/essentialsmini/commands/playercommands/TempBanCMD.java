@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,7 +32,7 @@ public class TempBanCMD extends CommandBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("tempban")) {
             if (sender.hasPermission(getPlugin().getPermissionBase() + "tempban")) {
                 if (args.length == 5) {
@@ -80,6 +81,10 @@ public class TempBanCMD extends CommandBase {
         }
         if (cmd.getName().equalsIgnoreCase("removetempban")) {
             OfflinePlayer target = PlayerUtils.getOfflinePlayerByName(args[0]);
+            if(target.getName() == null) {
+                sender.sendMessage("§cPlayername not found!");
+                return true;
+            }
             if (sender.hasPermission(getPlugin().getPermissionBase() + "tempban")) {
                 if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
                     new BanMuteManager().removeTempBan(target);
@@ -94,7 +99,7 @@ public class TempBanCMD extends CommandBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("tempban")) {
             if (args.length == 1) {
                 List<String> reasons = new ArrayList<>();
@@ -136,7 +141,7 @@ public class TempBanCMD extends CommandBase {
                     return empty;
                 }
                 if (args[0].equalsIgnoreCase("own")) {
-                    return new ArrayList<String>(Collections.singleton("your_Message"));
+                    return new ArrayList<>(Collections.singleton("your_Message"));
                 }
             }
             if (args.length == 4) {
@@ -157,25 +162,31 @@ public class TempBanCMD extends CommandBase {
         }
         if (command.getName().equalsIgnoreCase("removetempban")) {
             if (args.length == 1) {
-                List<String> playerNames = new ArrayList<>();
-                List<String> empty = new ArrayList<>();
-                if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                    playerNames = new BanMuteManager().getAllTempBannedPlayers();
-                } else {
-                    List<OfflinePlayer> players = (List<OfflinePlayer>) getPlugin().getServer().getBannedPlayers();
-                    for (OfflinePlayer player : players) {
-                        playerNames.add(player.getName());
-                    }
-                }
-                for (String s : playerNames) {
-                    if (s.toLowerCase().startsWith(args[0].toLowerCase()))
-                        empty.add(s);
-                }
+                List<String> empty = getStrings(args);
                 Collections.sort(empty);
                 return empty;
             }
         }
         return super.onTabComplete(sender, command, label, args);
+    }
+
+    @SuppressWarnings("unchecked")
+    private @NotNull List<String> getStrings(String[] args) {
+        List<String> playerNames = new ArrayList<>();
+        List<String> empty = new ArrayList<>();
+        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
+            playerNames = new BanMuteManager().getAllTempBannedPlayers();
+        } else {
+            List<OfflinePlayer> players = (List<OfflinePlayer>) getPlugin().getServer().getBannedPlayers();
+            for (OfflinePlayer player : players) {
+                playerNames.add(player.getName());
+            }
+        }
+        for (String s : playerNames) {
+            if (s.toLowerCase().startsWith(args[0].toLowerCase()))
+                empty.add(s);
+        }
+        return empty;
     }
 
     public enum Ban {

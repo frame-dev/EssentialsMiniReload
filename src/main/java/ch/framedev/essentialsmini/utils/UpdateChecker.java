@@ -59,6 +59,7 @@ public class UpdateChecker {
         }
     }
 
+    @SuppressWarnings("unused")
     public boolean hasUpdate() {
         try {
             URLConnection conn = new URL("https://framedev.ch/others/versions/essentialsmini-versions.json").openConnection();

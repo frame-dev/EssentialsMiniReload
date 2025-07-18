@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -32,7 +33,7 @@ public class MuteForPlayerCMD extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if(!(sender instanceof Player player)) {
             sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
             return true;
@@ -59,7 +60,7 @@ public class MuteForPlayerCMD extends CommandListenerBase {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         // Ensure the command matches and the sender is a player
         if (!command.getName().equalsIgnoreCase("muteforplayer") || !(sender instanceof Player)) {
             return Collections.emptyList();

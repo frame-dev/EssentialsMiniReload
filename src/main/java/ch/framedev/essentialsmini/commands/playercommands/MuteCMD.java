@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class MuteCMD extends CommandBase implements Listener {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("mute")) {
             if (args.length == 1) {
                 if (!sender.hasPermission(plugin.getPermissionBase() + "mute")) {
@@ -70,10 +71,18 @@ public class MuteCMD extends CommandBase implements Listener {
                     muted.remove(player);
                     if (player.isOnline()) {
                         String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
+                        if(selfUnMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
+                            return true;
+                        }
                         selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
                         ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
                     }
                     String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
+                    if(otherUnMute == null) {
+                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
+                        return true;
+                    }
                     otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
                     otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
                     sender.sendMessage(plugin.getPrefix() + otherUnMute);
@@ -81,10 +90,18 @@ public class MuteCMD extends CommandBase implements Listener {
                     muted.add(player);
                     if (player.isOnline()) {
                         String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
+                        if(selfMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
+                            return true;
+                        }
                         selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
                         ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
                     }
                     String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
+                    if(otherMute == null) {
+                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
+                        return true;
+                    }
                     otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
                     otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
                     sender.sendMessage(plugin.getPrefix() + otherMute);
@@ -111,10 +128,18 @@ public class MuteCMD extends CommandBase implements Listener {
                         new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
+                            if(selfMute == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
+                                return true;
+                            }
                             selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
                             ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
                         }
                         String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
+                        if(otherMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
+                            return true;
+                        }
                         otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
                         otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
                         sender.sendMessage(plugin.getPrefix() + otherMute);
@@ -128,10 +153,18 @@ public class MuteCMD extends CommandBase implements Listener {
                         }
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
+                            if(selfMute == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
+                                return true;
+                            }
                             selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
                             ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
                         }
                         String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
+                        if(otherMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
+                            return true;
+                        }
                         otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
                         otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
                         sender.sendMessage(plugin.getPrefix() + otherMute);
@@ -151,10 +184,18 @@ public class MuteCMD extends CommandBase implements Listener {
                         new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
+                            if(selfMute == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
+                                return true;
+                            }
                             selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
                             ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
                         }
                         String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
+                        if(otherMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
+                            return true;
+                        }
                         otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
                         otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
                         sender.sendMessage(plugin.getPrefix() + otherMute);
@@ -168,10 +209,18 @@ public class MuteCMD extends CommandBase implements Listener {
                         }
                         if (player.isOnline()) {
                             String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
+                            if(selfMute == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
+                                return true;
+                            }
                             selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
                             ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
                         }
                         String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
+                        if(otherMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
+                            return true;
+                        }
                         otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
                         otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
                         sender.sendMessage(plugin.getPrefix() + otherMute);
@@ -197,10 +246,18 @@ public class MuteCMD extends CommandBase implements Listener {
                     new BanMuteManager().removeTempMute(player);
                     if (player.isOnline()) {
                         String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
+                        if(selfUnMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
+                            return true;
+                        }
                         selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
                         ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
                     }
                     String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
+                    if(otherUnMute == null) {
+                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
+                        return true;
+                    }
                     otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
                     otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
                     sender.sendMessage(plugin.getPrefix() + otherUnMute);
@@ -214,10 +271,18 @@ public class MuteCMD extends CommandBase implements Listener {
                         }
                         if (player.isOnline()) {
                             String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
+                            if(selfUnMute == null) {
+                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
+                                return true;
+                            }
                             selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
                             ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
                         }
                         String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
+                        if(otherUnMute == null) {
+                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
+                            return true;
+                        }
                         otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
                         otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
                         sender.sendMessage(plugin.getPrefix() + otherUnMute);
@@ -257,18 +322,16 @@ public class MuteCMD extends CommandBase implements Listener {
                     if (new BanMuteManager().isTempMute(player))
                         players.add(player);
                 }
-                players.forEach(player -> {
-                    new BanMuteManager().getTempMute(player).thenAccept(stringStringMap -> {
-                        if(stringStringMap != null) {
-                            sender.sendMessage("§6" + player.getName() + " §ais Muted while : §6" + stringStringMap.get(stringStringMap.keySet().iterator().next()));
-                            try {
-                                sender.sendMessage("§aExpired at §6: " + new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(stringStringMap.values().iterator().next()));
-                            } catch (ParseException e) {
-                                plugin.getLogger4J().error(e);
-                            }
+                players.forEach(player -> new BanMuteManager().getTempMute(player).thenAccept(stringStringMap -> {
+                    if(stringStringMap != null) {
+                        sender.sendMessage("§6" + player.getName() + " §ais Muted while : §6" + stringStringMap.get(stringStringMap.keySet().iterator().next()));
+                        try {
+                            sender.sendMessage("§aExpired at §6: " + new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(stringStringMap.values().iterator().next()));
+                        } catch (ParseException e) {
+                            plugin.getLogger4J().error(e);
                         }
-                    });
-                });
+                    }
+                }));
             }
         }
         return super.onCommand(sender, command, label, args);
@@ -342,7 +405,7 @@ public class MuteCMD extends CommandBase implements Listener {
                 }
             } else {
                 Date date = (Date) cfg.get(event.getPlayer().getName() + ".expire");
-                event.getPlayer().sendMessage(plugin.getPrefix() + "§cYou are Muted! While §6" + cfg.getString(event.getPlayer().getName() + ".reason") + " | §aExpired at : §6" + date.toString());
+                event.getPlayer().sendMessage(plugin.getPrefix() + "§cYou are Muted! While §6" + cfg.getString(event.getPlayer().getName() + ".reason") + " | §aExpired at : §6" + Objects.requireNonNull(date));
             }
             event.setCancelled(true);
         } else {
@@ -367,7 +430,7 @@ public class MuteCMD extends CommandBase implements Listener {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
             ArrayList<String> reason = new ArrayList<>();
             reason.add("own");
@@ -407,11 +470,11 @@ public class MuteCMD extends CommandBase implements Listener {
                 return empty;
             }
             if (args[0].equalsIgnoreCase("own")) {
-                return new ArrayList<String>(Collections.singleton("your_Message"));
+                return new ArrayList<>(Collections.singleton("your_Message"));
             }
         }
         if (args.length == 4) {
-            return new ArrayList<String>(Collections.singletonList("Time"));
+            return new ArrayList<>(Collections.singletonList("Time"));
         }
         if (args.length == 5) {
             ArrayList<String> dateFormat = new ArrayList<>();
@@ -428,7 +491,7 @@ public class MuteCMD extends CommandBase implements Listener {
         return super.onTabComplete(sender, command, label, args);
     }
 
-    public static enum MuteReason {
+    public enum MuteReason {
         ADVERTISING("advertising"),
         CAPS("caps"),
         MILD_TOXICITY("mild toxicity"),
@@ -446,6 +509,7 @@ public class MuteCMD extends CommandBase implements Listener {
             this.reason = reason;
         }
 
+        @SuppressWarnings("unused")
         public static MuteReason getMuteReason(String reason) {
             return valueOf(reason.toUpperCase());
         }
