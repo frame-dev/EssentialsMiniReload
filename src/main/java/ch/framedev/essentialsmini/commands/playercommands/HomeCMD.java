@@ -17,7 +17,6 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -32,7 +31,6 @@ import org.bukkit.permissions.PermissionDefault;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author DHZoc
@@ -289,7 +287,7 @@ public class HomeCMD extends CommandListenerBase {
         return false;
     }
 
-    ArrayList<String> homes = new ArrayList<>();
+    final ArrayList<String> homes = new ArrayList<>();
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {

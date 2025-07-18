@@ -296,11 +296,11 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         }
     }
 
-    File file = new File(Main.getInstance().getDataFolder(), "items.yml");
-    FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-    HashMap<Player, String> cmdMessage = new HashMap<>();
-    HashMap<Player, Sign> playerSign = new HashMap<>();
-    HashMap<Player, ItemStack> itemHash = new HashMap<>();
+    final File file = new File(Main.getInstance().getDataFolder(), "items.yml");
+    final FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+    final HashMap<Player, String> cmdMessage = new HashMap<>();
+    final HashMap<Player, Sign> playerSign = new HashMap<>();
+    final HashMap<Player, ItemStack> itemHash = new HashMap<>();
 
     @EventHandler
     public void onPlayerClickSign(PlayerInteractEvent event) {

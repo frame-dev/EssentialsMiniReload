@@ -266,6 +266,7 @@ public class Main extends JavaPlugin {
         return silent;
     }
 
+    @SuppressWarnings("SameReturnValue")
     public String getPermissionBase() {
         return "essentialsmini.";
     }

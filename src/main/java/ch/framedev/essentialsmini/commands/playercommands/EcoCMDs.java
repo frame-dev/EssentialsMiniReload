@@ -54,7 +54,7 @@ public class EcoCMDs extends CommandBase {
                                             plugin.getVaultManager().getEco().withdrawPlayer(p, amount);
                                             plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                             String send = plugin.getLanguageConfig(p).getString("Money.MSG.Pay");
-                                            if(send == null) return true;
+                                            if (send == null) return true;
                                             send = send.replace('&', '§');
                                             send = send.replace("[Target]", player.getName());
                                             send = send.replace("[Money]", amount + plugin.getCurrencySymbol());
@@ -81,7 +81,7 @@ public class EcoCMDs extends CommandBase {
                                         plugin.getVaultManager().getEco().withdrawPlayer(p, amount);
                                         plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                         String send = plugin.getLanguageConfig(sender).getString("Money.MSG.Pay");
-                                        if(send == null) return true;
+                                        if (send == null) return true;
                                         send = send.replace('&', '§');
                                         send = send.replace("[Target]", player.getName());
                                         send = send.replace("[Money]", amount + plugin.getCurrencySymbol());
@@ -189,7 +189,7 @@ public class EcoCMDs extends CommandBase {
                             if (isDouble(args[1])) {
                                 double amount = Double.parseDouble(args[1]);
                                 OfflinePlayer player;
-                                if(Bukkit.getOnlineMode()) {
+                                if (Bukkit.getOnlineMode()) {
                                     player = Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(args[2]));
                                 } else {
                                     player = Bukkit.getOfflinePlayer(args[2]);
@@ -201,7 +201,7 @@ public class EcoCMDs extends CommandBase {
                                     setOther = new TextUtils().replaceObject(setOther, "[Target]", player.getName());
                                     setOther = new TextUtils().replaceObject(setOther, "[Money]", plugin.getVaultManager().getEco().getBalance(player) + plugin.getCurrencySymbol());
                                 }
-                                if(player.isOnline()) {
+                                if (player.isOnline()) {
                                     String set = plugin.getLanguageConfig((Player) player).getString("Money.MSG.Set");
                                     if (set != null) {
                                         set = new TextUtils().replaceAndWithParagraph(set);
@@ -439,16 +439,10 @@ public class EcoCMDs extends CommandBase {
         return null;
     }
 
-    static class ValueComparator implements Comparator<String> {
+    record ValueComparator(Map<String, Double> base) implements Comparator<String> {
 
 
-        Map<String, Double> base;
-
-        public ValueComparator(Map<String, Double> base) {
-            this.base = base;
-        }
-
-
+        @SuppressWarnings("ComparatorMethodParameterNotUsed")
         public int compare(String a, String b) {
             if (base.get(a) >= base.get(b)) {
                 return -1;

@@ -10,7 +10,6 @@ package ch.framedev.essentialsmini.listeners;
  */
 
 import ch.framedev.essentialsmini.api.events.*;
-import ch.framedev.essentialsmini.api.events.PlayerKillPlayerEvent;
 import ch.framedev.essentialsmini.commands.playercommands.KillCMD;
 import ch.framedev.essentialsmini.commands.playercommands.SpawnCMD;
 import ch.framedev.essentialsmini.commands.playercommands.VanishCMD;

@@ -229,7 +229,7 @@ public class AFKCMD implements CommandExecutor {
     class IdleTimer implements Runnable {
 
         private final Main plugin;
-        int afkTime = Main.getInstance().getConfig().getInt("AFK.Time");
+        final int afkTime = Main.getInstance().getConfig().getInt("AFK.Time");
 
         IdleTimer(Main plugin) {
             this.plugin = plugin;

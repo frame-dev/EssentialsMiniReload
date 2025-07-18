@@ -11,8 +11,8 @@ import java.util.List;
 
 public class BanFileManager {
 
-    public static File file = new File(Main.getInstance().getDataFolder(), "Banned.yml");
-    public static FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+    public static final File file = new File(Main.getInstance().getDataFolder(), "Banned.yml");
+    public static final FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 
     public static void saveCfg() {
         try {

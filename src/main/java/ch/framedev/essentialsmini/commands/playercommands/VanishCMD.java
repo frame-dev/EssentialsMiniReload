@@ -23,7 +23,7 @@ import java.util.ArrayList;
 public class VanishCMD extends CommandListenerBase {
 
     private final Main plugin;
-    public static ArrayList<String> hided = new ArrayList<>();
+    public final static ArrayList<String> hided = new ArrayList<>();
 
     public VanishCMD(Main plugin) {
         super(plugin, "vanish");

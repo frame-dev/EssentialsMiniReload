@@ -33,7 +33,7 @@ public class BackpackCMD extends CommandListenerBase {
 
     static File file;
     static FileConfiguration cfg;
-    public static HashMap<String, String> itemsStringHashMap = new HashMap<>();
+    public final static HashMap<String, String> itemsStringHashMap = new HashMap<>();
     private final Main plugin;
 
     public BackpackCMD(Main plugin) {

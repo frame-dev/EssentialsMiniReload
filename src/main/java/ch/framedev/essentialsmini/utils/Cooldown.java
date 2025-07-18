@@ -28,6 +28,7 @@ public class Cooldown {
 		return seconds;
 	}
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean check() {
 		secondsLeft = ((actualTime / 1000) + seconds) - (System.currentTimeMillis() / 1000);
 		milliSeconds = actualTime + (seconds * 1000L) - System.currentTimeMillis();

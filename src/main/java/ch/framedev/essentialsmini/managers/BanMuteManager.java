@@ -335,6 +335,7 @@ public class BanMuteManager {
         return null;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isExpiredTempBan(OfflinePlayer player) {
         ensureTableExists();
 

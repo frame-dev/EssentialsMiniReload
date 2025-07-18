@@ -14,11 +14,11 @@ import java.util.Arrays;
 
 public class MongoManager {
 
-    String databasestring = Main.getInstance().getConfig().getString("MongoDB.Database");
-    String username = Main.getInstance().getConfig().getString("MongoDB.User");
-    String password = Main.getInstance().getConfig().getString("MongoDB.Password");
-    private String hostname = Main.getInstance().getConfig().getString("MongoDB.Host");
-    private int port = Main.getInstance().getConfig().getInt("MongoDB.Port");
+    final String databasestring = Main.getInstance().getConfig().getString("MongoDB.Database");
+    final String username = Main.getInstance().getConfig().getString("MongoDB.User");
+    final String password = Main.getInstance().getConfig().getString("MongoDB.Password");
+    private final String hostname = Main.getInstance().getConfig().getString("MongoDB.Host");
+    private final int port = Main.getInstance().getConfig().getInt("MongoDB.Port");
     private MongoClient client;
     private MongoDatabase database;
     private MongoCollection<Document> players;

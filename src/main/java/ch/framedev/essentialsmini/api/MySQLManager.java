@@ -29,7 +29,7 @@ import java.util.Objects;
 @SuppressWarnings("deprecation")
 public class MySQLManager {
 
-    protected String tableName = "essentialsmini_eco";
+    protected final String tableName = "essentialsmini_eco";
     private static boolean runOnce;
 
     public MySQLManager() {

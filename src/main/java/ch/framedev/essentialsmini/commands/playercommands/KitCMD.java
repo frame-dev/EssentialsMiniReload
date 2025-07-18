@@ -19,8 +19,8 @@ import java.util.*;
 public class KitCMD extends CommandBase {
 
     private final Main plugin;
-    public HashMap<String, HashMap<String, Cooldown>> cooldowns = new HashMap<>();
-    public HashMap<String, Cooldown> coo = new HashMap<>();
+    public final HashMap<String, HashMap<String, Cooldown>> cooldowns = new HashMap<>();
+    public final HashMap<String, Cooldown> coo = new HashMap<>();
     private final boolean eco;
 
     public KitCMD(Main plugin) {

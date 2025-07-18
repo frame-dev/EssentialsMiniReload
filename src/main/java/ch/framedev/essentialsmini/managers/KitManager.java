@@ -26,7 +26,7 @@ public class KitManager {
 
     private static File customConfigFile;
     private static FileConfiguration customConfig;
-    public Inventory kitName = Bukkit.createInventory(null, 36);
+    public final Inventory kitName = Bukkit.createInventory(null, 36);
 
     public void createCustomConfig() {
         customConfigFile = new File(Main.getInstance().getDataFolder(), "kits.yml");

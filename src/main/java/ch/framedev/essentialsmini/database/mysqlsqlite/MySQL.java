@@ -3,8 +3,6 @@ package ch.framedev.essentialsmini.database.mysqlsqlite;
 import ch.framedev.essentialsmini.main.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.sql.Connection;
