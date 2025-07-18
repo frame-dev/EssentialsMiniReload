@@ -25,6 +25,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Should work | needs Testing
+ * Requires ProtocolLib
+ * @author framedev
+ */
 public class NameTagChanger {
 
     public static Map<String,String> getSkin(String skinName) {

@@ -41,11 +41,14 @@ public class FeedCMD extends CommandBase {
                     if (feedSet.contains("&"))
                         feedSet = feedSet.replace('&', '§');
                     player.sendMessage(plugin.getPrefix() + feedSet);
+                    return true;
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                    return true;
                 }
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                return true;
             }
         } else if (args.length == 1) {
             if (sender.hasPermission("essentialsmini.feed.others")) {
@@ -55,50 +58,58 @@ public class FeedCMD extends CommandBase {
                         if (!Main.getSilent().contains(sender.getName())) {
                             String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
                             if (feedSet == null) {
-                                player.sendMessage(plugin.getPrefix() + "§aYou Saturation has been filled!");
-                                return;
+                                player.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
+                            } else {
+                                if (feedSet.contains("&"))
+                                    feedSet = feedSet.replace('&', '§');
+                                player.sendMessage(plugin.getPrefix() + feedSet);
                             }
-                            if (feedSet.contains("&"))
-                                feedSet = feedSet.replace('&', '§');
-                            player.sendMessage(plugin.getPrefix() + feedSet);
                         }
                         String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
-                        if (feedOther == null) return;
-                        if (feedOther.contains("&"))
-                            feedOther = feedOther.replace('&', '§');
-                        if (feedOther.contains("%Player%"))
-                            feedOther = feedOther.replace("%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + feedOther);
+                        if (feedOther != null) {
+                            if (feedOther.contains("&"))
+                                feedOther = feedOther.replace('&', '§');
+                            if (feedOther.contains("%Player%"))
+                                feedOther = feedOther.replace("%Player%", player.getName());
+                            sender.sendMessage(plugin.getPrefix() + feedOther);
+                        }
                     });
+                    return true;
                 } else {
                     Player player = Bukkit.getPlayer(args[0]);
                     if (player != null) {
                         player.setFoodLevel(20);
                         if (!Main.getSilent().contains(sender.getName())) {
                             String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
-                            if (feedSet == null) return true;
-                            if (feedSet.contains("&"))
-                                feedSet = feedSet.replace('&', '§');
-                            player.sendMessage(plugin.getPrefix() + feedSet);
+                            if (feedSet == null) {
+                                player.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
+                            } else {
+                                if (feedSet.contains("&"))
+                                    feedSet = feedSet.replace('&', '§');
+                                player.sendMessage(plugin.getPrefix() + feedSet);
+                            }
                         }
                         String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
-                        if (feedOther == null) return true;
-                        if (feedOther.contains("&"))
-                            feedOther = feedOther.replace('&', '§');
-                        if (feedOther.contains("%Player%"))
-                            feedOther = feedOther.replace("%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + feedOther);
+                        if (feedOther != null) {
+                            if (feedOther.contains("&"))
+                                feedOther = feedOther.replace('&', '§');
+                            if (feedOther.contains("%Player%"))
+                                feedOther = feedOther.replace("%Player%", player.getName());
+                            sender.sendMessage(plugin.getPrefix() + feedOther);
+                        }
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
                     }
+                    return true;
                 }
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                return true;
             }
         } else {
             sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/feed §cor §6/feed <PlayerName>"));
+            return true;
         }
-        return false;
     }
 
     @Override

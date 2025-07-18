@@ -18,12 +18,12 @@ import java.io.IOException;
  * Copyrighted by FrameDev
  */
 
-public class FileManager {
+public class MoneyFileManager {
 
     private final File file;
     private final FileConfiguration cfg;
 
-    public FileManager() {
+    public MoneyFileManager() {
         this.file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
         this.cfg = YamlConfiguration.loadConfiguration(file);
     }

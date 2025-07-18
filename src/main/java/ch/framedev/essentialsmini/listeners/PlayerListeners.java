@@ -10,6 +10,7 @@ package ch.framedev.essentialsmini.listeners;
  */
 
 import ch.framedev.essentialsmini.api.events.*;
+import ch.framedev.essentialsmini.api.events.PlayerKillPlayerEvent;
 import ch.framedev.essentialsmini.commands.playercommands.KillCMD;
 import ch.framedev.essentialsmini.commands.playercommands.SpawnCMD;
 import ch.framedev.essentialsmini.commands.playercommands.VanishCMD;
@@ -55,7 +56,7 @@ public class PlayerListeners implements Listener {
     }
 
     @EventHandler
-    public void onSignColo(SignChangeEvent event) {
+    public void onSignColor(SignChangeEvent event) {
         if (plugin.getConfig().getBoolean("ColoredSigns")) {
             for (int i = 0; i < event.getLines().length; i++) {
                 if (event.getLines()[i].contains("&")) {

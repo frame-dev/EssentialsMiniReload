@@ -171,6 +171,9 @@ public class KitCMD extends CommandBase {
         if (command.getName().equalsIgnoreCase("kits") && args.length == 1) {
             ArrayList<String> list = new ArrayList<>();
             ConfigurationSection cs = KitManager.getCustomConfig().getConfigurationSection("Items");
+            if (cs == null) {
+                return list; // No kits available
+            }
             for (String s : cs.getKeys(false)) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "kits." + s)) {
                     list.add(s);

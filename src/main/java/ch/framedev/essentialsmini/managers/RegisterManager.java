@@ -2,6 +2,7 @@ package ch.framedev.essentialsmini.managers;
 
 import ch.framedev.essentialsmini.commands.playercommands.*;
 import ch.framedev.essentialsmini.commands.servercommands.ClearChatCMD;
+import ch.framedev.essentialsmini.commands.servercommands.GlobalMuteCMD;
 import ch.framedev.essentialsmini.commands.servercommands.MaintenanceCMD;
 import ch.framedev.essentialsmini.commands.servercommands.PlayerListCMD;
 import ch.framedev.essentialsmini.commands.worldcommands.DayNightCMD;
@@ -125,6 +126,7 @@ public class RegisterManager {
 
         new PlayerWeatherCMD(plugin);
         new MaintenanceCMD(plugin);
+        new GlobalMuteCMD(plugin);
 
         for (Map.Entry<String, CommandExecutor> commands : plugin.getCommands().entrySet()) {
             if (commands.getKey() == null) continue;

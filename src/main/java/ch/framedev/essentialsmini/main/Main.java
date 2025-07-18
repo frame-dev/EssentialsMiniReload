@@ -70,18 +70,24 @@ public class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
+        // Loads the default configuration file
         saveDefaultConfig();
         saveConfig();
 
+        // Initialize the logger
         logger = Logger.getLogger("EssentialsMini");
         BasicConfigurator.configure();
 
+        // create the messages-examples directory if it does not exist
         if (!new File(getDataFolder() + "/messages-examples").exists()) {
             if (!new File(getDataFolder() + "/messages-examples").mkdir()) {
                 getLogger4J().error("Could not create directory " + getDataFolder() + "/messages-examples");
             }
         }
+        // Move example messages to the messages-examples directory
         moveExampleMessages();
+        // Check and move messages configs
         checkAndMoveMessagesConfigs();
 
         /* HashMaps / Lists Initialing */
@@ -89,8 +95,10 @@ public class Main extends JavaPlugin {
         this.listeners = new ArrayList<>();
         this.tabCompleters = new HashMap<>();
 
+        // Initialize the silent list
         silent = new ArrayList<>();
 
+        // Initialize the Variables, DatabaseManager and MongoDBUtils
         this.variables = new Variables();
         this.databaseManager = new DatabaseManager(this);
 
@@ -124,8 +132,10 @@ public class Main extends JavaPlugin {
                 this.vaultManager = new VaultManager(this);
             }
         }
+        // Register Commands, TabCompleters and Listeners
         new RegisterManager(this);
 
+        // Register KitManager and create custom config
         new KitManager().createCustomConfig();
 
         // Checking for Update and when enabled, Download the Latest Version automatically

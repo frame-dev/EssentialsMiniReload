@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class BanFile {
+public class BanFileManager {
 
     public static File file = new File(Main.getInstance().getDataFolder(), "Banned.yml");
     public static FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);

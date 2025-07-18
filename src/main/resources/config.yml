@@ -88,3 +88,10 @@ maintenance:
     header: '&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«'
     footer: '&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«'
 playerPingServerMessage: false
+globalMute: false
+globalMuteMessage:
+  enable: '&cGlobal Mute is enabled! You can not send messages!'
+  disable: '&aGlobal Mute is disabled! You can send messages again!'
+  chat: '&cGlobal Mute is enabled! You can not send messages!'
+  bypass: '&6[%Player%] &f %Message%'
+

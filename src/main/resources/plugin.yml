@@ -5,7 +5,6 @@ version: ${project.version}
 main: ch.framedev.essentialsmini.main.Main
 softdepend:
   - Vault
-  - SpigotMongoDBUtils
   - ProtocolLib
   - LuckPerms
 
@@ -274,6 +273,12 @@ commands:
       - resetplayerw
       - rplayerweather
   maintenance:
+  globalmute:
+    description: Base Command for the use of Global Mute
+    aliases:
+      - gmute
+      - globalm
+      - globalmuted
 permissions:
   essentialsmini.*:
     children:

@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.listeners;
 
 import ch.framedev.essentialsmini.abstracts.ListenerBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.BanFile;
+import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
@@ -42,23 +42,27 @@ public class BanListener extends ListenerBase {
                             getPlugin().getLogger4J().error(parseException.getMessage(), parseException);
                         }
                     });
+                    // Set the login result to kick banned with the reason
                     e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_BANNED);
                     e.setKickMessage(reason[0]);
                 }
             } else {
+                // Remove expired temp ban
                 new BanMuteManager().removeTempBan(Bukkit.getOfflinePlayer(e.getUniqueId()));
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.ALLOWED);
             }
         }
+        // Check if player is banned in the Database
         if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
             if (new BanMuteManager().isPermBan(Bukkit.getOfflinePlayer(e.getUniqueId()))) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
                 e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + new BanMuteManager().getPermBanReason(Bukkit.getOfflinePlayer(e.getUniqueId())));
             }
         } else {
-            if (BanFile.cfg.getBoolean(e.getName() + ".isBanned")) {
+            // Check if player is banned in the BanFileManager
+            if (BanFileManager.cfg.getBoolean(e.getName() + ".isBanned")) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + BanFile.cfg.getString(e.getName() + ".reason"));
+                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + BanFileManager.cfg.getString(e.getName() + ".reason"));
             }
         }
     }

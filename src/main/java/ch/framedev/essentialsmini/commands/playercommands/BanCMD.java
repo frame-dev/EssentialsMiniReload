@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.BanFile;
+import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import org.bukkit.Bukkit;
@@ -30,7 +30,7 @@ public class BanCMD extends CommandBase {
                             Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + type.getReason());
                         new BanMuteManager().setPermBan(PlayerUtils.getOfflinePlayerByName(args[1]), type, true);
                     } else {
-                        BanFile.banPlayer(args[1], type.getReason());
+                        BanFileManager.banPlayer(args[1], type.getReason());
                         if (Bukkit.getPlayer(args[1]) != null) {
                             Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + type.getReason());
                         } else {
@@ -44,7 +44,7 @@ public class BanCMD extends CommandBase {
                                 Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + args[2]);
                             new BanMuteManager().setPermBan(PlayerUtils.getOfflinePlayerByName(args[1]), args[2], true);
                         } else {
-                            BanFile.banPlayer(args[1], args[2]);
+                            BanFileManager.banPlayer(args[1], args[2]);
                             if (Bukkit.getPlayer(args[1]) != null) {
                                 Objects.requireNonNull(Bukkit.getPlayer(args[1])).kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + args[2]);
                             } else {

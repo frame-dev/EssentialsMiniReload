@@ -166,6 +166,15 @@ public class ExperienceCMD extends CommandBase {
                     target.sendMessage(getPlugin().getPrefix() + xpMessage);
                 }
             }
+        } else {
+            sender.sendMessage(getPlugin().getPrefix() + "§cUsage: /xp <set/add/remove/send> <Amount> <Player> <xp/level>");
+            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp set 100 PlayerName level");
+            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp add 50 PlayerName xp");
+            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp remove 20 PlayerName level");
+            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp send 10 PlayerName xp");
+            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp send 5 PlayerName level");
+            sender.sendMessage(getPlugin().getPrefix() + "§cYou can use 'level' or 'xp' as the last argument.");
+            return true;
         }
         return super.onCommand(sender, command, label, args);
     }

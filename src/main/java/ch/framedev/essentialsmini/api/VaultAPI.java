@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.api;
 
 import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.FileManager;
+import ch.framedev.essentialsmini.managers.MoneyFileManager;
 import ch.framedev.essentialsmini.utils.UUIDFetcher;
 import net.milkbowl.vault.economy.AbstractEconomy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -138,7 +138,7 @@ public class VaultAPI extends AbstractEconomy {
             if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                 return (double) BACKEND_MANAGER.get(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data");
         } else {
-            return new FileManager().getMoney(Bukkit.getOfflinePlayer(playerName));
+            return new MoneyFileManager().getMoney(Bukkit.getOfflinePlayer(playerName));
         }
         return 0.0;
     }
@@ -184,7 +184,7 @@ public class VaultAPI extends AbstractEconomy {
                 if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                     BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(playerName), "money", balance, "essentialsmini_data");
             } else {
-                new FileManager().removeMoney(Bukkit.getOfflinePlayer(playerName), amount);
+                new MoneyFileManager().removeMoney(Bukkit.getOfflinePlayer(playerName), amount);
             }
 
         }
@@ -213,7 +213,7 @@ public class VaultAPI extends AbstractEconomy {
             if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                 BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(playerName), "money", balance, "essentialsmini_data");
         } else {
-            new FileManager().addMoney(Bukkit.getOfflinePlayer(playerName), amount);
+            new MoneyFileManager().addMoney(Bukkit.getOfflinePlayer(playerName), amount);
         }
         return new EconomyResponse(amount, 0.0D, EconomyResponse.ResponseType.SUCCESS, "");
     }

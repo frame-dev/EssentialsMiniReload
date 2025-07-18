@@ -239,6 +239,10 @@ public class MuteCMD extends CommandBase implements Listener {
                         System.out.println("OfflinePlayer is Null; MuteCMD.java:238");
                         return true;
                     }
+                    if (offlinePlayer.getName() == null) {
+                        System.out.println("OfflinePlayer Name is Null; MuteCMD.java:240");
+                        return true;
+                    }
                     if (cfg.contains(offlinePlayer.getName())) {
                         players.add(offlinePlayer);
                     }

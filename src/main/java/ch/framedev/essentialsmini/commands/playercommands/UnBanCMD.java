@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.BanFile;
+import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -22,7 +22,7 @@ public class UnBanCMD extends CommandBase {
                 if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
 					new BanMuteManager().setPermBan(Bukkit.getOfflinePlayer(args[0]), BanCMD.BanType.HACKING, false);
 				} else {
-					BanFile.unBanPlayer(args[0]);
+					BanFileManager.unBanPlayer(args[0]);
 				}
 			} else {
 				sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/eunban <Player>"));
