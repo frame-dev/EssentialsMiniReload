@@ -54,7 +54,7 @@ Set your preferred storage type in `config.yml`:
 - `/mute`, `/tempmute`, `/removetempmute`, `/muteinfo`, `/muteforplayer`
 - `/ban`, `/tempban`, `/eban`, `/eunban`, `/removetempban`
 - `/globalmute`, `/silent`, `/clearchat`, `/maintenance`
-- `/srestart`
+- `/srestart`, `/staffchat`
 
 ### 💰 Economy (Vault)
 - `/balance`, `/balancetop`, `/eco`, `/pay`
