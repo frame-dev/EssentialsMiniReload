@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class GlobalMuteCMD extends CommandListenerBase {
+
     public GlobalMuteCMD(Main plugin) {
         super(plugin, "globalmute");
     }

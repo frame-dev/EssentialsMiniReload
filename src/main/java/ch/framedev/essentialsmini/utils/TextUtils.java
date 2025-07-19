@@ -14,6 +14,7 @@ import java.util.List;
  * Copyrighted by FrameDev
  */
 
+@SuppressWarnings("unused")
 public class TextUtils {
 
     public String replaceAndWithParagraph(String text) {
@@ -95,15 +96,10 @@ public class TextUtils {
 
     public String centerTextWithSymbol(String text, char symbol, int length) {
         int half = length/2;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < half; i++) {
-            sb.append(symbol);
-        }
-        sb.append(text);
-        for (int i = 0; i < half; i++) {
-            sb.append(symbol);
-        }
-        return sb.toString();
+        String repeat = String.valueOf(symbol).repeat(Math.max(0, half));
+        return repeat +
+               text +
+               repeat;
     }
 
     public void printBox(String... text) {
@@ -121,10 +117,10 @@ public class TextUtils {
             if (!s.contains("[") || !s.contains("]")) {
                 System.out.print("| " + s);
             } else {
-                String updated = s;
+                StringBuilder updated = new StringBuilder(s);
                 int updatedSpaces = spaces / 2;
                 for (int i = 0; i < updatedSpaces; i++)
-                    updated = " " + updated;
+                    updated.insert(0, " ");
                 System.out.print("| " + updated);
                 spaces = updatedSpaces;
             }
@@ -136,12 +132,10 @@ public class TextUtils {
     }
 
     public String topBottom(int length) {
-        StringBuilder lineBuilder = new StringBuilder();
-        lineBuilder.append("+");
-        for (int i = 0; i < length + 2; i++) // Adjusted loop condition
-            lineBuilder.append("-");
-        lineBuilder.append("+\n");
-        return lineBuilder.toString();
+        return "+" +
+               // Adjusted loop condition
+               "-".repeat(Math.max(0, length + 2)) +
+               "+\n";
     }
 
     public void topBottomVoid(int length) {
@@ -177,10 +171,10 @@ public class TextUtils {
                     addedSpaces++;
                 }
             } else {
-                String updated = s;
+                StringBuilder updated = new StringBuilder(s);
                 int updatedSpaces = spaces / 2;
                 for (int i = 0; i < updatedSpaces; i++) {
-                    updated = " " + updated;
+                    updated.insert(0, " ");
                 }
                 sb.append("| ").append(updated);
                 spaces = lastLength - s.length() - updatedSpaces;

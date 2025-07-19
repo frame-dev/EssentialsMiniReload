@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class SkullBuilder {
 
     private final String skullOwner;

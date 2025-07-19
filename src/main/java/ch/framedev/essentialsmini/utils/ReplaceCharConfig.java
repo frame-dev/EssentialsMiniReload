@@ -1,10 +1,11 @@
 package ch.framedev.essentialsmini.utils;
 
 
+@SuppressWarnings("unused")
 public class ReplaceCharConfig {
 
     public static String replaceParagraph(String text) {
-        if (text == null) return text;
+        if (text == null) return "";
         if (text.contains("&"))
             text = text.replace('&', '§');
         return text;

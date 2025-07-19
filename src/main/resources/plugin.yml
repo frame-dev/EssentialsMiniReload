@@ -279,6 +279,11 @@ commands:
       - gmute
       - globalm
       - globalmuted
+  staffchat:
+    description: Base Command for the use of Staff Chat
+    aliases:
+      - sc
+      - staffc
 permissions:
   essentialsmini.*:
     children:
@@ -369,6 +374,7 @@ permissions:
       essentialsmini.plweather: true
       essentialsmini.maintenance: true
       essentialsmini.maintenance.bypass: true
+      essentialsmini.staffchat: true
   essentialsmini.sethome:
     default: op
   essentialsmini.worldutils:
@@ -577,3 +583,5 @@ permissions:
     default: op
     children:
       essentialsmini.maintenance: true
+  essentialsmini.staffchat:
+    default: op

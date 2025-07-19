@@ -127,6 +127,7 @@ public class RegisterManager {
         new PlayerWeatherCMD(plugin);
         new MaintenanceCMD(plugin);
         new GlobalMuteCMD(plugin);
+        new StaffChatCMD(plugin);
 
         for (Map.Entry<String, CommandExecutor> commands : plugin.getCommands().entrySet()) {
             if (commands.getKey() == null) continue;
