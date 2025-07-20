@@ -1,7 +1,7 @@
 {
   "latest": "1.3.9-RELEASE",
   "latest-pre-release": "1.4.9.3-1.20.6-PRE-RELEASE",
-  "1.20.6-higher-release": "1.0.6-1.20.6-HIGHER-RELEASE",
+  "1.20.6-higher-release": "1.0.6.1-1.20.6-HIGHER-RELEASE",
   "1.20.6-higher-releases": [
     "1.0.0-1.20.6-HIGHER-PRE-RELEASE",
     "1.0.1-1.20.6-HIGHER-PRE-RELEASE",
@@ -11,7 +11,8 @@
     "1.0.4.1-1.20.6-HIGHER-RELEASE",
     "1.0.5-1.20.6-HIGHER-RELEASE",
     "1.0.5.1-1.20.6-HIGHER-RELEASE",
-    "1.0.6-1.20.6-HIGHER-RELEASE"
+    "1.0.6-1.20.6-HIGHER-RELEASE",
+    "1.0.6.1-1.20.6-HIGHER-RELEASE"
   ],
   "pre-releases": [
     "1.4.2-1.20.6-PRE-RELEASE",
