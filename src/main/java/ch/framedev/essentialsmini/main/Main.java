@@ -40,6 +40,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 
+@SuppressWarnings("DanglingJavadoc")
 public class Main extends JavaPlugin {
 
     // Singleton instance of the plugin
@@ -126,6 +127,7 @@ public class Main extends JavaPlugin {
             }
         }
 
+        // Enable economy if enabled in config
         if (getConfig().getBoolean("Economy.Activate")) {
             if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
                 this.vaultManager = new VaultManager(this);
@@ -138,15 +140,18 @@ public class Main extends JavaPlugin {
         new KitManager().createCustomConfig();
 
         // Checking for Update and when enabled, Download the Latest Version automatically
-        if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
-            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
-        } else {
-            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
-        }
+
+        // Server not online, so the update check is disabled
+        // if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
+        //    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
+        //} else {
+        //    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
+        //}*/
 
         // Restore Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::restore);
 
+        // Log that the plugin has been enabled
         getLogger4J().info("EssentialsMini has been enabled!");
     }
 
@@ -154,6 +159,8 @@ public class Main extends JavaPlugin {
     public void onDisable() {
         // Save Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::save);
+
+        // Clear lists, maps and variables
         instance = null;
         listeners.clear();
         commands.clear();
@@ -163,9 +170,14 @@ public class Main extends JavaPlugin {
         variables = null;
         silent.clear();
         databaseManager = null;
+        // Log that the plugin has been disabled
         getLogger4J().info("EssentialsMini has been disabled!");
     }
 
+    /**
+     * Moves example messages from the resources to the messages-examples directory.
+     * The method checks if the destination file already exists before copying.
+     */
     public void moveExampleMessages() {
         String[] locales = {"de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"};
 
@@ -232,15 +244,6 @@ public class Main extends JavaPlugin {
         }
     }
 
-    public File getFromResourceFile(String file) {
-        InputStream resource = this.getClass().getClassLoader().getResourceAsStream(file);
-        if (resource == null) {
-            throw new IllegalArgumentException("File not found!");
-        } else {
-            return streamToFile(resource);
-        }
-    }
-
     public File getFromResourceFile(String file, Class<?> class_) {
         InputStream resource = class_.getClassLoader().getResourceAsStream(file);
         if (resource == null) {
@@ -250,6 +253,10 @@ public class Main extends JavaPlugin {
         }
     }
 
+    /**
+     * Checks if the messages configuration files exist, and if not, copies them from the example directory.
+     * The method checks for multiple language configurations and copies them if they do not exist.
+     */
     public void checkAndMoveMessagesConfigs() {
         List<String> exampleConfigFiles = Arrays.asList(
                 "plugins/EssentialsMini/messages-examples/messages_de-DE-examples.yml",
@@ -353,6 +360,14 @@ public class Main extends JavaPlugin {
         return prefix;
     }
 
+    /**
+     * Returns the language configuration for the given player or command sender.
+     * If the player is null, it defaults to English (en-EN).
+     * If the player's locale is not supported, it falls back to English.
+     *
+     * @param player The CommandSender or Player for whom to get the language configuration.
+     * @return The FileConfiguration for the player's language.
+     */
     public FileConfiguration getLanguageConfig(CommandSender player) {
         String locale = "en"; // Default locale
         File configFile;
@@ -388,6 +403,14 @@ public class Main extends JavaPlugin {
         return YamlConfiguration.loadConfiguration(configFile);
     }
 
+    /**
+     * Returns the language configuration for the given player.
+     * If the player is null, it defaults to English (en-EN).
+     * If the player's locale is not supported, it falls back to English.
+     *
+     * @param player The Player for whom to get the language configuration.
+     * @return The FileConfiguration for the player's language.
+     */
     public FileConfiguration getLanguageConfig(Player player) {
         String locale; // Default locale
         File configFile;
@@ -419,6 +442,13 @@ public class Main extends JavaPlugin {
         return YamlConfiguration.loadConfiguration(configFile);
     }
 
+    /**
+     * Determines the language of the player based on their locale.
+     * If the player's locale is not recognized, it defaults to English.
+     *
+     * @param player The CommandSender or Player whose language to determine.
+     * @return The Language enum corresponding to the player's locale.
+     */
     public Language getLanguage(CommandSender player) {
         if (player instanceof Player) {
             String playerLocale = ((Player) player).getLocale().toLowerCase();
@@ -522,6 +552,13 @@ public class Main extends JavaPlugin {
         return vaultManager;
     }
 
+    /**
+     * Checks for updates of the plugin on framedev.ch.
+     * If download is true, it will download the latest version.
+     *
+     * @param download Whether to download the latest version or not.
+     * @return true if an update is available, false otherwise.
+     */
     public boolean checkUpdate(boolean download) {
         Bukkit.getConsoleSender().sendMessage(getPrefix() + "Checking for updates...");
         URLConnection conn;
@@ -585,6 +622,11 @@ public class Main extends JavaPlugin {
         }
     }
 
+    /**
+     * Checks if Economy is enabled in the config.
+     *
+     * @return true if Economy is enabled, false otherwise.
+     */
     public boolean isEconomyEnabled() {
         return getConfig().getBoolean("Economy.Activate", false);
     }

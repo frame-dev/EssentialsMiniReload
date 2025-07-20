@@ -286,7 +286,7 @@ public class DisallowCommands extends ListenerBase {
         if (!event.getPlayer().hasPermission("essentialsmini.plugins")) {
             if (event.getMessage().split(" ")[0].equalsIgnoreCase("/pl") || event.getMessage().split(" ")[0].equalsIgnoreCase("/bukkit:pl") || event.getMessage().split(" ")[0].equalsIgnoreCase("/plugins")
                     || event.getMessage().split(" ")[0].equalsIgnoreCase("/bukkit:plugins")) {
-                event.getPlayer().sendMessage(ChatColor.WHITE + "Plugins(3): " + ChatColor.GREEN + "Nichts" + ChatColor.WHITE + ", " + ChatColor.GREEN + "zu" + ChatColor.WHITE + ", " + ChatColor.GREEN + "sehen!");
+                event.getPlayer().sendMessage(ChatColor.WHITE + "Plugins(3): " + ChatColor.GREEN + "Nothing" + ChatColor.WHITE + ", " + ChatColor.GREEN + "too" + ChatColor.WHITE + ", " + ChatColor.GREEN + "see!");
                 event.setCancelled(true);
             }
         }
