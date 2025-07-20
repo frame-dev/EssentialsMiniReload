@@ -142,11 +142,15 @@ public class Main extends JavaPlugin {
         // Checking for Update and when enabled, Download the Latest Version automatically
 
         // Server not online, so the update check is disabled
-        // if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
-        //    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
-        //} else {
-        //    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
-        //}*/
+        if(getConfig().getBoolean("checkForUpdates")) {
+            if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
+                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
+            } else {
+                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
+            }
+        } else {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cUpdate check is disabled in config.yml!");
+        }
 
         // Restore Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::restore);
