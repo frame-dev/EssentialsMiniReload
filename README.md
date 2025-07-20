@@ -73,6 +73,7 @@ Set your preferred storage type in `config.yml`:
 - `/msg`, `/r`, `/spy`, `/afk`
 - `/msgtoggle`, `/tptoggle`
 - `/nick`, `/nicklist`
+- `/mail` (send, read, delete, clear)
 
 ### 🌤️ World Control
 - `/day`, `/night`, `/sun`, `/rain`, `/thunder`

@@ -14,9 +14,24 @@ public class SQL {
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(10);
 
+    /**
+     * Callback interface for asynchronous operations.
+     *
+     * @param <T> The type of the result.
+     */
     public interface Callback<T> {
+        /**
+         * Called when the operation is successful.
+         *
+         * @param value The result of the operation.
+         */
         void accept(T value);
 
+        /**
+         * Called when an error occurs during the operation.
+         *
+         * @param t The Throwable that represents the error.
+         */
         void onError(Throwable t);
     }
 

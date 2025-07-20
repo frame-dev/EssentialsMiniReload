@@ -284,6 +284,17 @@ commands:
     aliases:
       - sc
       - staffc
+  top:
+    description: Teleport you to the Highest Block at your Location
+    aliases:
+      - tpblock
+      - tpb
+      - topblock
+  mail:
+    description: Base Command for the use of Mail
+    aliases:
+      - m
+      - mailcommand
 permissions:
   essentialsmini.*:
     children:
@@ -375,6 +386,8 @@ permissions:
       essentialsmini.maintenance: true
       essentialsmini.maintenance.bypass: true
       essentialsmini.staffchat: true
+      essentialsmini.top: true
+      essentialsmini.mail: true
   essentialsmini.sethome:
     default: op
   essentialsmini.worldutils:
@@ -584,4 +597,8 @@ permissions:
     children:
       essentialsmini.maintenance: true
   essentialsmini.staffchat:
+    default: op
+  essentialsmini.top:
+    default: op
+  essentialsmini.mail:
     default: op

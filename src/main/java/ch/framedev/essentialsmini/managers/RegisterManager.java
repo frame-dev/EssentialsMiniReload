@@ -129,6 +129,9 @@ public class RegisterManager {
         new GlobalMuteCMD(plugin);
         new StaffChatCMD(plugin);
 
+        new TopCMD(plugin);
+        new MailCMD(plugin);
+
         for (Map.Entry<String, CommandExecutor> commands : plugin.getCommands().entrySet()) {
             if (commands.getKey() == null) continue;
             if (commands.getValue() == null) continue;

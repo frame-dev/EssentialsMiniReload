@@ -95,3 +95,14 @@ globalMuteMessage:
   chat: '&cGlobal Mute is enabled! You can not send messages!'
   bypass: '&6[%Player%] &f %Message%'
 
+mail:
+  enable: true
+  maxMessages: 100
+  message:
+    send: '&aYou have sent a message to %Player%!'
+    receive: '&aYou have received a message from %Player%!'
+    noMessages: '&cYou have no messages!'
+    delete: '&aYou have deleted the message from %Player%!'
+    notFound: '&cMessage not found!'
+    list: '&aYou have &6%Count% &amessages!'
+    sender: '&6[Mail] &f%Sender% &7» &f%Message%'

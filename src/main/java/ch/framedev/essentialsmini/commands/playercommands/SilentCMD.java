@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * This Plugin was Created by FrameDev
- * Package : de.framedev.essentialsmin.commands.playercommands
+ * Package : de.framedev.essentialsmini.commands.playercommands
  * ClassName SilentCMD
  * Date: 26.03.21
  * Project: EssentialsMini

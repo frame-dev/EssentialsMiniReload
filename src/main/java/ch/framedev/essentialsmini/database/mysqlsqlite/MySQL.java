@@ -13,9 +13,13 @@ public class MySQL {
 
     public static String host;
     public static String user;
+    // Password for MySQL connection
     public static String password;
+    // Database name for MySQL connection
     public static String database;
+    // Port for MySQL connection, default is usually 3306
     public static String port;
+    // HikariDataSource is a connection pool for MySQL
     private static HikariDataSource hikariDataSource;
 
     public MySQL() {
