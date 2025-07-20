@@ -107,6 +107,36 @@ public class MaintenanceCMD extends CommandListenerBase {
         return true;
     }
 
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (!command.getName().equalsIgnoreCase("maintenance")) {
+            return super.onTabComplete(sender, command, label, args);
+        }
+        if (args.length == 1) {
+            List<String> options = new ArrayList<>();
+            options.add("add");
+            options.add("remove");
+            return options;
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
+            List<String> playerNames = new ArrayList<>();
+            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                if (player.getName() != null && player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                    playerNames.add(player.getName());
+                }
+            }
+            return playerNames;
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+            List<String> playerNames = new ArrayList<>();
+            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                if (player.getName() != null && player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                    playerNames.add(player.getName());
+                }
+            }
+            return playerNames;
+        }
+        return super.onTabComplete(sender, command, label, args);
+    }
+
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
