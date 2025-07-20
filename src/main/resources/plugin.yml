@@ -55,8 +55,6 @@ commands:
   invsee:
     permission: essentialsmini.invsee
     description: sere others inventory
-  saveinventory:
-    description: opens an Inventory that will save
   enderchest:
     permission: essentialsmini.enderchest
     aliases:

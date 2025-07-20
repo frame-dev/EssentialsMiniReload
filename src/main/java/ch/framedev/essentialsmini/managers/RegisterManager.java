@@ -145,6 +145,7 @@ public class RegisterManager {
         return playerListeners;
     }
 
+    @SuppressWarnings("unused")
     public MuteCMD getMuteCMD() {
         return muteCMD;
     }

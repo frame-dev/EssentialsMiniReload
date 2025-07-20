@@ -66,7 +66,7 @@ Set your preferred storage type in `config.yml`:
 ### 🛠️ Utilities
 - `/fly`, `/walkspeed`, `/flyspeed`, `/godmode`, `/gamemode`
 - `/heal`, `/feed`, `/workbench`, `/repair`, `/enchant`, `/item`
-- `/invsee`, `/enderchest`, `/backpack`, `/saveinventory`, `/trash`
+- `/invsee`, `/enderchest`, `/backpack`, `/trash`
 - `/sleep`, `/signitem`, `/renameitem`, `/playerheads`
 
 ### 💬 Chat & Messaging
