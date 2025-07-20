@@ -49,6 +49,7 @@ Set your preferred storage type in `config.yml`:
 - `/back`, `/spawn`, `/setspawn`
 - `/tpa`, `/tpahere`, `/tpaaccept`, `/tpadeny`, `/tphereall`
 - `/position`, `/showlocation`
+- `/top`
 
 ### 🛡️ Moderation
 - `/mute`, `/tempmute`, `/removetempmute`, `/muteinfo`, `/muteforplayer`
