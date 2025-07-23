@@ -8,13 +8,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-/*
- * ===================================================
- * This File was Created by FrameDev
- * Please do not change anything without my consent!
- * ===================================================
- * This Class was created at 14.07.2020 16:35
- */
 public class InvseeCMD extends CommandBase {
 
     private final Main plugin;
@@ -24,70 +17,69 @@ public class InvseeCMD extends CommandBase {
         super(plugin, "invsee", "enderchest");
         this.plugin = plugin;
         this.seeOwner = plugin.getConfig().getBoolean("Invsee.Owner");
-        //plugin.getCommands().put("resethealth", this);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("invsee")) {
             if (args.length == 1) {
-                if (sender.hasPermission("essentialsmini.invsee")) {
-                    if (sender instanceof Player player) {
-                        Player target = Bukkit.getPlayer(args[0]);
-                        if (target != null) {
-                            if (!seeOwner) {
-                                if (!target.hasPermission(plugin.getPermissionBase() + "invsee.owner")) {
-                                    player.openInventory(target.getInventory());
-                                } else {
-                                    player.sendMessage(plugin.getPrefix() + "§cYou can't see this Inventory!");
-                                }
-                            } else {
-                                player.openInventory(target.getInventory());
-                            }
-                        } else {
-                            player.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                        }
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    }
-                } else {
+                if (!sender.hasPermission("essentialsmini.invsee")) {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                    return true;
                 }
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                    return true;
+                }
+                Player target = Bukkit.getPlayer(args[0]);
+                if (target == null) {
+                    player.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
+                    return true;
+                }
+                if (!seeOwner && target.hasPermission(plugin.getPermissionBase() + "invsee.owner")) {
+                    // If the target player has the invsee.owner permission, the player cannot see their inventory
+                    player.sendMessage(plugin.getPrefix() + "§cYou can't see this Inventory!");
+                    return true;
+                }
+                player.openInventory(target.getInventory());
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/invsee <PlayerName>"));
             }
+            return true;
         }
+
         if (command.getName().equalsIgnoreCase("enderchest")) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                return true;
+            }
             if (args.length == 0) {
-                if (sender.hasPermission("essentialsmini.enderchest")) {
-                    if (sender instanceof Player player) {
-                        player.openInventory(player.getEnderChest());
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    }
-                } else {
+                if (!sender.hasPermission("essentialsmini.enderchest")) {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                    return true;
                 }
+                player.openInventory(player.getEnderChest());
+                return true;
             } else if (args.length == 1) {
-                if (sender instanceof Player player) {
-                    if (sender.hasPermission("essentialsmini.enderchest.others")) {
-                        Player target = Bukkit.getPlayer(args[0]);
-                        if (target != null) {
-                            if (!target.hasPermission(plugin.getPermissionBase() + "enderchest.owner")) {
-                                player.openInventory(target.getEnderChest());
-                            }
-                        } else {
-                            player.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                        }
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    }
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                if (!sender.hasPermission("essentialsmini.enderchest.others")) {
+                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                    return true;
                 }
+                Player target = Bukkit.getPlayer(args[0]);
+                if (target == null) {
+                    player.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
+                    return true;
+                }
+                if (!seeOwner && target.hasPermission(plugin.getPermissionBase() + "enderchest.owner")) {
+                    player.sendMessage(plugin.getPrefix() + "§cYou can't see this EnderChest!");
+                    return true;
+                }
+                player.openInventory(target.getEnderChest());
+                return true;
             } else {
                 sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/ec"));
                 sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/ec <PlayerName>"));
+                return true;
             }
         }
         return false;
