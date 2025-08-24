@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * This Plugin was Created by FrameDev
- * Package : de.framedev.essentialsmin.commands
+ * Package : de.framedev.essentialsmini.commands
  * Date: 23.11.2020
  * Project: EssentialsMini
  * Copyrighted by FrameDev

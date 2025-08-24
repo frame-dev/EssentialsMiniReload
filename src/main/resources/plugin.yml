@@ -293,6 +293,11 @@ commands:
     aliases:
       - m
       - mailcommand
+  essentialsmini:
+    aliases:
+      - essmini
+    description: Main Command for all EssentialsMini Commands
+
 permissions:
   essentialsmini.*:
     children:
@@ -386,6 +391,9 @@ permissions:
       essentialsmini.staffchat: true
       essentialsmini.top: true
       essentialsmini.mail: true
+      essentialsmini.reload: true
+      essentialsmini.economy: true
+      essentialsmini.help: true
   essentialsmini.sethome:
     default: op
   essentialsmini.worldutils:
@@ -599,4 +607,8 @@ permissions:
   essentialsmini.top:
     default: op
   essentialsmini.mail:
+    default: op
+  essentialsmini.reload:
+    default: op
+  essentialsmini.economy:
     default: op

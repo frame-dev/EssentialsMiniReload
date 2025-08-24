@@ -31,9 +31,13 @@ public class TimePlayedCMD extends CommandBase {
                 return true;
             } else if (args.length == 1) {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[0]);
-                if (offlinePlayer.hasPlayedBefore())
+                if (offlinePlayer.hasPlayedBefore()) {
                     sender.sendMessage(getPrefix() + "§aPlayer §6" + offlinePlayer.getName() + " §ahas Played Hours of : §6"
-                            + toFormatted(calculateHours(offlinePlayer)));
+                                       + toFormatted(calculateHours(offlinePlayer)));
+                } else {
+                    sender.sendMessage(getPrefix() + "§cPlayer §6" + args[0] + " §cis not known.");
+                }
+                return true;
             }
         }
         return super.onCommand(sender, command, label, args);

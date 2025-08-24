@@ -30,10 +30,11 @@ public class ClearChatCMD extends CommandBase {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (sender.hasPermission(plugin.getPermissionBase() + "chatclear")) {
             clearChat(sender);
+            return true;
         } else {
             sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+            return false;
         }
-        return super.onCommand(sender, command, label, args);
     }
 
     public void clearChat(CommandSender sender) {

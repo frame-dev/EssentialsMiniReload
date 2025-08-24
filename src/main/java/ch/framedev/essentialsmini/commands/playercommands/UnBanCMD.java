@@ -25,10 +25,11 @@ public class UnBanCMD extends CommandBase {
 				} else {
 					BanFileManager.unBanPlayer(args[0]);
 				}
-			} else {
+            } else {
 				sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/eunban <Player>"));
-			}
-		}
+            }
+            return true;
+        }
 		return super.onCommand(sender,cmd,label,args);
 	}
 	

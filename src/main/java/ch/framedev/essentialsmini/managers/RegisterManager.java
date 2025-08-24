@@ -1,10 +1,7 @@
 package ch.framedev.essentialsmini.managers;
 
 import ch.framedev.essentialsmini.commands.playercommands.*;
-import ch.framedev.essentialsmini.commands.servercommands.ClearChatCMD;
-import ch.framedev.essentialsmini.commands.servercommands.GlobalMuteCMD;
-import ch.framedev.essentialsmini.commands.servercommands.MaintenanceCMD;
-import ch.framedev.essentialsmini.commands.servercommands.PlayerListCMD;
+import ch.framedev.essentialsmini.commands.servercommands.*;
 import ch.framedev.essentialsmini.commands.worldcommands.DayNightCMD;
 import ch.framedev.essentialsmini.commands.worldcommands.LightningStrikeCMD;
 import ch.framedev.essentialsmini.commands.worldcommands.SunRainThunderCMD;
@@ -130,7 +127,12 @@ public class RegisterManager {
         new StaffChatCMD(plugin);
 
         new TopCMD(plugin);
+
+        // Register the mail command
         new MailCMD(plugin);
+
+        // Register the main EssentialsMini command
+        new EssentialsMiniCMD(plugin);
 
         for (Map.Entry<String, CommandExecutor> commands : plugin.getCommands().entrySet()) {
             if (commands.getKey() == null) continue;

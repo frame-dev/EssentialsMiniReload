@@ -21,7 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
+// TODO: Require Testing
 public class MailCMD extends CommandBase {
 
     private final File mailFile = new File(Main.getInstance().getDataFolder(), "mail.yml");
@@ -67,15 +69,11 @@ public class MailCMD extends CommandBase {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     private void sendMail(CommandSender sender, String recipient, String message) {
         if (!mailConfig.contains(recipient)) {
             mailConfig.set(recipient, new ArrayList<String>());
         }
-        ArrayList<String> messages = (ArrayList<String>) mailConfig.getList(recipient);
-        if (messages == null) {
-            messages = new ArrayList<>();
-        }
+        List<String> messages = mailConfig.getStringList(recipient);
         messages.add(message);
         mailConfig.set(recipient, messages);
         try {
@@ -87,14 +85,13 @@ public class MailCMD extends CommandBase {
         sender.sendMessage(getPlugin().getPrefix() + "Mail sent to " + recipient + ": " + message);
     }
 
-    @SuppressWarnings("unchecked")
     private void readMail(CommandSender sender, String recipient) {
         if (!mailConfig.contains(recipient)) {
             sender.sendMessage(getPlugin().getPrefix() + "No mail found for " + recipient);
             return;
         }
-        ArrayList<String> messages = (ArrayList<String>) mailConfig.getList(recipient);
-        if (messages == null || messages.isEmpty()) {
+        List<String> messages = mailConfig.getStringList(recipient);
+        if (messages.isEmpty()) {
             sender.sendMessage(getPlugin().getPrefix() + "No mail found for " + recipient);
             return;
         }
