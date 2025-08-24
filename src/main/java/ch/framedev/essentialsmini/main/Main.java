@@ -40,7 +40,6 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 
-@SuppressWarnings("DanglingJavadoc")
 public class Main extends JavaPlugin {
 
     // Singleton instance of the plugin

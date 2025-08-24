@@ -95,8 +95,7 @@ public class VaultManager {
             new MySQLManager().addBankMember(bankName, player);
         } else if (Main.getInstance().isMongoDB()) {
             List<String> users = (List<String>) Main.getInstance().getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
-            if (!users.contains(player.getName()))
-                users.add(player.getName());
+            if (users != null && !users.contains(player.getName())) users.add(player.getName());
             Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankname", bankName, "essentialsmini_data");
             Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
             Main.getInstance().getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
@@ -136,7 +135,9 @@ public class VaultManager {
             new MySQLManager().removeBankMember(bankName, player);
         } else if (Main.getInstance().isMongoDB()) {
             List<String> users = (List<String>) Main.getInstance().getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
-            users.remove(player.getName());
+            if (users != null) {
+                users.remove(player.getName());
+            }
             Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankname", "", "essentialsmini_data");
             Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
             Main.getInstance().getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");

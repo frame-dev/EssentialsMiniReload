@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 public class BanMuteManager {
 
     // Database table for MySQL / SQLite
-    private final String table = "essentialsmini_banmute";
+    private final String table = "essentialsmini_ban-mute";
 
     public BanMuteManager() {
         if (Main.getInstance().isMongoDB()) {

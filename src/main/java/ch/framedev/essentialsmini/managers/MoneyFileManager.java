@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * This Plugin was Created by FrameDev
- * Package : de.framedev.frameeconomy.utils
+ * Package : ch.framedev.essentialsmini.managers
  * ClassName FileManager
  * Date: 20.03.21
  * Project: FrameEconomy
