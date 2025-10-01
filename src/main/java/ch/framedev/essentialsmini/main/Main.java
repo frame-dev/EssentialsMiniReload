@@ -68,6 +68,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Set the instance to this plugin
         instance = this;
 
         // Loads the default configuration file
@@ -143,11 +144,14 @@ public class Main extends JavaPlugin {
         // Server not online, so the update check is disabled
         if(getConfig().getBoolean("checkForUpdates")) {
             if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
+                // If no update is found, inform the console
                 Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
             } else {
+                // If an update is found and downloaded, inform the console to restart the server
                 Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
             }
         } else {
+            // Update check is disabled in config.yml
             Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cUpdate check is disabled in config.yml!");
         }
 
@@ -190,12 +194,14 @@ public class Main extends JavaPlugin {
             return;
         }
 
+        // Copy each locale example file
         for (String locale : locales) {
             File sourceFile = getFromResourceFile("locale-examples/" + "messages_" + locale + "-examples.yml", Main.class);
 
             File destinationFile = new File(destinationDir, "messages_" + locale + "-examples.yml");
             if (destinationFile.exists()) continue;
 
+            // Copy the file
             try (InputStream in = new FileInputStream(sourceFile);
                  OutputStream out = new FileOutputStream(destinationFile)) {
 
@@ -247,6 +253,15 @@ public class Main extends JavaPlugin {
         }
     }
 
+    /**
+     * Retrieves a file from the resources folder and converts it to a File object.
+     *
+     * @param file   The name of the file in the resources' folder.
+     * @param class_ The class whose classloader will be used to load the resource.
+     * @return The File object representing the resource file.
+     * @throws IllegalArgumentException if the file is not found in the resources.
+     * @see #streamToFile(InputStream) for converting InputStream to File.
+     */
     public File getFromResourceFile(String file, Class<?> class_) {
         InputStream resource = class_.getClassLoader().getResourceAsStream(file);
         if (resource == null) {
@@ -338,6 +353,14 @@ public class Main extends JavaPlugin {
         return getConfig().getBoolean("HomeTP", false);
     }
 
+    /**
+     * Retrieves the prefix from the configuration file.
+     * If the prefix is not found, it checks for an old format and updates it.
+     * It also replaces color codes and special characters in the prefix.
+     *
+     * @return The formatted prefix string.
+     * @throws NullPointerException if the prefix is not found in the configuration.
+     */
     public String getPrefix() {
         // If prefix is not found in config.yml, check for prefix in config.yml (old format) and update config.yml
         if (!getConfig().contains("prefix") && getConfig().contains("Prefix")) {
@@ -478,6 +501,12 @@ public class Main extends JavaPlugin {
         return Language.EN;
     }
 
+    /**
+     * Determines the language of the player based on their locale.
+     * If the player's locale is not recognized, it defaults to English.
+     *
+     * @return The Language enum corresponding to the player's locale.
+     */
     public String getNoPerms() {
         String permission = getLanguageConfig(null).getString("NoPermissions");
         if (permission == null) return "";
@@ -515,6 +544,7 @@ public class Main extends JavaPlugin {
         return onlyPlayer;
     }
 
+    /** Get the OnlyPlayer message from messages.yml */
     public String getOnlyPlayer(Player player) {
         String onlyPlayer = getLanguageConfig(player).getString("OnlyPlayer");
         if (onlyPlayer == null) return "";
@@ -522,35 +552,43 @@ public class Main extends JavaPlugin {
         return onlyPlayer;
     }
 
+    /** Get the log4j Logger */
     public Logger getLogger4J() {
         return logger;
     }
 
+    /** Get the Single Currency Symbol from config.yml */
     public String getCurrencySymbol() {
         return getConfig().getString("Currency.Single");
     }
 
+    /** Get the Multi Currency Symbol from config.yml */
     public String getCurrencySymbolMulti() {
         return getConfig().getString("Currency.Multi");
     }
 
+    /** MongoDB Methods */
     public boolean isMongoDB() {
         if (mongoDBUtils == null) return false;
         return mongoDBUtils.isMongoDb();
     }
 
+    /** LuckPerms Methods */
     public static boolean isLuckPermsInstalled() {
         return Bukkit.getPluginManager().isPluginEnabled("LuckPerms");
     }
 
+    /** Database Methods */
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
+    /** MongoDB Methods */
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
     }
 
+    /** Vault Methods */
     public VaultManager getVaultManager() {
         return vaultManager;
     }

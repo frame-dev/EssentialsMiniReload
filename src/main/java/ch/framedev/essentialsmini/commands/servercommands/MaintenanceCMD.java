@@ -52,10 +52,10 @@ public class MaintenanceCMD extends CommandListenerBase {
                 getPlugin().getConfig().set("maintenance.enabled", true);
                 getPlugin().saveConfig();
                 sender.sendMessage(getPlugin().getPrefix() + "§cMaintenance mode has been enabled!");
-                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«");
-                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«");
-                tabListHeader = tabListHeader.replace("§", "&");
-                tabListFooter = tabListFooter.replace("§", "&");
+                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!«");
+                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!»");
+                tabListHeader = tabListHeader.replace("&", "§");
+                tabListFooter = tabListFooter.replace("&", "§");
                 for (Player player : Bukkit.getOnlinePlayers())
                     player.setPlayerListHeaderFooter(tabListHeader, tabListFooter);
             }
@@ -71,10 +71,11 @@ public class MaintenanceCMD extends CommandListenerBase {
             getPlugin().getConfig().set("maintenance.players", uuids);
             getPlugin().saveConfig();
             String addMessage = getPlugin().getConfig()
-                            .getString("maintenance.list.added", "%Prefix%&aPlayer %Player% has been added to the maintenance list!");
-            addMessage = addMessage.replace("§", "&")
-                            .replace("%Prefix%", getPlugin().getPrefix())
-                            .replace("%Player%", args[1]);
+                    .getString("maintenance.list.added", "%Prefix%&aPlayer %Player% has been added to the maintenance list!");
+            addMessage = addMessage.replace("&", "§")
+                    .replace("%Prefix%", getPlugin().getPrefix())
+                    .replace("%Player%", sender.getName())
+                    .replace("%Target%", args[1]);
             sender.sendMessage(addMessage);
             return true;
         } else if (args[0].equalsIgnoreCase("remove")) {
@@ -89,17 +90,19 @@ public class MaintenanceCMD extends CommandListenerBase {
                 getPlugin().getConfig().set("maintenance.players", uuids);
                 getPlugin().saveConfig();
                 String removeMessage = getPlugin().getConfig()
-                                .getString("maintenance.list.removed", "%Prefix%&aPlayer %Player% has been removed from the maintenance list!");
-                removeMessage = removeMessage.replace("§", "&")
-                                .replace("%Prefix%", getPlugin().getPrefix())
-                                .replace("%Player%", args[1]);
+                        .getString("maintenance.list.removed", "%Prefix%&aPlayer %Player% has been removed from the maintenance list!");
+                removeMessage = removeMessage.replace("&", "§")
+                        .replace("%Prefix%", getPlugin().getPrefix())
+                        .replace("%Player%", sender.getName())
+                        .replace("%Target%", args[1]);
                 sender.sendMessage(removeMessage);
             } else {
                 String notInListMessage = getPlugin().getConfig()
-                                .getString("maintenance.list.notInList", "%Prefix%&cPlayer %Player% is not on the maintenance list!");
-                notInListMessage = notInListMessage.replace("§", "&")
-                                .replace("%Prefix%", getPlugin().getPrefix())
-                                .replace("%Player%", args[1]);
+                        .getString("maintenance.list.notInList", "%Prefix%&cPlayer %Player% is not on the maintenance list!");
+                notInListMessage = notInListMessage.replace("&", "§")
+                        .replace("%Prefix%", getPlugin().getPrefix())
+                        .replace("%Player%", sender.getName())
+                        .replace("%Target%", args[1]);
                 sender.sendMessage(notInListMessage);
             }
             return true;
@@ -145,7 +148,7 @@ public class MaintenanceCMD extends CommandListenerBase {
                     (!Main.isLuckPermsInstalled() || !LuckPermsManager.hasOfflinePermission(PlayerUtils.getOfflinePlayerByName(event.getName()), "essentialsmini.maintenance.bypass"))) {event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, getPlugin().getPrefix() + "§cThis server is currently in maintenance mode!");
                 event.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
                 String kickMessage = getPlugin().getConfig().getString("maintenance.kickMessage", "%Prefix%&cThis server is currently in maintenance mode!");
-                kickMessage = kickMessage.replace("§", "&");
+                kickMessage = kickMessage.replace("&", "§");
                 kickMessage = kickMessage.replace("%Prefix%", getPlugin().getPrefix());
                 event.setKickMessage(kickMessage);
             }
@@ -157,14 +160,14 @@ public class MaintenanceCMD extends CommandListenerBase {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
             if (getPlugin().getConfig().getStringList("maintenance.players").contains(event.getPlayer().getUniqueId().toString())) {
                 String joinMessage = getPlugin().getConfig().getString("maintenance.joinMessage", "%Prefix%&6%Player% &cjoined the server in maintenance mode!");
-                joinMessage = joinMessage.replace("§", "&");
+                joinMessage = joinMessage.replace("&", "§");
                 joinMessage = joinMessage.replace("%Prefix%", getPlugin().getPrefix());
                 joinMessage = joinMessage.replace("%Player%", event.getPlayer().getName());
                 event.setJoinMessage(joinMessage);
-                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«");
-                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«");
-                tabListHeader = tabListHeader.replace("§", "&");
-                tabListFooter = tabListFooter.replace("§", "&");
+                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!«");
+                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!«");
+                tabListHeader = tabListHeader.replace("&", "§");
+                tabListFooter = tabListFooter.replace("&", "§");
                 event.getPlayer().setPlayerListHeaderFooter(tabListHeader, tabListFooter);
             }
         }
@@ -180,7 +183,7 @@ public class MaintenanceCMD extends CommandListenerBase {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
             String motd = getPlugin().getConfig().getString("maintenance.motd");
             if (motd == null)
-                motd = "%PREFIX%&c&l»This server is currently in maintenance mode!" + System.lineSeparator() + "&r&cPlease try again later!«";
+                motd = "%PREFIX%&c&l»This server is currently in maintenance mode!\\n&r&cPlease try again later!«";
             motd = motd.replace("&", "§") // Convert color codes
                     .replace("%PREFIX%", getPrefix()) // Replace %PREFIX% with actual prefix
                     .replace("\\n", System.lineSeparator()); // Replace escaped \n with a real newline

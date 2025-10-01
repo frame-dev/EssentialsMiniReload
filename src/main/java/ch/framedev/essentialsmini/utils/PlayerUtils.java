@@ -19,6 +19,7 @@ import java.util.UUID;
 public class PlayerUtils {
 
     @SuppressWarnings("deprecation")
+    // TODO: Require Testing with Geyser
     public static OfflinePlayer getOfflinePlayerByName(String playerName) {
         if (playerName == null || playerName.isEmpty()) {
             throw new IllegalArgumentException("Player name cannot be null or empty!");
@@ -27,9 +28,18 @@ public class PlayerUtils {
         OfflinePlayer player = null;
 
         if (Bukkit.getOnlineMode()) {
-            UUID uuid = UUIDFetcher.getUUID(playerName);
-            if (uuid != null) {
-                player = Bukkit.getOfflinePlayer(uuid);
+            if(GeyserManager.isGeyserInstalled()) {
+                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                    if (offlinePlayer.getName() != null && offlinePlayer.getName().equalsIgnoreCase(playerName)) {
+                        player = offlinePlayer;
+                        break;
+                    }
+                }
+            } else {
+                UUID uuid = UUIDFetcher.getUUID(playerName);
+                if (uuid != null) {
+                    player = Bukkit.getOfflinePlayer(uuid);
+                }
             }
         }
 
