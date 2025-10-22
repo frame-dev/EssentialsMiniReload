@@ -1,7 +1,5 @@
 package ch.framedev.essentialsmini.utils;
 
-
-
 /*
  * ch.framedev.essentialsmini.utils
  * =============================================
@@ -28,7 +26,8 @@ public class PlayerUtils {
         OfflinePlayer player = null;
 
         if (Bukkit.getOnlineMode()) {
-            if(GeyserManager.isGeyserInstalled()) {
+            // If Geyser/Floodgate is present, prefer scanning known offline players first
+            if (GeyserManager.isGeyserInstalled()) {
                 for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
                     if (offlinePlayer.getName() != null && offlinePlayer.getName().equalsIgnoreCase(playerName)) {
                         player = offlinePlayer;

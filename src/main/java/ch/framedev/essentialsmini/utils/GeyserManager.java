@@ -1,49 +1,55 @@
 package ch.framedev.essentialsmini.utils;
 
-import ch.framedev.essentialsmini.main.Main;
-import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.connection.GeyserConnection;
-import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
-
-import java.util.Optional;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
-public class GeyserManager {
+public final class GeyserManager {
 
+    private GeyserManager() { /* utility class */ }
+
+    /**
+     * Returns true if Geyser or Floodgate API is present on the server classpath.
+     */
     public static boolean isGeyserInstalled() {
+        return isClassAvailable("org.geysermc.geyser.api.GeyserApi") ||
+                isClassAvailable("org.geysermc.floodgate.api.FloodgateApi");
+    }
+
+    /**
+     * Returns true if Floodgate API is present (Floodgate is the common Floodgate plugin for Geyser).
+     */
+    public static boolean isFloodgateInstalled() {
+        return isClassAvailable("org.geysermc.floodgate.api.FloodgateApi");
+    }
+
+    /**
+     * Uses FloodgateApi.getInstance().isFloodgatePlayer(UUID) via reflection.
+     * Returns true only if Floodgate is installed and the UUID belongs to a Floodgate (Bedrock) player.
+     */
+    public static boolean isFloodgatePlayer(UUID uuid) {
+        if (uuid == null) return false;
         try {
-            Class.forName("org.geysermc.geyser.api.GeyserApi");
-            return true;
+            Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+            Method getInstance = apiClass.getMethod("getInstance");
+            Object api = getInstance.invoke(null);
+            Method isFgPlayer = apiClass.getMethod("isFloodgatePlayer", UUID.class);
+            Object result = isFgPlayer.invoke(api, uuid);
+            return result instanceof Boolean && (Boolean) result;
         } catch (ClassNotFoundException e) {
+            // Floodgate not present
+            return false;
+        } catch (Exception e) {
+            // Any reflection failure => treat as not a floodgate player
             return false;
         }
     }
 
-    public static GeyserConnection getGeyserConnection(UUID player) {
-        if (!isGeyserInstalled()) {
-            return null;
-        }
+    private static boolean isClassAvailable(String className) {
         try {
-            return GeyserApi.api().connectionByUuid(player);
-        } catch (Exception e) {
-            Main.getInstance().getLogger4J().error("Error while getting Geyser connection: " + e.getMessage());
-            return null;
-        }
-    }
-
-    public static Optional<GeyserPlayerEntity> getGeyserPlayerEntity(UUID player) {
-        if (!isGeyserInstalled()) {
-            return Optional.empty();
-        }
-        try {
-            GeyserConnection connection = GeyserApi.api().connectionByUuid(player);
-            if (connection == null) {
-                return Optional.empty();
-            }
-            return Optional.of(connection.entities().playerEntity());
-        } catch (Exception e) {
-            Main.getInstance().getLogger4J().error("Error while getting Geyser player entity: " + e.getMessage());
-            return Optional.empty();
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException ignored) {
+            return false;
         }
     }
 }

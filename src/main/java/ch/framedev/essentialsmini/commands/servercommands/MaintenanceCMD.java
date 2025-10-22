@@ -1,8 +1,18 @@
 package ch.framedev.essentialsmini.commands.servercommands;
 
+/*
+ * ch.framedev.essentialsmini.commands.servercommands
+ * =============================================
+ * This File was Created by FrameDev
+ * Please do not change anything without my consent!
+ * =============================================
+ * This Class was created at 28.01.2025 19:31
+ */
+
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.LuckPermsManager;
+import ch.framedev.essentialsmini.utils.GeyserManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -15,7 +25,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,22 +42,14 @@ public class MaintenanceCMD extends CommandListenerBase {
             return true;
         }
         if (args.length == 0) {
-            if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
-                getPlugin().getConfig().set("maintenance.enabled", false);
-                getPlugin().saveConfig();
-                sender.sendMessage(getPlugin().getPrefix() + "§aMaintenance mode has been disabled!");
-                for (Player player : Bukkit.getOnlinePlayers())
-                    player.setPlayerListHeaderFooter(null, null);
-            } else {
-                getPlugin().getConfig().set("maintenance.enabled", true);
-                getPlugin().saveConfig();
-                sender.sendMessage(getPlugin().getPrefix() + "§cMaintenance mode has been enabled!");
-                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!«");
-                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!»");
-                tabListHeader = tabListHeader.replace("&", "§");
-                tabListFooter = tabListFooter.replace("&", "§");
-                for (Player player : Bukkit.getOnlinePlayers())
-                    player.setPlayerListHeaderFooter(tabListHeader, tabListFooter);
+            boolean enabled = getPlugin().getConfig().getBoolean("maintenance.enabled");
+            getPlugin().getConfig().set("maintenance.enabled", !enabled);
+            getPlugin().saveConfig();
+            sender.sendMessage(getPlugin().getPrefix() + (!enabled ? "§cMaintenance mode has been enabled!" : "§aMaintenance mode has been disabled!"));
+            String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«").replace("&", "§");
+            String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!\n&r&cPlease try again later!«").replace("&", "§");
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.setPlayerListHeaderFooter(!enabled ? tabListHeader : null, !enabled ? tabListFooter : null);
             }
             return true;
         } else if (args[0].equalsIgnoreCase("add")) {
@@ -61,12 +62,8 @@ public class MaintenanceCMD extends CommandListenerBase {
             uuids.add(offlinePlayer.getUniqueId().toString());
             getPlugin().getConfig().set("maintenance.players", uuids);
             getPlugin().saveConfig();
-            String addMessage = getPlugin().getConfig()
-                    .getString("maintenance.list.added", "%Prefix%&aPlayer %Player% has been added to the maintenance list!");
-            addMessage = addMessage.replace("&", "§")
-                    .replace("%Prefix%", getPlugin().getPrefix())
-                    .replace("%Player%", sender.getName())
-                    .replace("%Target%", args[1]);
+            String addMessage = getPlugin().getConfig().getString("maintenance.list.added", "%Prefix%&aPlayer %Player% has been added to the maintenance list!");
+            addMessage = addMessage.replace("§", "&").replace("%Prefix%", getPlugin().getPrefix()).replace("%Player%", args[1]);
             sender.sendMessage(addMessage);
             return true;
         } else if (args[0].equalsIgnoreCase("remove")) {
@@ -80,20 +77,12 @@ public class MaintenanceCMD extends CommandListenerBase {
                 uuids.remove(offlinePlayer.getUniqueId().toString());
                 getPlugin().getConfig().set("maintenance.players", uuids);
                 getPlugin().saveConfig();
-                String removeMessage = getPlugin().getConfig()
-                        .getString("maintenance.list.removed", "%Prefix%&aPlayer %Player% has been removed from the maintenance list!");
-                removeMessage = removeMessage.replace("&", "§")
-                        .replace("%Prefix%", getPlugin().getPrefix())
-                        .replace("%Player%", sender.getName())
-                        .replace("%Target%", args[1]);
+                String removeMessage = getPlugin().getConfig().getString("maintenance.list.removed", "%Prefix%&aPlayer %Player% has been removed from the maintenance list!");
+                removeMessage = removeMessage.replace("§", "&").replace("%Prefix%", getPlugin().getPrefix()).replace("%Player%", args[1]);
                 sender.sendMessage(removeMessage);
             } else {
-                String notInListMessage = getPlugin().getConfig()
-                        .getString("maintenance.list.notInList", "%Prefix%&cPlayer %Player% is not on the maintenance list!");
-                notInListMessage = notInListMessage.replace("&", "§")
-                        .replace("%Prefix%", getPlugin().getPrefix())
-                        .replace("%Player%", sender.getName())
-                        .replace("%Target%", args[1]);
+                String notInListMessage = getPlugin().getConfig().getString("maintenance.list.notInList", "%Prefix%&cPlayer %Player% is not on the maintenance list!");
+                notInListMessage = notInListMessage.replace("§", "&").replace("%Prefix%", getPlugin().getPrefix()).replace("%Player%", args[1]);
                 sender.sendMessage(notInListMessage);
             }
             return true;
@@ -101,56 +90,25 @@ public class MaintenanceCMD extends CommandListenerBase {
         return true;
     }
 
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("maintenance")) {
-            return super.onTabComplete(sender, command, label, args);
-        }
-        if (args.length == 1) {
-            List<String> options = new ArrayList<>();
-            options.add("add");
-            options.add("remove");
-            return options;
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
-            List<String> playerNames = new ArrayList<>();
-            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                if (player.getName() != null && player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
-                    playerNames.add(player.getName());
-                }
-            }
-            return playerNames;
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
-            List<String> playerNames = new ArrayList<>();
-            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                if (player.getName() != null && player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
-                    playerNames.add(player.getName());
-                }
-            }
-            return playerNames;
-        }
-        return super.onTabComplete(sender, command, label, args);
-    }
-
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
-            OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(event.getName());
-            boolean isAllowedInList = getPlugin().getConfig().getStringList("maintenance.players").contains(event.getUniqueId().toString());
-            boolean isOp = offline.isOp();
-            boolean hasPermissionBypass = Main.isLuckPermsInstalled() && LuckPermsManager.hasOfflinePermission(offline, "essentialsmini.maintenance.bypass");
+        if (!getPlugin().getConfig().getBoolean("maintenance.enabled")) return;
 
-            // Optional config flag to allow all Floodgate/Geyser (Bedrock) players to bypass maintenance:
-            boolean floodgateBypassEnabled = getPlugin().getConfig().getBoolean("maintenance.floodgateBypass", false);
-            boolean isFloodgate = isFloodgatePlayer(event.getUniqueId());
+        UUID uuid = event.getUniqueId();
+        OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(event.getName());
+        boolean allowedInList = getPlugin().getConfig().getStringList("maintenance.players").contains(uuid.toString());
+        boolean isOp = offline != null && offline.isOp();
+        boolean hasPermissionBypass = Main.isLuckPermsInstalled() && offline != null && LuckPermsManager.hasOfflinePermission(offline, "essentialsmini.maintenance.bypass");
 
-            if (!isAllowedInList && !isOp && !hasPermissionBypass && !(isFloodgate && floodgateBypassEnabled)) {
-                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, getPlugin().getPrefix() + "§cThis server is currently in maintenance mode!");
-                event.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-                String kickMessage = getPlugin().getConfig().getString("maintenance.kickMessage", "%Prefix%&cThis server is currently in maintenance mode!");
-                kickMessage = kickMessage.replace("&", "§");
-                kickMessage = kickMessage.replace("%Prefix%", getPlugin().getPrefix());
-                event.setKickMessage(kickMessage);
-            }
+        boolean floodgateBypassEnabled = getPlugin().getConfig().getBoolean("maintenance.floodgateBypass", false);
+        boolean isFloodgate = GeyserManager.isFloodgateInstalled() && GeyserManager.isFloodgatePlayer(uuid);
+
+        if (!allowedInList && !isOp && !hasPermissionBypass && !(isFloodgate && floodgateBypassEnabled)) {
+            String kickMessage = getPlugin().getConfig().getString("maintenance.kickMessage", "%Prefix%&cThis server is currently in maintenance mode!");
+            kickMessage = kickMessage.replace("&", "§").replace("%Prefix%", getPlugin().getPrefix());
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, kickMessage);
+            event.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+            event.setKickMessage(kickMessage);
         }
     }
 
@@ -159,14 +117,10 @@ public class MaintenanceCMD extends CommandListenerBase {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
             if (getPlugin().getConfig().getStringList("maintenance.players").contains(event.getPlayer().getUniqueId().toString())) {
                 String joinMessage = getPlugin().getConfig().getString("maintenance.joinMessage", "%Prefix%&6%Player% &cjoined the server in maintenance mode!");
-                joinMessage = joinMessage.replace("&", "§");
-                joinMessage = joinMessage.replace("%Prefix%", getPlugin().getPrefix());
-                joinMessage = joinMessage.replace("%Player%", event.getPlayer().getName());
+                joinMessage = joinMessage.replace("&", "§").replace("%Prefix%", getPlugin().getPrefix()).replace("%Player%", event.getPlayer().getName());
                 event.setJoinMessage(joinMessage);
-                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!«");
-                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!«");
-                tabListHeader = tabListHeader.replace("&", "§");
-                tabListFooter = tabListFooter.replace("&", "§");
+                String tabListHeader = getPlugin().getConfig().getString("maintenance.tabList.header", "&c&l»This server is currently in maintenance mode!«").replace("&", "§");
+                String tabListFooter = getPlugin().getConfig().getString("maintenance.tabList.footer", "&c&l»This server is currently in maintenance mode!«").replace("&", "§");
                 event.getPlayer().setPlayerListHeaderFooter(tabListHeader, tabListFooter);
             }
         }
@@ -182,35 +136,12 @@ public class MaintenanceCMD extends CommandListenerBase {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
             String motd = getPlugin().getConfig().getString("maintenance.motd");
             if (motd == null)
-                motd = "%PREFIX%&c&l»This server is currently in maintenance mode!\\n&r&cPlease try again later!«";
-            motd = motd.replace("&", "§") // Convert color codes
-                    .replace("%PREFIX%", getPrefix()) // Replace %PREFIX% with actual prefix
-                    .replace("\\n", System.lineSeparator()); // Replace escaped \n with a real newline
+                motd = "%PREFIX%&c&l»This server is currently in maintenance mode!" + System.lineSeparator() + "&r&cPlease try again later!«";
+            motd = motd.replace("&", "§").replace("%PREFIX%", getPlugin().getPrefix()).replace("\\n", System.lineSeparator());
             event.setMotd(motd);
             event.setMaxPlayers(-1);
         } else {
             event.setMotd(getPlugin().getServer().getMotd());
-        }
-    }
-
-    /**
-     * Detect Floodgate (Geyser) Bedrock players using reflection so there's no hard compile dependency.
-     * Returns true if Floodgate is present and the given UUID belongs to a Floodgate player.
-     */
-    private boolean isFloodgatePlayer(UUID uuid) {
-        try {
-            Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
-            Method getInstance = apiClass.getMethod("getInstance");
-            Object api = getInstance.invoke(null);
-            Method isFloodgatePlayer = apiClass.getMethod("isFloodgatePlayer", UUID.class);
-            Object result = isFloodgatePlayer.invoke(api, uuid);
-            return result instanceof Boolean && (Boolean) result;
-        } catch (ClassNotFoundException e) {
-            // Floodgate not installed
-            return false;
-        } catch (Exception e) {
-            // Reflection failure - treat as not a floodgate player
-            return false;
         }
     }
 }
