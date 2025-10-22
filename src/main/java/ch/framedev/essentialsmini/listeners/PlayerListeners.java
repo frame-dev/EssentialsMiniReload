@@ -18,7 +18,6 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -61,7 +60,7 @@ public class PlayerListeners implements Listener {
         }
     }
 
-    private List<String> colorList = List.of(
+    private final List<String> colorList = List.of(
             "aqua",
             "black",
             "blue",
