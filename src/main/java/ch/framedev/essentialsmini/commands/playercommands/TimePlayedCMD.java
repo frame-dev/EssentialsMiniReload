@@ -21,8 +21,14 @@ public class TimePlayedCMD extends CommandBase {
                              @NotNull String label, String[] args) {
         if (args.length == 0) {
             if (sender instanceof Player player) {
+                String message = getPlugin().getLanguageConfig(player).getString("timePlayed");
+                if(message == null) {
+                    message = "§aPlayed: §6%TimePlayed%";
+                }
+                message = message.replace("%TimePlayed%", toFormattedTime(calculateSeconds(player)));
+                message = message.replace("&", "§");
+                player.sendMessage(getPrefix() + message);
                 long seconds = calculateSeconds(player);
-                player.sendMessage(getPrefix() + "§aPlayed: §6" + toFormattedTime(seconds));
             } else {
                 sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
             }

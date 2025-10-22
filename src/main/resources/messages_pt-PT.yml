@@ -114,3 +114,5 @@ VanishOff:
 
 JoinMessage: '&aBem-vindo &6%Player% &aao servidor!'
 LeaveMessage: '&6%Player% &asaiu do servidor!'
+
+timePlayed: '&aVocê jogou por &6%TimePlayed%&a!'

@@ -165,3 +165,5 @@ LeaveMessage: '&6%Player% &ahat den Server verlassen!'
 PlayerWeather:
   Set: "&aDein Wetter wurde auf &6%WEATHER% &agesetzt!"
   Reset: "&aDein Wetter wurde zurückgesetzt!"
+
+timePlayed: '&aDu hast &6%TimePlayed% &agespielt!'

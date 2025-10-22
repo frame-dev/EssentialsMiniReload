@@ -122,3 +122,5 @@ Experience:
   Other:
     Level: '&aУровень &6%Player% &a: &6%Level%'
     XP: '&aОпыт &6%Player% &a: &6%XP%'
+
+timePlayed: '&aВы играли &6%TimePlayed%&a!'

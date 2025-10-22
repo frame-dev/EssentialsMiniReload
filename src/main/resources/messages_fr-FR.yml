@@ -115,3 +115,5 @@ Experience:
   Other:
     Level: '&aLe niveau actuel de &6%Player% &aest &6%Level%'
     XP: "&a%Player% a actuellement &6%XP% &ad'expérience"
+
+timePlayed: '&aVous avez joué pendant &6%TimePlayed%&a!'

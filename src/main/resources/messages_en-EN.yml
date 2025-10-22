@@ -162,3 +162,5 @@ Bank:
 
 JoinMessage: '&aWelcome &6%Player% &aon this Server!'
 LeaveMessage: '&6%Player% &ahas left the Server!'
+
+timePlayed: '&aYou have played for &6%TimePlayed%'

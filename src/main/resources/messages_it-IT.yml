@@ -122,3 +122,5 @@ Experience:
   Other:
     Level: '&aIl livello di &6%Player% &aè &6%Level%'
     XP: '&a%Player% ha attualmente &6%XP% &adi esperienza'
+
+timePlayed: '&aHai giocato per &6%TimePlayed%&a!'
