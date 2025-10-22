@@ -431,6 +431,7 @@ public class VaultAPI extends AbstractEconomy {
                     cfg.set("accounts", accounts);
                 }
             }
+            Main.getInstance().getLogger4J().info("[Economy] Created Account for " + playerName);
             save(file, cfg);
             return true;
         }

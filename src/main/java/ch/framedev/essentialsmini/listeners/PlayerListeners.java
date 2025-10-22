@@ -17,6 +17,8 @@ import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,9 +52,34 @@ public class PlayerListeners implements Listener {
             String message = event.getMessage();
             if (message.contains("&"))
                 message = message.replace('&', '§');
+            for(String color : colorList) {
+                if (message.contains("%" + color + "%")) {
+                    message = message.replace("%" + color + "%", ChatColor.valueOf(color.toUpperCase()) + "");
+                }
+            }
             event.setMessage(message);
         }
     }
+
+    private List<String> colorList = List.of(
+            "aqua",
+            "black",
+            "blue",
+            "fuchsia",
+            "gray",
+            "green",
+            "lime",
+            "maroon",
+            "navy",
+            "olive",
+            "orange",
+            "purple",
+            "red",
+            "silver",
+            "teal",
+            "white",
+            "yellow"
+    );
 
     @EventHandler
     public void onSignColor(SignChangeEvent event) {

@@ -33,6 +33,9 @@ public class RegisterManager {
         this.plugin = plugin;
         plugin.getLogger4J().info("Registering Events and Commands starting!");
 
+        if(plugin.getConfig().getBoolean("debug"))
+            plugin.getLogger4J().info("Debug is enabled, show all registered Commands and Listeners.");
+
         // Register Commands
         registerCommands();
 

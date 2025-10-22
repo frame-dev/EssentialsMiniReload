@@ -114,6 +114,7 @@ public class Main extends JavaPlugin {
                         databaseManager.getBackendManager().createUser(player, "essentialsmini_data", new BackendManager.Callback<>() {
                             @Override
                             public void onResult(Void result) {
+                                logger.info("User " + player.getUniqueId() + " created successfully in MongoDB.");
                             }
 
                             @Override
