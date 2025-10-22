@@ -142,7 +142,10 @@
       "description": [
         "Bug fixes",
         "Performance improvements",
-        "Geyser support added (for bedrock players)"
+        "Geyser support added (for bedrock players)",
+        "messages updated",
+        "Played Time added Messages",
+        "Chat Color added option to use %YourColor% in messages"
       ]
     }
   ]
