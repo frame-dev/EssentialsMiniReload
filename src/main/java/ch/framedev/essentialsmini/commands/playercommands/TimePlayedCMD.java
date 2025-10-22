@@ -31,7 +31,7 @@ public class TimePlayedCMD extends CommandBase {
 
         if (args.length == 1) {
             OfflinePlayer offline = Bukkit.getOfflinePlayer(args[0]);
-            if (offline == null || !offline.hasPlayedBefore()) {
+            if (!offline.hasPlayedBefore()) {
                 sender.sendMessage(getPrefix() + "§cPlayer §6" + args[0] + " §cis not known.");
                 return true;
             }
