@@ -97,8 +97,8 @@ public class MaintenanceCMD extends CommandListenerBase {
         UUID uuid = event.getUniqueId();
         OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(event.getName());
         boolean allowedInList = getPlugin().getConfig().getStringList("maintenance.players").contains(uuid.toString());
-        boolean isOp = offline != null && offline.isOp();
-        boolean hasPermissionBypass = Main.isLuckPermsInstalled() && offline != null && LuckPermsManager.hasOfflinePermission(offline, "essentialsmini.maintenance.bypass");
+        boolean isOp = offline.isOp();
+        boolean hasPermissionBypass = Main.isLuckPermsInstalled() && LuckPermsManager.hasOfflinePermission(offline, "essentialsmini.maintenance.bypass");
 
         boolean floodgateBypassEnabled = getPlugin().getConfig().getBoolean("maintenance.floodgateBypass", false);
         boolean isFloodgate = GeyserManager.isFloodgateInstalled() && GeyserManager.isFloodgatePlayer(uuid);
