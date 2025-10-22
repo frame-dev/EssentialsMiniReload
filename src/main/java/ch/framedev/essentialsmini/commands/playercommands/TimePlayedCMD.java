@@ -28,7 +28,6 @@ public class TimePlayedCMD extends CommandBase {
                 message = message.replace("%TimePlayed%", toFormattedTime(calculateSeconds(player)));
                 message = message.replace("&", "§");
                 player.sendMessage(getPrefix() + message);
-                long seconds = calculateSeconds(player);
             } else {
                 sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
             }
