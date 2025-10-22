@@ -10,9 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 public class TimePlayedCMD extends CommandBase {
     public TimePlayedCMD(Main plugin) {
         super(plugin, "playedtime", "timeplayed");
@@ -20,40 +17,53 @@ public class TimePlayedCMD extends CommandBase {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("timeplayed")) {
-            if (args.length == 0) {
-                if (sender instanceof Player player) {
-                    player.sendMessage(getPrefix() + "§aPlayed Hours : §6" + toFormatted(calculateHours(player)));
-                } else {
-                    sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
-                }
-                return true;
-            } else if (args.length == 1) {
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[0]);
-                if (offlinePlayer.hasPlayedBefore()) {
-                    sender.sendMessage(getPrefix() + "§aPlayer §6" + offlinePlayer.getName() + " §ahas Played Hours of : §6"
-                                       + toFormatted(calculateHours(offlinePlayer)));
-                } else {
-                    sender.sendMessage(getPrefix() + "§cPlayer §6" + args[0] + " §cis not known.");
-                }
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
+                             @NotNull String label, String[] args) {
+        if (args.length == 0) {
+            if (sender instanceof Player player) {
+                long seconds = calculateSeconds(player);
+                player.sendMessage(getPrefix() + "§aPlayed: §6" + toFormattedTime(seconds));
+            } else {
+                sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
+            }
+            return true;
+        }
+
+        if (args.length == 1) {
+            OfflinePlayer offline = Bukkit.getOfflinePlayer(args[0]);
+            if (offline == null || !offline.hasPlayedBefore()) {
+                sender.sendMessage(getPrefix() + "§cPlayer §6" + args[0] + " §cis not known.");
                 return true;
             }
+
+            Player online = offline.getPlayer();
+            if (online != null) {
+                long seconds = calculateSeconds(online);
+                sender.sendMessage(getPrefix() + "§aPlayer §6" + online.getName() + " §ahas Played: §6" + toFormattedTime(seconds));
+            } else {
+                // Cannot access statistics for truly offline players via Bukkit API without loading player data.
+                sender.sendMessage(getPrefix() + "§cPlayer §6" + (offline.getName() != null ? offline.getName() : args[0])
+                        + " §ais offline; playtime data is unavailable.");
+            }
+            return true;
         }
+
         return super.onCommand(sender, command, label, args);
     }
 
-    private String toFormatted(double hours) {
-        return BigDecimal.valueOf(hours).setScale(3, RoundingMode.HALF_UP).toString();
+    private long calculateSeconds(OfflinePlayer player) {
+        if (player instanceof Player p) {
+            long playedTicks = p.getStatistic(Statistic.PLAY_ONE_MINUTE); // ticks
+            return playedTicks / 20L; // convert ticks to seconds
+        }
+        return 0L;
     }
 
-    private double calculateHours(OfflinePlayer player) {
-        if (player.hasPlayedBefore()) {
-            long played = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-            double seconds = (double) played / 20;
-            double minutes = seconds / 60;
-            return minutes / 60;
-        }
-        return 0.0d;
+    private String toFormattedTime(long totalSeconds) {
+        long days = totalSeconds / 86400;
+        long hours = (totalSeconds % 86400) / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%d days, %d hours, %d minutes, %d seconds", days, hours, minutes, seconds);
     }
 }
