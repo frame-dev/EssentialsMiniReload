@@ -88,6 +88,7 @@ maintenance:
   tabList:
     header: '&c&l»This server is currently in maintenance mode!«'
     footer: '&c&l»This server is currently in maintenance mode!«'
+  floodgateBypass: false
 playerPingServerMessage: false
 globalMute: false
 globalMuteMessage:

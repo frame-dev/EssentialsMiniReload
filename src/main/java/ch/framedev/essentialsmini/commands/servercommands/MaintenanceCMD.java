@@ -1,16 +1,5 @@
 package ch.framedev.essentialsmini.commands.servercommands;
 
-
-
-/*
- * ch.framedev.essentialsmini.commands.servercommands
- * =============================================
- * This File was Created by FrameDev
- * Please do not change anything without my consent!
- * =============================================
- * This Class was created at 28.01.2025 19:31
- */
-
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.LuckPermsManager;
@@ -26,8 +15,10 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class MaintenanceCMD extends CommandListenerBase {
 
@@ -143,9 +134,17 @@ public class MaintenanceCMD extends CommandListenerBase {
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
         if (getPlugin().getConfig().getBoolean("maintenance.enabled")) {
-            if (!getPlugin().getConfig().getStringList("maintenance.players").contains(event.getUniqueId().toString()) &&
-                    !PlayerUtils.getOfflinePlayerByName(event.getName()).isOp() &&
-                    (!Main.isLuckPermsInstalled() || !LuckPermsManager.hasOfflinePermission(PlayerUtils.getOfflinePlayerByName(event.getName()), "essentialsmini.maintenance.bypass"))) {event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, getPlugin().getPrefix() + "§cThis server is currently in maintenance mode!");
+            OfflinePlayer offline = PlayerUtils.getOfflinePlayerByName(event.getName());
+            boolean isAllowedInList = getPlugin().getConfig().getStringList("maintenance.players").contains(event.getUniqueId().toString());
+            boolean isOp = offline.isOp();
+            boolean hasPermissionBypass = Main.isLuckPermsInstalled() && LuckPermsManager.hasOfflinePermission(offline, "essentialsmini.maintenance.bypass");
+
+            // Optional config flag to allow all Floodgate/Geyser (Bedrock) players to bypass maintenance:
+            boolean floodgateBypassEnabled = getPlugin().getConfig().getBoolean("maintenance.floodgateBypass", false);
+            boolean isFloodgate = isFloodgatePlayer(event.getUniqueId());
+
+            if (!isAllowedInList && !isOp && !hasPermissionBypass && !(isFloodgate && floodgateBypassEnabled)) {
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, getPlugin().getPrefix() + "§cThis server is currently in maintenance mode!");
                 event.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
                 String kickMessage = getPlugin().getConfig().getString("maintenance.kickMessage", "%Prefix%&cThis server is currently in maintenance mode!");
                 kickMessage = kickMessage.replace("&", "§");
@@ -191,6 +190,27 @@ public class MaintenanceCMD extends CommandListenerBase {
             event.setMaxPlayers(-1);
         } else {
             event.setMotd(getPlugin().getServer().getMotd());
+        }
+    }
+
+    /**
+     * Detect Floodgate (Geyser) Bedrock players using reflection so there's no hard compile dependency.
+     * Returns true if Floodgate is present and the given UUID belongs to a Floodgate player.
+     */
+    private boolean isFloodgatePlayer(UUID uuid) {
+        try {
+            Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+            Method getInstance = apiClass.getMethod("getInstance");
+            Object api = getInstance.invoke(null);
+            Method isFloodgatePlayer = apiClass.getMethod("isFloodgatePlayer", UUID.class);
+            Object result = isFloodgatePlayer.invoke(api, uuid);
+            return result instanceof Boolean && (Boolean) result;
+        } catch (ClassNotFoundException e) {
+            // Floodgate not installed
+            return false;
+        } catch (Exception e) {
+            // Reflection failure - treat as not a floodgate player
+            return false;
         }
     }
 }
