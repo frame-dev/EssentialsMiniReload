@@ -51,7 +51,7 @@ public class RegisterManager {
         for (Map.Entry<String, TabCompleter> completer : plugin.getTabCompleters().entrySet()) {
             PluginCommand command = Objects.requireNonNull(plugin.getCommand(completer.getKey()),
                     "Command not found for tab completer: " + completer.getKey());
-           command.setTabCompleter(completer.getValue());
+            command.setTabCompleter(completer.getValue());
         }
     }
 
@@ -66,7 +66,8 @@ public class RegisterManager {
         new WarpSigns(plugin);
         plugin.getListeners().forEach(listener -> {
             plugin.getServer().getPluginManager().registerEvents(listener, plugin);
-            plugin.getLogger4J().info("Registered Listener: " + listener.getClass().getSimpleName());
+            if (plugin.getConfig().getBoolean("debug"))
+                plugin.getLogger4J().info("Registered Listener: " + listener.getClass().getSimpleName());
         });
     }
 
@@ -142,7 +143,8 @@ public class RegisterManager {
             if (commands.getValue() == null) continue;
             if (plugin.getCommand(commands.getKey()) == null) continue;
             Objects.requireNonNull(plugin.getCommand(commands.getKey()), "Command not found for Executor: " + commands.getKey()).setExecutor(commands.getValue());
-            plugin.getLogger4J().info("Registered Command: " + commands.getKey());
+            if (plugin.getConfig().getBoolean("debug"))
+                plugin.getLogger4J().info("Registered Command: " + commands.getKey());
         }
     }
 

@@ -109,3 +109,4 @@ mail:
     sender: '&6[Mail] &f%Sender% &7» &f%Message%'
 
 geyser-support: false
+debug: false
