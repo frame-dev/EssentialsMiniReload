@@ -49,6 +49,7 @@ Spy:
 Item:
   Get: '&aВы получили предмет &6%Item%! Количество: &6%Amount%'
   Other: '&6%Player% &aполучил предмет &6%Item%! Количество: &6%Amount%'
+  notFound: "&cЭтот предмет не существует! &6%Item%"
 
 Warp:
   Created: '&aТочка варпа создана с именем &6%WarpName%&a!'

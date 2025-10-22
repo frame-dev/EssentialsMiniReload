@@ -49,6 +49,7 @@ Spy:
 Item:
   Get: '&aYou got the Item &6%Item%! Amount: &6%Amount%'
   Other: '&6%Player% &agot the Item &6%Item%! Amount: &6%Amount%'
+  notFound: "&cThis item doesn't exist! &6%Item%"
 
 Warp:
   Created: '&aWarp has been created with the name &6%WarpName%&c!'

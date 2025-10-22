@@ -8,11 +8,10 @@ PlayerNameNotOnline: '&cDieser Spieler ist nicht Online! &6%Player%'
 FeedSet: '&aDein Hunger wurde gestillt!!'
 FeedOtherSet: '&6%Player% &asein Hunger wurde gestillt!'
 
-Fly:
-  SelfOn: '&aDu kannst nun Fliegen!'
-  SelfOff: '&cDu kannst nun nicht mehr Fliegen!'
-  OtherOn: '&6%Player% &akann nun Fliegen!'
-  OtherOff: '&6%Player% &ckann nun nicht mehr Fliegen!'
+FlySelfOn: '&aDu kannst nun Fliegen!'
+FlySelfOff: '&cDu kannst nun nicht mehr Fliegen!'
+FlyOtherOn: '&6%Player% &akann nun Fliegen!'
+FlyOtherOff: '&6%Player% &ckann nun nicht mehr Fliegen!'
 
 GameModeChanged: '&aDein SpielModus wurde gesetzt auf &6%GameMode%!'
 GameModeOtherChanged: '&aDenn SpielModus von &6%Player% &awurde auf &6%GameMode% &agesetzt'
