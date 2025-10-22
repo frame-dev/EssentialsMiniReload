@@ -64,7 +64,10 @@ public class RegisterManager {
         this.playerListeners = new PlayerListeners(plugin);
         new BanListener(plugin);
         new WarpSigns(plugin);
-        plugin.getListeners().forEach(listener -> plugin.getServer().getPluginManager().registerEvents(listener, plugin));
+        plugin.getListeners().forEach(listener -> {
+            plugin.getServer().getPluginManager().registerEvents(listener, plugin);
+            plugin.getLogger4J().info("Registered Listener: " + listener.getClass().getSimpleName());
+        });
     }
 
     /**
@@ -139,6 +142,7 @@ public class RegisterManager {
             if (commands.getValue() == null) continue;
             if (plugin.getCommand(commands.getKey()) == null) continue;
             Objects.requireNonNull(plugin.getCommand(commands.getKey()), "Command not found for Executor: " + commands.getKey()).setExecutor(commands.getValue());
+            plugin.getLogger4J().info("Registered Command: " + commands.getKey());
         }
     }
 
