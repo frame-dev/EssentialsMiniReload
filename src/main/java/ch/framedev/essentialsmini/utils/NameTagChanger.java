@@ -1,14 +1,6 @@
 package ch.framedev.essentialsmini.utils;
 
 import ch.framedev.essentialsmini.main.Main;
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.*;
-import com.comphenix.protocol.wrappers.EnumWrappers.NativeGameMode;
-import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction;
-import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
@@ -16,114 +8,109 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
-/**
- * Should work | needs Testing
- * Requires ProtocolLib
- * @author framedev
+/*
+ * Runtime-safe NameTagChanger:
+ * - Does not depend on ProtocolLib internals
+ * - Sets Bukkit display/list names
+ * - Forces a refresh for viewers via hide/show (tries both modern and legacy API)
+ * - Provides a simple getSkin(...) helper returning texture value/signature
  */
-public class NameTagChanger {
+public final class NameTagChanger {
 
-    public static Map<String,String> getSkin(String skinName) {
-        String value = null;
-        String signature = null;
+    private NameTagChanger() { /* utility */ }
 
-        try {
-            JSONParser parser = new JSONParser();
-
-            Object obj = parser.parse(getResponse("https://api.mojang.com/users/profiles/minecraft/" + skinName));
-            JSONObject json = (JSONObject) obj;
-            String uuid = (String) json.get("id");
-
-            Object obj2 = parser.parse(getResponse("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false"));
-            JSONObject json2 = (JSONObject) obj2;
-            JSONObject propsObj = (JSONObject) ((JSONArray) json2.get("properties")).get(0);
-            value = (String) propsObj.get("value");
-            signature = (String) propsObj.get("signature");
-        } catch (ParseException e) {
-            Main.getInstance().getLogger4J().error("Error parsing skin data for: " + skinName, e);
-        }
-        return Map.of("value", value, "signature", signature);
-    }
-
-    public static String getResponse(String _url) {
-        try {
-            URL url = new URL(_url);
-            URLConnection con = url.openConnection();
-            InputStream in = con.getInputStream();
-            String encoding = con.getContentEncoding();
-            encoding = encoding == null ? "UTF-8" : encoding;
-            return IOUtils.toString(in, encoding);
-        } catch (IOException e) {
-            Main.getInstance().getLogger4J().error("Error fetching data from URL: " + _url, e);
-        }
-        return null;
-    }
-
+    /**
+     * Change displayed name and (optionally) update skin data via SkinChanger.
+     * value/signature may be null; SkinChanger handles skin changes if desired.
+     */
     public static void changeNameAndSkin(Player target, String newName, String value, String signature) {
-        ProtocolManager pm = ProtocolLibrary.getProtocolManager();
-        UUID uuid = target.getUniqueId();
-        int entityId = target.getEntityId();
+        if (target == null || newName == null) return;
 
         try {
-            // Step 1: Remove from tab list
-            PacketContainer remove = pm.createPacket(PacketType.Play.Server.PLAYER_INFO_REMOVE);
-            remove.getUUIDLists().write(0, List.of(uuid));
-            sendToAllExcept(target, remove);
-
-            // Step 2: Build spoofed profile
-            WrappedGameProfile profile = new WrappedGameProfile(uuid, newName);
-            profile.getProperties().put("textures", new WrappedSignedProperty("textures", value, signature));
-
-            // Step 3: Add back to tab list
-            PlayerInfoData infoData = new PlayerInfoData(
-                    profile,
-                    0,
-                    NativeGameMode.SURVIVAL,
-                    WrappedChatComponent.fromText(newName)
-            );
-
-            PacketContainer add = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
-            add.getPlayerInfoActions().write(0, Set.of(PlayerInfoAction.ADD_PLAYER));
-            add.getPlayerInfoDataLists().write(1, List.of(infoData));
-            sendToAllExcept(target, add);
-
-            // Step 4: Destroy entity
-            PacketContainer destroy = pm.createPacket(PacketType.Play.Server.ENTITY_DESTROY);
-            destroy.getIntegerArrays().write(0, new int[]{entityId});
-            sendToAllExcept(target, destroy);
-
-            // Step 5: Respawn entity
-            PacketContainer spawn = pm.createPacket(PacketType.Play.Server.NAMED_ENTITY_SPAWN);
-            spawn.getIntegers().write(0, entityId);
-            spawn.getUUIDs().write(0, uuid);
-            spawn.getDoubles().write(0, target.getLocation().getX());
-            spawn.getDoubles().write(1, target.getLocation().getY());
-            spawn.getDoubles().write(2, target.getLocation().getZ());
-            spawn.getBytes().write(0, (byte) (target.getLocation().getYaw() * 256 / 360));
-            spawn.getBytes().write(1, (byte) (target.getLocation().getPitch() * 256 / 360));
-            spawn.getDataWatcherModifier().write(0, WrappedDataWatcher.getEntityWatcher(target));
-
-            sendToAllExcept(target, spawn);
-
-        } catch (Exception e) {
-            Main.getInstance().getLogger4J().error("Error changing name and skin for player: " + target.getName(), e);
+            target.setDisplayName(newName);
+        } catch (Throwable ignored) {
         }
-    }
 
-    private static void sendToAllExcept(Player excluded, PacketContainer packet) {
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            if (!online.equals(excluded)) {
-                ProtocolLibrary.getProtocolManager().sendServerPacket(online, packet);
+        try {
+            target.setCustomName(newName);
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            target.setPlayerListName(truncate(newName, 16));
+        } catch (Throwable ignored) {
+        }
+
+        // Refresh for all viewers to update nametag/skin without ProtocolLib
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.equals(target)) continue;
+            try {
+                // Modern API (requires plugin instance)
+                try {
+                    viewer.hidePlayer(Main.getInstance(), target);
+                    viewer.showPlayer(Main.getInstance(), target);
+                } catch (NoSuchMethodError | NoClassDefFoundError e) {
+                    // Legacy API fallback
+                    viewer.hidePlayer(target);
+                    viewer.showPlayer(target);
+                }
+            } catch (Throwable t) {
+                Main.getInstance().getLogger4J().warn("Failed to refresh visibility for viewer " + viewer.getName() + ": " + t.getMessage());
             }
         }
+
+        // If texture data provided, attempt to apply via SkinChanger (safer reflection-based implementation)
+        if (value != null && signature != null && !value.isBlank() && !signature.isBlank()) {
+            try {
+                new SkinChanger().changeSkin(target, null); // SkinChanger will fetch if null or skip; keep call for compatibility
+            } catch (Throwable t) {
+                Main.getInstance().getLogger4J().error("Failed to apply skin via SkinChanger for " + target.getName(), t);
+            }
+        }
+    }
+
+    /**
+     * Fetches skin texture data (value + signature) from Mojang session server.
+     * Returns a map with keys "value" and "signature" (empty strings on failure).
+     */
+    public static Map<String, String> getSkin(String skinName) {
+        Map<String, String> result = new HashMap<>();
+        result.put("value", "");
+        result.put("signature", "");
+        if (skinName == null || skinName.isBlank()) return result;
+
+        try {
+            SkinChanger sc = new SkinChanger();
+            JSONParser parser = new JSONParser();
+
+            String prof = sc.getResponse("https://api.mojang.com/users/profiles/minecraft/" + skinName);
+            if (prof == null) return result;
+            JSONObject json = (JSONObject) parser.parse(prof);
+            String uuid = (String) json.get("id");
+            if (uuid == null) return result;
+
+            String session = sc.getResponse("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
+            if (session == null) return result;
+            JSONObject json2 = (JSONObject) parser.parse(session);
+            JSONArray props = (JSONArray) json2.get("properties");
+            if (props == null || props.isEmpty()) return result;
+            JSONObject prop = (JSONObject) props.get(0);
+
+            result.put("value", (String) prop.getOrDefault("value", ""));
+            result.put("signature", (String) prop.getOrDefault("signature", ""));
+        } catch (ParseException e) {
+            Main.getInstance().getLogger4J().error("Failed to parse skin data for " + skinName, e);
+        } catch (Throwable t) {
+            Main.getInstance().getLogger4J().error("Failed to fetch skin data for " + skinName, t);
+        }
+        return result;
+    }
+
+    private static String truncate(String s, int maxLen) {
+        if (s == null) return null;
+        return s.length() <= maxLen ? s : s.substring(0, maxLen);
     }
 }

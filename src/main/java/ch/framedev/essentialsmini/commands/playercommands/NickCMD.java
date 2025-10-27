@@ -2,8 +2,9 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.utils.NameTagChanger;
+import ch.framedev.essentialsmini.utils.SkinApplier;
 import ch.framedev.essentialsmini.utils.SkinChanger;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -47,32 +48,34 @@ public class NickCMD extends CommandBase {
             return true;
         }
 
-        String newName = args[0];
-        String skinName = args[1];
+        if(isPaperLike()) {
+            player.sendMessage(getPrefix() + "§cThis command is not supported on Paper-like servers due to API limitations.");
+            return true;
+        }
+
+        String skinName = args[0];
         boolean isNicked = nickList.contains(player.getName());
-        SkinChanger changer = new SkinChanger();
 
-        if (!isNicked) {
-            // Apply nickname and skin
-            changer.changeSkin(player, skinName);
-            player.setDisplayName(newName);
-            player.setPlayerListName(newName); // tab list name
+        if(!isNicked) {
+            SkinChanger.fetchByUsername(getPlugin(), skinName).whenCompleteAsync((tex, err) -> {
+                if (err != null) {
+                    player.sendMessage("§cFailed: " + err.getMessage());
+                    return;
+                }
+                Bukkit.getScheduler().runTask(getPlugin(), () -> {
+                    try {
+                        getPlugin().getSkinService().apply(player, tex.value(), tex.signature());
+                        player.sendMessage("§aSkin applied! If you don’t see it, re-log or wait a few seconds.");
+                    } catch (Exception e) {
+                        player.sendMessage("§cApply failed: " + e.getMessage());
+                    }
+                });
+            });
             nickList.add(player.getName());
-            Map<String, String> skin = NameTagChanger.getSkin(skinName);
-            fileConfiguration.set("nick." + player.getName() + ".name", player.getName());
-            player.sendMessage(getPrefix() + "You are now nicked as §e" + newName);
-            NameTagChanger.changeNameAndSkin(player, newName, skin.get("value"), skin.get("signature"));
         } else {
-            // Revert nickname and skin
-            changer.changeSkin(player, player.getName());
-            player.setDisplayName(player.getName());
-            player.setPlayerListName(player.getName());
+            getPlugin().getSkinService().clear(player);
+            player.sendMessage("§aYour skin has been reset to your original skin.");
             nickList.remove(player.getName());
-            Map<String, String> skin = NameTagChanger.getSkin(player.getName());
-            NameTagChanger.changeNameAndSkin(player, player.getName(), skin.get("value"), skin.get("signature"));
-
-            fileConfiguration.set("nick." + player.getName(), null);
-            player.sendMessage(getPrefix() + "Your nickname was §cremoved§7.");
         }
 
         fileConfiguration.set("nicks", nickList);
@@ -84,5 +87,10 @@ public class NickCMD extends CommandBase {
         }
 
         return true;
+    }
+
+    public boolean isPaperLike() {
+        String serverType = Bukkit.getServer().getClass().getPackage().getName();
+        return serverType.contains("paper") || serverType.contains("purpur") || serverType.contains("folia");
     }
 }

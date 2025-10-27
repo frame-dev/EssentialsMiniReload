@@ -60,6 +60,8 @@ public class Main extends JavaPlugin {
     private DatabaseManager databaseManager;
     private MongoDBUtils mongoDBUtils;
 
+    private SkinService skinService;
+
     // Vault variables
     private VaultManager vaultManager;
 
@@ -128,6 +130,12 @@ public class Main extends JavaPlugin {
             }
         }
 
+        // Ensure ProtocolLib is present
+        if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
+            skinService = new SkinService(this);
+            skinService.start();
+        }
+
         // Enable economy if enabled in config
         if (getConfig().getBoolean("Economy.Activate")) {
             if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
@@ -180,6 +188,10 @@ public class Main extends JavaPlugin {
         databaseManager = null;
         // Log that the plugin has been disabled
         getLogger4J().info("EssentialsMini has been disabled!");
+    }
+
+    public SkinService getSkinService() {
+        return skinService;
     }
 
     /**
