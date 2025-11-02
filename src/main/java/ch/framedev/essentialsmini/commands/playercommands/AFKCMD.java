@@ -100,7 +100,7 @@ public class AFKCMD implements CommandExecutor {
         return false;
     }
 
-    @SuppressWarnings({"unused", "deprecation", "DataFlowIssue"})
+    @SuppressWarnings({"unused", "deprecation"})
     public void afk(Player player, boolean afk, String reason) {
         String isAfkMessage = this.plugin.getConfig().getString("AFK.IsAFK");
         String notAfkMessage = this.plugin.getConfig().getString("AFK.IsNotAFK");
@@ -113,9 +113,8 @@ public class AFKCMD implements CommandExecutor {
                 Objects.requireNonNull(Bukkit.getPlayer(player.getName())).setPlayerListName(getAfkPlayerName(player.getName()));
                 removePlayerFromAfkMap(player.getName());
                 notAfkMessage = ReplaceCharConfig.replaceParagraph(notAfkMessage);
-                TextComponent tc = new TextComponent();
-                tc.setText(player.getName());
-                tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new ComponentBuilder(player.getName())).create()));
+                TextComponent textComponent = new TextComponent(player.getName());
+                textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new ComponentBuilder(player.getName())).create()));
                 notAfkMessage = ReplaceCharConfig.replaceObjectWithData(notAfkMessage, "[Player]", player.getName());
                 Bukkit.broadcastMessage(notAfkMessage);
                 Bukkit.getConsoleSender().sendMessage("§7" + player.getName() + " is no longer AFK " + afkTime);

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class BanFileManager {
 
     public static final File file = new File(Main.getInstance().getDataFolder(), "Banned.yml");
@@ -34,29 +35,21 @@ public class BanFileManager {
     }
 
     public static void banPlayer(String playerName, String reason) {
-        if (cfg.getBoolean("Ban." + playerName + ".isBanned")) {
-            Bukkit.getConsoleSender().sendMessage(playerName + " ist schon gebannt!");
-        } else {
-            cfg.set("Ban." + playerName + ".isBanned", true);
-            cfg.set("Ban." + playerName + ".reason", reason);
-            saveCfg();
-            if (!file.exists()) {
-                try {
-                    if (!file.mkdir())
-                        System.err.println("File cannot be created!");
-                } catch (Exception ignored) {
-                }
+        cfg.set("Ban." + playerName + ".isBanned", true);
+        cfg.set("Ban." + playerName + ".reason", reason);
+        saveCfg();
+        if (!file.exists()) {
+            try {
+                if (!file.mkdir())
+                    System.err.println("File cannot be created!");
+            } catch (Exception ignored) {
             }
         }
     }
 
     public static void unBanPlayer(String playerName) {
-        if (!cfg.getBoolean("Ban." + playerName + ".isBanned")) {
-            Bukkit.getConsoleSender().sendMessage("Ban." + playerName + " ist nicht gebannt!");
-        } else {
-            cfg.set("Ban." + playerName + ".isBanned", false);
-            saveCfg();
-        }
+        cfg.set("Ban." + playerName + ".isBanned", false);
+        saveCfg();
     }
 
     public List<String> getAllBannedPlayers() {

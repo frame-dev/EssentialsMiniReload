@@ -4,6 +4,7 @@ package ch.framedev.essentialsmini.utils;
  * Dies ist ein Plugin von FrameDev
  * Bitte nichts ändern, @Copyright by FrameDev
  */
+@SuppressWarnings("unused")
 public enum DateUnit {
 
     SEC("Second(s)", 1),
@@ -21,7 +22,7 @@ public enum DateUnit {
     /**
      *
      */
-    private DateUnit(String output, long toSec) {
+    DateUnit(String output, long toSec) {
         this.output = output;
         this.toSec = toSec;
     }

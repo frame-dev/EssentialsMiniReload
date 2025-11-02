@@ -43,7 +43,7 @@ public record SpawnCMD(Main plugin) implements CommandExecutor {
                     try {
                         ((Player) sender).teleport(new LocationsManager("spawn").getLocation());
                         sender.sendMessage(plugin.getPrefix() + "§aTeleport to Spawn!");
-                    } catch (IllegalArgumentException ignored) {
+                    } catch (Exception ignored) {
                         ((Player) sender).teleport(((Player) sender).getWorld().getSpawnLocation());
                     }
                 } else {

@@ -1,14 +1,5 @@
 package ch.framedev.essentialsmini.commands.worldcommands;
 
-
-/*
- * ===================================================
- * This File was Created by FrameDev
- * Please do not change anything without my consent!
- * ===================================================
- * This Class was created at 14.08.2020 20:52
- */
-
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -21,8 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public record SunRainThunderCMD(Main plugin) implements CommandExecutor {
 
-    public SunRainThunderCMD(Main plugin) {
-        this.plugin = plugin;
+    public SunRainThunderCMD {
         plugin.getCommands().put("sun", this);
         plugin.getCommands().put("rain", this);
         plugin.getCommands().put("thunder", this);
@@ -127,15 +117,10 @@ public record SunRainThunderCMD(Main plugin) implements CommandExecutor {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    Bukkit.getWorlds().forEach(world -> {
-                                        if (world.getEnvironment() == World.Environment.NORMAL)
-                                            world.setStorm(true);
-                                    });
-                                }
-                            }.runTaskLater(plugin, 60);
+                            Bukkit.getWorlds().forEach(world -> {
+                                if (world.getEnvironment() == World.Environment.NORMAL)
+                                    world.setStorm(true);
+                            });
                         }
                     }.runTaskLater(plugin, 60);
                     sender.sendMessage(plugin.getPrefix() + "Rain");
@@ -162,6 +147,6 @@ public record SunRainThunderCMD(Main plugin) implements CommandExecutor {
                 }
             }
         }
-        return false;
+        return true;
     }
 }

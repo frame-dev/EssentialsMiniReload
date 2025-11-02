@@ -10,6 +10,7 @@ package ch.framedev.essentialsmini.utils;
  * This Class was created at 20.09.2020 19:35
  */
 
+@SuppressWarnings("unused")
 public class NotFoundException extends RuntimeException {
 
     public NotFoundException(Object object) {

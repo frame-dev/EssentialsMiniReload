@@ -112,6 +112,10 @@ public class BanCMD extends CommandBase {
     public enum BanType {
 
         HACKING("hacking"),
+        GRIEFING("griefing"),
+        SPAMMING("spamming"),
+        ABUSING("abusing"),
+        OFFENSIVE_LANGUAGE("using offensive language"),
         TRY_BYPASSING_BAN("try bypassing a Ban");
 
         private final String reason;

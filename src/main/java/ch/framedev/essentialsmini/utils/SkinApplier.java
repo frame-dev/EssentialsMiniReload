@@ -8,6 +8,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 
+@SuppressWarnings("unused")
 public class SkinApplier {
 
     public static void applyAndRefresh(Plugin plugin, Player player, SkinChanger.Textures textures) {

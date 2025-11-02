@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
  * Copyrighted by FrameDev
  */
 
+@SuppressWarnings({"unused", "deprecation"})
 public class BanMuteManager {
 
     // Database table for MySQL / SQLite
@@ -88,9 +89,7 @@ public class BanMuteManager {
     }
 
     public void setTempMute(OfflinePlayer player, MuteCMD.MuteReason reason, String date) {
-        setTempMute(player, reason.getReason(), date).thenRun(() -> {
-            Main.getInstance().getLogger4J().log(Level.INFO, "TempMute for " + player.getName() + " set successfully.");
-        });
+        setTempMute(player, reason.getReason(), date).thenRun(() -> Main.getInstance().getLogger4J().log(Level.INFO, "TempMute for " + player.getName() + " set successfully."));
     }
 
     public boolean isSQL() {
@@ -128,7 +127,7 @@ public class BanMuteManager {
                             }
                         }, selected, "Player = ?", playerName);
                     } else {
-                        SQL.insertDataAsync(table, new SQL.Callback<Boolean>() {
+                        SQL.insertDataAsync(table, new SQL.Callback<>() {
                             @Override
                             public void accept(Boolean value) {
                                 if (value) {
@@ -203,7 +202,7 @@ public class BanMuteManager {
             ensureTableExists();
             String playerName = player.getName();
 
-            SQL.existsAsync(table, "Player", playerName, new SQL.Callback<Boolean>() {
+            SQL.existsAsync(table, "Player", playerName, new SQL.Callback<>() {
 
                 @Override
                 public void accept(Boolean exists) {

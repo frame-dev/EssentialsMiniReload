@@ -7,6 +7,7 @@ import ch.framedev.essentialsmini.commands.playercommands.KitCMD;
  * This Class is for Creating a new Cooldown examples can be found in {@link KitCMD}
  * @author FrameDev
  */
+@SuppressWarnings("unused")
 public class Cooldown {
 
 	private final int seconds;

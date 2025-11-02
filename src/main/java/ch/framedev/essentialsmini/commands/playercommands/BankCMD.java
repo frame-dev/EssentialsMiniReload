@@ -36,6 +36,20 @@ public class BankCMD extends CommandBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if(args.length == 0) {
+            sender.sendMessage(plugin.getPrefix() + "§a/bank list");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank info <BankName>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank create <BankName>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank remove <BankName>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank balance <BankName>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank deposit <BankName> <Amount>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank withdraw <BankName> <Amount>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank addmember <BankName> <Player>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank removemember <BankName> <Player>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank listmembers <BankName>");
+            sender.sendMessage(plugin.getPrefix() + "§a/bank transfer <FromBank> <ToBank> <Amount>");
+            return true;
+        }
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("list")) {
                 if (sender.hasPermission("essentialsmini.bank.list")) {

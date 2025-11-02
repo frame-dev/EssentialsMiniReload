@@ -13,6 +13,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@SuppressWarnings("deprecation")
 public final class SkinService {
 
     private final Plugin plugin;
@@ -55,7 +56,7 @@ public final class SkinService {
                     WrappedGameProfile old = d.getProfile();
                     WrappedGameProfile repl = new WrappedGameProfile(old.getUUID(), old.getName());
                     for (WrappedSignedProperty prop : old.getProperties().values())
-                        if (!"textures".equalsIgnoreCase(prop.getName()))
+                        if (!"textures".equalsIgnoreCase(Objects.requireNonNull(prop).getName()))
                             repl.getProperties().put(prop.getName(), prop);
                     repl.getProperties().put("textures", ov);
 

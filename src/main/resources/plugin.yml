@@ -173,6 +173,7 @@ commands:
   godmode:
     aliases:
       - god
+      - godm
   spawnmob:
     description: Spawn a Custom Mob
   walkspeed:

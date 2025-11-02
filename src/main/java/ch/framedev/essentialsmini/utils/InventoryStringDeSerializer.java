@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 public class InventoryStringDeSerializer {
 
     public static String playerInventoryToBase64(PlayerInventory playerInventory) throws IllegalStateException {

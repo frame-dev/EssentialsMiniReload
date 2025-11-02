@@ -24,6 +24,7 @@ import java.util.*;
  * ===================================================
  * This Class was created at 03.07.2020 20:00
  */
+@SuppressWarnings("unused")
 public class LocationsManager {
 
     private String name;

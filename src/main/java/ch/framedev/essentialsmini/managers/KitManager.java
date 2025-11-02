@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@SuppressWarnings("unused")
 public class KitManager {
 
     private static File customConfigFile;
@@ -117,7 +118,7 @@ public class KitManager {
         try {
             customConfig.save(customConfigFile);
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger4J().error(e);
         }
     }
 
@@ -174,10 +175,20 @@ public class KitManager {
             for (String s : getCustomConfig().getStringList("Items." + name + ".Content")) {
                 if (s.contains(",")) {
                     String[] x = s.split(",");
-                    ItemStack item = new ItemStack(Material.getMaterial(x[0].toUpperCase()), Integer.parseInt(x[1]));
+                    Material material = Material.getMaterial(x[0].toUpperCase());
+                    if (material == null) {
+                        Bukkit.getConsoleSender().sendMessage("§cError while Creating Kit §f" + x[0] + " is not a valid Material!");
+                        return null;
+                    }
+                    ItemStack item = new ItemStack(material, Integer.parseInt(x[1]));
                     this.kitName.addItem(item);
                 } else {
-                    this.kitName.addItem(new ItemStack(Material.getMaterial(s.toUpperCase())));
+                    Material material = Material.getMaterial(s.toUpperCase());
+                    if (material == null) {
+                        Bukkit.getConsoleSender().sendMessage("§cError while Creating Kit §f" + s + " is not a valid Material!");
+                        return null;
+                    }
+                    this.kitName.addItem(new ItemStack(material));
                 }
             }
         } catch (Exception ex) {
@@ -252,13 +263,6 @@ public class KitManager {
             }
         }
         return inventory;
-    }
-
-    @Override
-    public String toString() {
-        return "KitManager{" +
-                "kitname=" + kitName +
-                '}';
     }
 
     public static File getCustomConfigFile() {

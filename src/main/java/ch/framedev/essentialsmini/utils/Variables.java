@@ -16,6 +16,7 @@ import org.bukkit.OfflinePlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class Variables {
 
     transient private final Main instance;

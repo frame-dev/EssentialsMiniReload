@@ -68,6 +68,8 @@ public class GlobalMuteCMD extends CommandListenerBase {
                 String bypassMessage = getPlugin().getConfig().getString("globalMuteMessage.bypass");
                 if (bypassMessage != null && !bypassMessage.isEmpty()) {
                     bypassMessage = ChatColor.translateAlternateColorCodes('&', bypassMessage);
+                    bypassMessage = bypassMessage.replace("%Message%", event.getMessage());
+                    bypassMessage = bypassMessage.replace("%Player%", event.getPlayer().getName());
                     event.setMessage(bypassMessage);
                 } else {
                     event.getPlayer().sendMessage(getPlugin().getPrefix() + "You are not allowed to chat while the server is globally muted.");

@@ -45,6 +45,7 @@ import org.bukkit.Bukkit;
  * Reflection Utilities for minecraft
  *
  */
+@SuppressWarnings("unused")
 public class Reflection {
     public static Class<?> getNmsClass(String name) {
         String version = getVersion();
@@ -192,7 +193,7 @@ public class Reflection {
         if (constructor == null) throw new RuntimeException("No such constructor");
         constructor.setAccessible(true);
         try {
-            return (T) constructor.newInstance(paramaters);
+            return constructor.newInstance(paramaters);
         } catch (InvocationTargetException ex) {
             throw new RuntimeException(ex.getCause());
         } catch (Exception ex) {

@@ -137,7 +137,7 @@ public class GameModeCMD extends CommandBase {
                                 player.sendMessage(plugin.getPrefix() + gameModeChanged);
                                 break;
                             default:
-                                player.sendMessage(plugin.getPrefix() + "§cKein gültigen GameMode gefunden §6" + args[0] + "§c!");
+                                player.sendMessage(plugin.getPrefix() + "§cNo valid GameMode found §6" + args[0] + "§c!");
                         }
                     }
                 } else {
@@ -247,7 +247,7 @@ public class GameModeCMD extends CommandBase {
                                 sender.sendMessage(plugin.getPrefix() + gameModeOtherChanged);
                                 break;
                             default:
-                                sender.sendMessage(plugin.getPrefix() + "§cKein gültigen GameMode gefunden mit der Nummer §6" + args[0] + "§c!");
+                                sender.sendMessage(plugin.getPrefix() + "§cNo valid GameMode found with the number §6" + args[0] + "§c!");
                         }
                     } catch (NumberFormatException ex) {
                         switch (args[0]) {
@@ -344,7 +344,7 @@ public class GameModeCMD extends CommandBase {
                                 sender.sendMessage(plugin.getPrefix() + gameModeOtherChanged);
                                 break;
                             default:
-                                sender.sendMessage(plugin.getPrefix() + "§cKein gültigen GameMode gefunden §6" + args[0] + "§c!");
+                                sender.sendMessage(plugin.getPrefix() + "§cNo valid GameMode found §6" + args[0] + "§c!");
                         }
                     }
                 } else {

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class VaultManager {
 
     private final Economy eco;
@@ -59,14 +60,15 @@ public class VaultManager {
                 plugin.getLogger4J().info("Economy Accounts created!");
             }
         }
+        if(plugin.isMongoDB()) {
+            VaultAPI.init();
+        }
         plugin.getServer().getServicesManager().register(Economy.class, new VaultAPI(), plugin, ServicePriority.High);
         eco = new VaultAPI();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!eco.hasAccount(player))
+            if (!eco.hasAccount(player)) {
                 eco.createPlayerAccount(player);
-        }
-        if(plugin.isMongoDB()) {
-            VaultAPI.init();
+            }
         }
 
         Bukkit.getConsoleSender().sendMessage(plugin.getPrefix() + "§aVaultManager Loaded and Enabled!");

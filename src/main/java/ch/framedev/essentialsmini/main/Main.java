@@ -105,28 +105,22 @@ public class Main extends JavaPlugin {
         this.databaseManager = new DatabaseManager(this);
 
         if (getConfig().getBoolean("MongoDB.Boolean") || getConfig().getBoolean("MongoDB.LocalHost")) {
-            if (Bukkit.getPluginManager().getPlugin("SpigotMongoDBUtils") == null) {
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cSpigotMongoDBUtils plugin not found!");
-                Bukkit.getConsoleSender().sendMessage("Download the Plugin here: https://repository.framedev.ch:444/releases/ch/framedev/SpigotMongoDBUtils/1.0.1-SNAPSHOT/SpigotMongoDBUtils-1.0.1-20250125.124232-1.jar");
-                return;
-            } else {
-                this.mongoDBUtils = new MongoDBUtils(this);
-                if (isMongoDB()) {
-                    for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                        databaseManager.getBackendManager().createUser(player, "essentialsmini_data", new BackendManager.Callback<>() {
-                            @Override
-                            public void onResult(Void result) {
-                                logger.info("User " + player.getUniqueId() + " created successfully in MongoDB.");
-                            }
+            this.mongoDBUtils = new MongoDBUtils(this);
+            if (isMongoDB()) {
+                for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                    databaseManager.getBackendManager().createUser(player, "essentialsmini_data", new BackendManager.Callback<>() {
+                        @Override
+                        public void onResult(Void result) {
+                            logger.info("User " + player.getUniqueId() + " created successfully in MongoDB.");
+                        }
 
-                            @Override
-                            public void onError(Exception exception) {
-                                logger.error("Could not create User: " + exception.getMessage(), exception);
-                            }
-                        });
-                    }
-                    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aMongoDB Enabled!");
+                        @Override
+                        public void onError(Exception exception) {
+                            logger.error("Could not create User: " + exception.getMessage(), exception);
+                        }
+                    });
                 }
+                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aMongoDB Enabled!");
             }
         }
 
@@ -151,7 +145,7 @@ public class Main extends JavaPlugin {
         // Checking for Update and when enabled, Download the Latest Version automatically
 
         // Server not online, so the update check is disabled
-        if(getConfig().getBoolean("checkForUpdates")) {
+        if (getConfig().getBoolean("checkForUpdates")) {
             if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
                 // If no update is found, inform the console
                 Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
@@ -312,7 +306,7 @@ public class Main extends JavaPlugin {
 
         if (!configsExist) {
             getLogger4J().info("No configuration files found. Downloading default configuration...");
-            for(int i = 0; i < configFiles.size(); i++) {
+            for (int i = 0; i < configFiles.size(); i++) {
                 try {
                     Files.copy(new File(exampleConfigFiles.get(i)).toPath(),
                             new File(configFiles.get(i)).toPath());
@@ -557,7 +551,9 @@ public class Main extends JavaPlugin {
         return onlyPlayer;
     }
 
-    /** Get the OnlyPlayer message from messages.yml */
+    /**
+     * Get the OnlyPlayer message from messages.yml
+     */
     public String getOnlyPlayer(Player player) {
         String onlyPlayer = getLanguageConfig(player).getString("OnlyPlayer");
         if (onlyPlayer == null) return "";
@@ -565,43 +561,59 @@ public class Main extends JavaPlugin {
         return onlyPlayer;
     }
 
-    /** Get the log4j Logger */
+    /**
+     * Get the log4j Logger
+     */
     public Logger getLogger4J() {
         return logger;
     }
 
-    /** Get the Single Currency Symbol from config.yml */
+    /**
+     * Get the Single Currency Symbol from config.yml
+     */
     public String getCurrencySymbol() {
         return getConfig().getString("Currency.Single");
     }
 
-    /** Get the Multi Currency Symbol from config.yml */
+    /**
+     * Get the Multi Currency Symbol from config.yml
+     */
     public String getCurrencySymbolMulti() {
         return getConfig().getString("Currency.Multi");
     }
 
-    /** MongoDB Methods */
+    /**
+     * MongoDB Methods
+     */
     public boolean isMongoDB() {
         if (mongoDBUtils == null) return false;
         return mongoDBUtils.isMongoDb();
     }
 
-    /** LuckPerms Methods */
+    /**
+     * LuckPerms Methods
+     */
     public static boolean isLuckPermsInstalled() {
         return Bukkit.getPluginManager().isPluginEnabled("LuckPerms");
     }
 
-    /** Database Methods */
+    /**
+     * Database Methods
+     */
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
-    /** MongoDB Methods */
+    /**
+     * MongoDB Methods
+     */
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
     }
 
-    /** Vault Methods */
+    /**
+     * Vault Methods
+     */
     public VaultManager getVaultManager() {
         return vaultManager;
     }

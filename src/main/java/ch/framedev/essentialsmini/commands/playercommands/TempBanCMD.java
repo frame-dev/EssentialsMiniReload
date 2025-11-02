@@ -82,7 +82,7 @@ public class TempBanCMD extends CommandBase {
         if (cmd.getName().equalsIgnoreCase("removetempban")) {
             OfflinePlayer target = PlayerUtils.getOfflinePlayerByName(args[0]);
             if(target.getName() == null) {
-                sender.sendMessage("§cPlayername not found!");
+                sender.sendMessage("§cPlayer name not found!");
                 return true;
             }
             if (sender.hasPermission(getPlugin().getPermissionBase() + "tempban")) {

@@ -79,21 +79,8 @@ public class DisallowCommands extends ListenerBase {
         if (!event.getPlayer().hasPermission("essentialsmini.warps")) {
             blockedCommands.add("warps");
         }
-        if (!event.getPlayer().hasPermission("essentialsmini.saveinventory")) {
-            blockedCommands.add("saveinventory");
-        }
-        if (!Main.getInstance().getConfig().getBoolean("SaveInventory")) {
-            blockedCommands.add("saveinventory");
-        }
         if (!event.getPlayer().hasPermission("essentialsmini.sleep")) {
             blockedCommands.add("sleep");
-        }
-        if (!event.getPlayer().hasPermission("essentialsmini.getlocation")) {
-            blockedCommands.add("getlocation");
-        }
-        if (!event.getPlayer().hasPermission("essentialsmini.playerdata")) {
-            blockedCommands.add("playerdata");
-            blockedCommands.add("pldata");
         }
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "god") || !event.getPlayer().hasPermission(plugin.getPermissionBase() + "godmode")) {
             blockedCommands.add("godmode");
@@ -117,38 +104,6 @@ public class DisallowCommands extends ListenerBase {
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "thunder")) {
             blockedCommands.add("thunder");
         }
-        if (!plugin.getConfig().getBoolean("ShowItem")) {
-            blockedCommands.add("showitem");
-        }
-        if (!plugin.getConfig().getBoolean("ShowCrafting")) {
-            blockedCommands.add("showcrafting");
-        }
-        if (!plugin.getConfig().getBoolean("ShowLocation")) {
-            blockedCommands.add("showlocation");
-        }
-        if (!plugin.getConfig().getBoolean("Position")) {
-            blockedCommands.add("position");
-            blockedCommands.add("pos");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "showitem")) {
-            blockedCommands.add("showitem");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "showcrafting")) {
-            blockedCommands.add("showcrafting");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "signitem")) {
-            blockedCommands.add("signitem");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "renameitem")) {
-            blockedCommands.add("renameitem");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "showlocation")) {
-            blockedCommands.add("showlocation");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "position")) {
-            blockedCommands.add("position");
-            blockedCommands.add("pos");
-        }
         if (!event.getPlayer().hasPermission("essentialsmini.repair")) {
             blockedCommands.add("repair");
         }
@@ -166,13 +121,6 @@ public class DisallowCommands extends ListenerBase {
             blockedCommands.add("enderchest");
             blockedCommands.add("ec");
         }
-        if (!event.getPlayer().hasPermission(plugin.getVariables().getPermissionBase() + "restart")) {
-            blockedCommands.add("srestart");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getVariables().getPermissionBase() + "worldutils")) {
-            blockedCommands.add("worldtp");
-            blockedCommands.add("addworld");
-        }
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "key")) {
             blockedCommands.add("key");
         }
@@ -181,9 +129,6 @@ public class DisallowCommands extends ListenerBase {
         }
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "thunder")) {
             blockedCommands.add("thunder");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "summon")) {
-            blockedCommands.add("summon");
         }
 
         if (!event.getPlayer().hasPermission("essentialsmini.gamemode")) {
@@ -198,9 +143,6 @@ public class DisallowCommands extends ListenerBase {
             blockedCommands.add("cc");
             blockedCommands.add("clearchat");
             blockedCommands.add("chatclear");
-        }
-        if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "fuck")) {
-            blockedCommands.add("fuck");
         }
         if (!event.getPlayer().hasPermission(plugin.getPermissionBase() + "pay")) {
             blockedCommands.add("pay");

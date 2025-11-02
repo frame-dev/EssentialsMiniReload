@@ -288,7 +288,7 @@ public class VaultAPI extends AbstractEconomy {
     @Override
     public EconomyResponse bankHas(String name, double amount) {
         if (bankBalance(name).amount < amount) {
-            return new EconomyResponse(amount, bankBalance(name).amount, EconomyResponse.ResponseType.FAILURE, "Not enought Money!");
+            return new EconomyResponse(amount, bankBalance(name).amount, EconomyResponse.ResponseType.FAILURE, "Not enough Money!");
         }
         return new EconomyResponse(amount, bankBalance(name).amount, EconomyResponse.ResponseType.SUCCESS, "");
     }
@@ -300,18 +300,18 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             balance -= amount;
             if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enought Money");
+                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
             new MySQLManager().setBankMoney(name, balance);
         } else if (Main.getInstance().isMongoDB()) {
             balance -= amount;
             if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enought Money");
+                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
             BACKEND_MANAGER.updateData("bankname", name, "bank", balance, "essentialsmini_data");
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
             if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enought Money");
+                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
             balance -= amount;
             cfg.set("Banks." + name + ".balance", balance);
             save(file, cfg);
@@ -355,7 +355,7 @@ public class VaultAPI extends AbstractEconomy {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
             if (!cfg.contains("Banks." + name + ".Owner"))
-                return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Doesn't Exsits");
+                return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Doesn't Exists");
             if (!player.equalsIgnoreCase(cfg.getString("Banks." + name + ".Owner")))
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
         }
