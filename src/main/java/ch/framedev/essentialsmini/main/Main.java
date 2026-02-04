@@ -68,6 +68,9 @@ public class Main extends JavaPlugin {
     // Variables for the plugin
     private Variables variables;
 
+    private boolean debug;
+
+
     @Override
     public void onEnable() {
         // Set the instance to this plugin
@@ -76,6 +79,7 @@ public class Main extends JavaPlugin {
         // Loads the default configuration file
         saveDefaultConfig();
         saveConfig();
+        debug = getConfig().getBoolean("debug", false);
 
         // Initialize the logger
         logger = Logger.getLogger("EssentialsMini");
@@ -182,6 +186,10 @@ public class Main extends JavaPlugin {
         databaseManager = null;
         // Log that the plugin has been disabled
         getLogger4J().info("EssentialsMini has been disabled!");
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 
     public SkinService getSkinService() {

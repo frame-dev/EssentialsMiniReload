@@ -44,50 +44,48 @@ public class MySQLManager {
     }
 
     /**
+     * Ensures the economy table exists
+     */
+    private void ensureTableExists() {
+        if (!SQL.isTableExists(tableName)) {
+            SQL.createTable(tableName,
+                "Player TEXT(256)",
+                "Name TEXT(255)",
+                "Money TEXT",
+                "BankBalance DOUBLE",
+                "BankName TEXT",
+                "BankOwner TEXT",
+                "BankMembers TEXT");
+        }
+    }
+
+    /**
      * set the Money in the Database
      *
      * @param player the Player
      * @param amount Money amount
      */
     protected void setMoney(OfflinePlayer player, double amount) {
-        if (isOnlineMode()) {
-            if (SQL.isTableExists(tableName)) {
-                if (SQL.exists(tableName, "Player", player.getUniqueId().toString())) {
-                    SQL.updateData(tableName, "Money", String.valueOf(amount), "Player = '" + player.getUniqueId() + "'");
-                } else {
-                    String[] data = {"" + player.getUniqueId(), player.getName(), "" + amount};
-                    SQL.insertData(tableName, data, "Player", "Name", "Money");
-                }
-            } else {
-                SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
-                // Correct and safe way to insert data using the existing insertData method
-                SQL.insertData(
-                        tableName,
-                        new String[]{player.getUniqueId().toString(), player.getName(), String.valueOf(amount)},
-                        "Player", "Name", "Money"
-                );
-            }
+        if (player == null || player.getName() == null) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Attempted to set money for null player");
+            return;
+        }
+
+        ensureTableExists();
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+
+        if (SQL.exists(tableName, "Player", playerId)) {
+            SQL.updateData(tableName, "Money", String.valueOf(amount), "Player = ?", playerId);
         } else {
-            if (SQL.isTableExists(tableName)) {
-                if (SQL.exists(tableName, "Player", player.getName())) {
-                    SQL.updateData(tableName, "Money", String.valueOf(amount), "Player = '" + player.getName() + "'"
-                    );
-                } else {
-                    // Correct and safe way to insert data using the insertData method
-                    SQL.insertData(
-                            tableName,
-                            new String[]{player.getName(), String.valueOf(amount)},
-                            "Player", "Money"
-                    );
-                }
+            if (isOnlineMode()) {
+                SQL.insertData(tableName,
+                    new String[]{player.getUniqueId().toString(), player.getName(), String.valueOf(amount)},
+                    "Player", "Name", "Money");
             } else {
-                // Keep storing money consistently as string representation of the double
-                SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
-                SQL.insertData(
-                        tableName,
-                        new String[]{player.getName(), String.valueOf(amount)},
-                        "Player", "Money"
-                );
+                SQL.insertData(tableName,
+                    new String[]{player.getName(), String.valueOf(amount)},
+                    "Player", "Money");
             }
         }
     }
@@ -97,33 +95,28 @@ public class MySQLManager {
      * @return the Money from the selected Player
      */
     protected double getMoney(OfflinePlayer player) {
-        if (isOnlineMode()) {
-            if (SQL.isTableExists(tableName)) {
-                if (SQL.exists(tableName, "Player", player.getUniqueId().toString())) {
-                    if (SQL.get(tableName, "Money", "Player", player.getUniqueId().toString()) != null) {
-                        String bd = (String) SQL.get(tableName, "Money", "Player", player.getUniqueId().toString());
-                        if (bd != null) {
-                            return Double.parseDouble(bd);
-                        }
-                    }
+        if (player == null || player.getName() == null) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Attempted to get money for null player");
+            return 0.0D;
+        }
+
+        ensureTableExists();
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+
+        if (SQL.exists(tableName, "Player", playerId)) {
+            Object moneyObj = SQL.get(tableName, "Money", "Player", playerId);
+            if (moneyObj != null) {
+                try {
+                    String moneyStr = moneyObj.toString();
+                    return Double.parseDouble(moneyStr);
+                } catch (NumberFormatException e) {
+                    Main.getInstance().getLogger4J().log(Level.ERROR, "Invalid money value for player " + player.getName(), e);
+                    return 0.0D;
                 }
-            } else {
-                SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
-            }
-        } else {
-            if (SQL.isTableExists(tableName)) {
-                if (SQL.exists(tableName, "Player", player.getName())) {
-                    if (SQL.get(tableName, "Money", "Player", player.getName()) != null) {
-                        String bd = (String) SQL.get(tableName, "Money", "Player", player.getName());
-                        if (bd != null) {
-                            return Double.parseDouble(bd);
-                        }
-                    }
-                }
-            } else {
-                SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
             }
         }
+
         return 0.0D;
     }
 
@@ -144,18 +137,22 @@ public class MySQLManager {
      * @param bankName the BankName
      */
     protected void createBank(OfflinePlayer player, String bankName) {
-        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
-        boolean tableExists = SQL.isTableExists(tableName);
+        if (player == null || player.getName() == null || bankName == null || bankName.trim().isEmpty()) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid parameters for createBank");
+            return;
+        }
 
-        if (tableExists && SQL.exists(tableName, "Player", playerId)) {
-            if (SQL.get(tableName, "BankName", "Player", playerId) == null) {
+        ensureTableExists();
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+
+        if (SQL.exists(tableName, "Player", playerId)) {
+            Object existingBank = SQL.get(tableName, "BankName", "Player", playerId);
+            if (existingBank == null || existingBank.toString().trim().isEmpty()) {
                 SQL.updateData(tableName, "BankName", bankName, "Player = ?", playerId);
                 SQL.updateData(tableName, "BankOwner", playerId, "Player = ?", playerId);
             }
         } else {
-            if (!tableExists) {
-                SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
-            }
             SQL.insertData(tableName, new String[]{playerId, bankName, playerId}, "Player", "BankName", "BankOwner");
         }
     }
@@ -168,28 +165,43 @@ public class MySQLManager {
      * @param amount amount to adding to the Bank
      */
     protected void setBankMoney(String name, double amount) {
+        if (name == null || name.trim().isEmpty()) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid bank name for setBankMoney");
+            return;
+        }
+
         List<String> players = new ArrayList<>();
+        String query = "SELECT Player FROM " + tableName + " WHERE BankName = ?";
+
         try {
             if (Main.getInstance().isMysql()) {
-                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + name + "';")) {
-                    while (resultSet.next()) {
-                        players.add(resultSet.getString("Player"));
+                try (java.sql.PreparedStatement stmt = MySQL.getConnection().prepareStatement(query)) {
+                    stmt.setString(1, name);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        while (resultSet.next()) {
+                            players.add(resultSet.getString("Player"));
+                        }
                     }
                 }
             } else if (Main.getInstance().isSQL()) {
-                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + name + "';")) {
-                    while (resultSet.next()) {
-                        players.add(resultSet.getString("Player"));
+                try (Connection conn = Objects.requireNonNull(SQLite.connect());
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, name);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        while (resultSet.next()) {
+                            players.add(resultSet.getString("Player"));
+                        }
                     }
                 }
             }
         } catch (SQLException ex) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Error in setBankMoney for bank: " + name, ex);
+            return;
         }
-        if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-            for (String player : players) {
-                SQL.updateData(tableName, "BankBalance", String.valueOf(amount), "Player = '" + player + "'");
-            }
+
+        // Update all bank members' balance
+        for (String player : players) {
+            SQL.updateData(tableName, "BankBalance", String.valueOf(amount), "Player = ?", player);
         }
     }
 
@@ -198,20 +210,36 @@ public class MySQLManager {
      * @return Amount of the Bank
      */
     protected double getBankMoney(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid bank name for getBankMoney");
+            return 0.0;
+        }
+
+        String query = "SELECT BankBalance FROM " + tableName + " WHERE BankName = ? LIMIT 1";
+
         try {
             if (Main.getInstance().isMysql()) {
-                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankBalance FROM " + tableName + " WHERE BankName ='" + name + "' LIMIT 1;")) {
-                    if (resultSet.next())
-                        return resultSet.getDouble("BankBalance");
+                try (java.sql.PreparedStatement stmt = MySQL.getConnection().prepareStatement(query)) {
+                    stmt.setString(1, name);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        if (resultSet.next()) {
+                            return resultSet.getDouble("BankBalance");
+                        }
+                    }
                 }
             } else if (Main.getInstance().isSQL()) {
-                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankBalance FROM " + tableName + " WHERE BankName ='" + name + "' LIMIT 1;")) {
-                    if (resultSet.next())
-                        return resultSet.getDouble("BankBalance");
+                try (Connection conn = Objects.requireNonNull(SQLite.connect());
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, name);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        if (resultSet.next()) {
+                            return resultSet.getDouble("BankBalance");
+                        }
+                    }
                 }
             }
         } catch (Exception ex) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Error in getBankMoney for bank: " + name, ex);
         }
         return 0.0;
     }
@@ -236,30 +264,42 @@ public class MySQLManager {
      * @return if the user is the BankOwner
      */
     protected boolean isBankOwner(String name, OfflinePlayer player) {
+        if (name == null || name.trim().isEmpty() || player == null || player.getName() == null) {
+            return false;
+        }
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+        String query = "SELECT BankName, BankOwner FROM " + tableName + " WHERE Player = ?";
+
         try {
             if (Main.getInstance().isMysql()) {
-                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankName, BankOwner FROM " + tableName + " WHERE Player = '" + (isOnlineMode() ? player.getUniqueId() : player.getName()) + "';")) {
-                    if (resultSet.next()) {
-                        String bank = resultSet.getString("BankName");
-                        String owner = resultSet.getString("BankOwner");
-                        String expectedOwner = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
-                        if (bank != null && owner != null && bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(expectedOwner))
-                            return true;
+                try (java.sql.PreparedStatement stmt = MySQL.getConnection().prepareStatement(query)) {
+                    stmt.setString(1, playerId);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        if (resultSet.next()) {
+                            String bank = resultSet.getString("BankName");
+                            String owner = resultSet.getString("BankOwner");
+                            return bank != null && owner != null &&
+                                   bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(playerId);
+                        }
                     }
                 }
             } else if (Main.getInstance().isSQL()) {
-                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankName, BankOwner FROM " + tableName + " WHERE Player = '" + (isOnlineMode() ? player.getUniqueId() : player.getName()) + "';")) {
-                    if (resultSet.next()) {
-                        String bank = resultSet.getString("BankName");
-                        String owner = resultSet.getString("BankOwner");
-                        String expectedOwner = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
-                        if (bank != null && owner != null && bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(expectedOwner))
-                            return true;
+                try (Connection conn = Objects.requireNonNull(SQLite.connect());
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, playerId);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        if (resultSet.next()) {
+                            String bank = resultSet.getString("BankName");
+                            String owner = resultSet.getString("BankOwner");
+                            return bank != null && owner != null &&
+                                   bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(playerId);
+                        }
                     }
                 }
             }
         } catch (Exception ex) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Error in isBankOwner for bank: " + name, ex);
         }
         return false;
     }
@@ -271,35 +311,38 @@ public class MySQLManager {
      * @param player   the Player
      */
     public void addBankMember(String bankName, OfflinePlayer player) {
-        if (SQL.isTableExists(tableName)) {
-            if (SQL.exists(tableName, "BankName", bankName)) {
-                if (SQL.get(tableName, "BankMembers", "BankName", bankName) != null) {
-                    Type type = new TypeToken<List<String>>() {
-                    }.getType();
-                    List<String> players = new Gson().fromJson((String) SQL.get(tableName, "BankMembers", "BankName", bankName), type);
-                    if (players != null && !players.contains(player.getName())) players.add(player.getName());
-                    if (isOnlineMode()) {
-                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
-                        SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getUniqueId() + "'");
-                    } else {
-                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
-                        SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getName() + "'");
-                    }
-                    SQL.updateData(tableName, "BankMembers", new Gson().toJson(players), "BankName = '" + bankName + "'");
-                } else {
-                    List<String> players = new ArrayList<>();
-                    players.add(player.getName());
-                    if (isOnlineMode()) {
-                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getUniqueId() + "'");
-                        SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getUniqueId() + "'");
-                    } else {
-                        SQL.updateData(tableName, "BankOwner", SQL.get(tableName, "BankOwner", "BankName", bankName), "Player = '" + player.getName() + "'");
-                        SQL.updateData(tableName, "BankName", bankName, "Player = '" + player.getName() + "'");
-                    }
-                    SQL.updateData(tableName, "BankMembers", new Gson().toJson(players), "BankName = '" + bankName + "'");
-                }
-            }
+        if (bankName == null || bankName.trim().isEmpty() || player == null || player.getName() == null) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid parameters for addBankMember");
+            return;
         }
+
+        if (!SQL.isTableExists(tableName) || !SQL.exists(tableName, "BankName", bankName)) {
+            return;
+        }
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+        Object membersObj = SQL.get(tableName, "BankMembers", "BankName", bankName);
+        Object ownerObj = SQL.get(tableName, "BankOwner", "BankName", bankName);
+
+        List<String> players;
+        if (membersObj != null) {
+            Type type = new TypeToken<List<String>>() {}.getType();
+            players = new Gson().fromJson(membersObj.toString(), type);
+            if (players == null) {
+                players = new ArrayList<>();
+            }
+        } else {
+            players = new ArrayList<>();
+        }
+
+        if (!players.contains(player.getName())) {
+            players.add(player.getName());
+        }
+
+        // Update player's bank info
+        SQL.updateData(tableName, "BankOwner", ownerObj, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankName", bankName, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankMembers", new Gson().toJson(players), "BankName = ?", bankName);
     }
 
     /**
@@ -328,61 +371,70 @@ public class MySQLManager {
      * @param player   the Player
      */
     public void removeBankMember(String bankName, OfflinePlayer player) {
-        List<String> pls = new ArrayList<>();
-        List<String> members = new ArrayList<>();
-        if (SQL.isTableExists(tableName)) {
-            if (SQL.exists(tableName, "BankName", bankName)) {
-                if (SQL.get(tableName, "BankMembers", "BankName", bankName) != null) {
-                    Type type = new TypeToken<List<String>>() {
-                    }.getType();
-                    List<String> players = new Gson().fromJson((String) SQL.get(tableName, "BankMembers", "BankName", bankName), type);
-                    if (players != null) {
-                        players.remove(player.getName());
-                    }
-                    if (isOnlineMode()) {
-                        SQL.updateData(tableName, "BankOwner", null, "Player = '" + player.getUniqueId() + "'");
-                        SQL.updateData(tableName, "BankName", null, "Player = '" + player.getUniqueId() + "'");
-                        SQL.updateData(tableName, "BankBalance", null, "Player = '" + player.getUniqueId() + "'");
-                        SQL.updateData(tableName, "BankMembers", null, "Player = '" + player.getUniqueId() + "'");
-                    } else {
-                        SQL.updateData(tableName, "BankOwner", null, "Player = '" + player.getName() + "'");
-                        SQL.updateData(tableName, "BankName", null, "Player = '" + player.getName() + "'");
-                        SQL.updateData(tableName, "BankBalance", null, "Player = '" + player.getName() + "'");
-                        SQL.updateData(tableName, "BankMembers", null, "Player = '" + player.getName() + "'");
-                    }
-                    if (players != null) {
-                        members.addAll(players);
-                    }
-                    if (Main.getInstance().isMysql()) {
-                        try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + bankName + "';")) {
-                            while (resultSet.next()) {
-                                pls.add(resultSet.getString("Player"));
-                            }
-                        } catch (Exception ex) {
-                            Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+        if (bankName == null || bankName.trim().isEmpty() || player == null || player.getName() == null) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid parameters for removeBankMember");
+            return;
+        }
+
+        if (!SQL.isTableExists(tableName) || !SQL.exists(tableName, "BankName", bankName)) {
+            return;
+        }
+
+        String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+        Object membersObj = SQL.get(tableName, "BankMembers", "BankName", bankName);
+
+        if (membersObj == null) {
+            return;
+        }
+
+        Type type = new TypeToken<List<String>>() {}.getType();
+        List<String> members = new Gson().fromJson(membersObj.toString(), type);
+
+        if (members == null) {
+            members = new ArrayList<>();
+        } else {
+            members.remove(player.getName());
+        }
+
+        // Clear player's bank info
+        SQL.updateData(tableName, "BankOwner", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankName", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankBalance", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankMembers", null, "Player = ?", playerId);
+
+        // Get all players in this bank and update their member list
+        List<String> bankPlayers = new ArrayList<>();
+        String query = "SELECT Player FROM " + tableName + " WHERE BankName = ?";
+
+        try {
+            if (Main.getInstance().isMysql()) {
+                try (java.sql.PreparedStatement stmt = MySQL.getConnection().prepareStatement(query)) {
+                    stmt.setString(1, bankName);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        while (resultSet.next()) {
+                            bankPlayers.add(resultSet.getString("Player"));
                         }
-                    } else if (Main.getInstance().isSQL()) {
-                        try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + bankName + "';")) {
-                            while (resultSet.next()) {
-                                pls.add(resultSet.getString("Player"));
-                            }
-                        } catch (Exception ex) {
-                            Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+                    }
+                }
+            } else if (Main.getInstance().isSQL()) {
+                try (Connection conn = Objects.requireNonNull(SQLite.connect());
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, bankName);
+                    try (ResultSet resultSet = stmt.executeQuery()) {
+                        while (resultSet.next()) {
+                            bankPlayers.add(resultSet.getString("Player"));
                         }
                     }
                 }
             }
-            if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-                if (SQL.isTableExists(tableName)) {
-                    if (SQL.exists(tableName, "BankName", bankName)) {
-                        if (SQL.get(tableName, "BankMembers", "BankName", bankName) != null) {
-                            for (String players : pls) {
-                                SQL.updateData(tableName, "BankMembers", new Gson().toJson(members), "Player = '" + players + "'");
-                            }
-                        }
-                    }
-                }
-            }
+        } catch (Exception ex) {
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Error in removeBankMember", ex);
+        }
+
+        // Update member list for all bank members
+        String membersJson = new Gson().toJson(members);
+        for (String p : bankPlayers) {
+            SQL.updateData(tableName, "BankMembers", membersJson, "Player = ?", p);
         }
     }
 
@@ -482,84 +534,55 @@ public class MySQLManager {
      * @return return if success or not
      */
     public boolean removeBank(String bankName) {
-        if (SQL.isTableExists(tableName)) {
-            if (getBanks().contains(bankName)) {
-                List<String> members = getBankMembers(bankName);
-                try {
-                    if (Main.getInstance().isMysql()) {
-                        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                            if (isBankOwner(bankName, player))
-                                if (Bukkit.getOnlineMode()) {
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + player.getUniqueId() + "'");
-                                } else {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getName() + "'");
-                                }
-                        }
-                        if (members != null) {
-                            members.forEach(member -> {
-                                removeBankMember(bankName, Bukkit.getOfflinePlayer(member));
-                                if (Bukkit.getOnlineMode()) {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                } else {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                }
-                            });
-                        }
-                        return true;
-                    } else if (Main.getInstance().isSQL()) {
-                        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                            if (isBankOwner(bankName, player))
-                                if (Bukkit.getOnlineMode()) {
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + player.getUniqueId() + "'");
-                                } else {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + player.getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + player.getName() + "'");
-                                }
-                        }
-                        if (members != null) {
-                            members.forEach(member -> {
-                                removeBankMember(bankName, Bukkit.getOfflinePlayer(member));
-                                if (Bukkit.getOnlineMode()) {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + Bukkit.getOfflinePlayer(member).getUniqueId() + "'");
-                                } else {
-                                    SQL.updateData(tableName, "BankName", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankBalance", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankOwner", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                    SQL.updateData(tableName, "BankMembers", null, "player = '" + Bukkit.getOfflinePlayer(member).getName() + "'");
-                                }
-                            });
-                        }
-                        return true;
-                    }
-                } catch (Exception ex) {
-                    Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
+        if (bankName == null || bankName.trim().isEmpty()) {
+            Main.getInstance().getLogger4J().log(Level.WARN, "Invalid bank name for removeBank");
+            return false;
+        }
+
+        if (!SQL.isTableExists(tableName) || !getBanks().contains(bankName)) {
+            return false;
+        }
+
+        List<String> members = getBankMembers(bankName);
+
+        try {
+            // Find and clear bank owner
+            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                if (player == null || player.getName() == null) continue;
+
+                if (isBankOwner(bankName, player)) {
+                    String playerId = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+                    clearBankData(playerId);
                 }
             }
+
+            // Clear bank data for all members
+            if (members != null && !members.isEmpty()) {
+                for (String memberName : members) {
+                    OfflinePlayer member = Bukkit.getOfflinePlayer(memberName);
+                    if (member.getName() == null) continue;
+
+                    removeBankMember(bankName, member);
+                    String memberId = isOnlineMode() ? member.getUniqueId().toString() : member.getName();
+                    clearBankData(memberId);
+                }
+            }
+
+            return true;
+        } catch (Exception ex) {
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Error removing bank: " + bankName, ex);
+            return false;
         }
-        return false;
+    }
+
+    /**
+     * Helper method to clear bank data for a player
+     * @param playerId the player identifier (UUID or name)
+     */
+    private void clearBankData(String playerId) {
+        SQL.updateData(tableName, "BankOwner", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankName", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankBalance", null, "Player = ?", playerId);
+        SQL.updateData(tableName, "BankMembers", null, "Player = ?", playerId);
     }
 }
