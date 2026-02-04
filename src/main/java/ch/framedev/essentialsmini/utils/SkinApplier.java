@@ -1,3 +1,4 @@
+/*
 package ch.framedev.essentialsmini.utils;
 
 import com.mojang.authlib.GameProfile;
@@ -41,4 +42,4 @@ public class SkinApplier {
             throw new RuntimeException("Failed to apply skin", e);
         }
     }
-}
+}*/

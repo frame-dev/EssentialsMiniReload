@@ -35,12 +35,7 @@ public class FeedCMD extends CommandBase {
         if (args.length == 0) {
             if (sender instanceof Player player) {
                 if (sender.hasPermission("essentialsmini.feed")) {
-                    player.setFoodLevel(20);
-                    String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
-                    if (feedSet == null) return true;
-                    if (feedSet.contains("&"))
-                        feedSet = feedSet.replace('&', '§');
-                    player.sendMessage(plugin.getPrefix() + feedSet);
+                    feedPlayerAndNotify(player, sender, false);
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
@@ -51,49 +46,11 @@ public class FeedCMD extends CommandBase {
         } else if (args.length == 1) {
             if (sender.hasPermission("essentialsmini.feed.others")) {
                 if (args[0].equalsIgnoreCase("**")) {
-                    Bukkit.getOnlinePlayers().forEach(player -> {
-                        player.setFoodLevel(20);
-                        if (!Main.getSilent().contains(sender.getName())) {
-                            String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
-                            if (feedSet == null) {
-                                player.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
-                            } else {
-                                if (feedSet.contains("&"))
-                                    feedSet = feedSet.replace('&', '§');
-                                player.sendMessage(plugin.getPrefix() + feedSet);
-                            }
-                        }
-                        String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
-                        if (feedOther != null) {
-                            if (feedOther.contains("&"))
-                                feedOther = feedOther.replace('&', '§');
-                            if (feedOther.contains("%Player%"))
-                                feedOther = feedOther.replace("%Player%", player.getName());
-                            sender.sendMessage(plugin.getPrefix() + feedOther);
-                        }
-                    });
+                    Bukkit.getOnlinePlayers().forEach(player -> feedPlayerAndNotify(player, sender, true));
                 } else {
                     Player player = Bukkit.getPlayer(args[0]);
                     if (player != null) {
-                        player.setFoodLevel(20);
-                        if (!Main.getSilent().contains(sender.getName())) {
-                            String feedSet = plugin.getLanguageConfig(player).getString("FeedSet");
-                            if (feedSet == null) {
-                                player.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
-                            } else {
-                                if (feedSet.contains("&"))
-                                    feedSet = feedSet.replace('&', '§');
-                                player.sendMessage(plugin.getPrefix() + feedSet);
-                            }
-                        }
-                        String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
-                        if (feedOther != null) {
-                            if (feedOther.contains("&"))
-                                feedOther = feedOther.replace('&', '§');
-                            if (feedOther.contains("%Player%"))
-                                feedOther = feedOther.replace("%Player%", player.getName());
-                            sender.sendMessage(plugin.getPrefix() + feedOther);
-                        }
+                        feedPlayerAndNotify(player, sender, true);
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
                     }
@@ -105,6 +62,33 @@ public class FeedCMD extends CommandBase {
         } else {
             sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/feed §cor §6/feed <PlayerName>"));
             return true;
+        }
+    }
+
+    // Helper to feed a player and notify both the target and the command sender (if requested).
+    private void feedPlayerAndNotify(Player target, CommandSender sender, boolean notifySender) {
+        // Refill food level
+        target.setFoodLevel(20);
+
+        // Notify target unless sender is silent
+        if (!Main.getSilent().contains(sender.getName())) {
+            String feedSet = plugin.getLanguageConfig(target).getString("FeedSet");
+            if (feedSet == null) {
+                target.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
+            } else {
+                if (feedSet.contains("&")) feedSet = feedSet.replace('&', '§');
+                target.sendMessage(plugin.getPrefix() + feedSet);
+            }
+        }
+
+        // Optionally notify command sender about the action
+        if (notifySender) {
+            String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
+            if (feedOther != null) {
+                if (feedOther.contains("&")) feedOther = feedOther.replace('&', '§');
+                if (feedOther.contains("%Player%")) feedOther = feedOther.replace("%Player%", target.getName());
+                sender.sendMessage(plugin.getPrefix() + feedOther);
+            }
         }
     }
 

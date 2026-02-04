@@ -10,116 +10,104 @@ package ch.framedev.essentialsmini.commands.playercommands;
  * This Class was created at 20.09.2020 18:26
  */
 
+import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
 import org.jetbrains.annotations.NotNull;
 
-public record GodCMD(Main plugin) implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class GodCMD extends CommandBase {
 
     public GodCMD(Main plugin) {
-        this.plugin = plugin;
-        plugin.getCommands().put("godmode", this);
+        super(plugin, "god");
+        setupTabCompleter(this);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
                 return true;
             }
-            if (!player.hasPermission(new Permission(plugin.getPermissionBase() + "god", PermissionDefault.OP))) {
-                player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+            if (!player.hasPermission(getPlugin().getPermissionBase() + "god")) {
+                player.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
                 return true;
             }
-            if (player.isInvulnerable()) {
-                player.setInvulnerable(false);
-                String godSelfOff = plugin.getLanguageConfig(player).getString("God.Self.Deactivated");
-                if (godSelfOff == null) {
-                    player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Deactivated' not found! Please contact the Admin!");
-                    return true;
-                }
-                if (godSelfOff.contains("&"))
-                    godSelfOff = godSelfOff.replace('&', '§');
-                player.sendMessage(plugin.getPrefix() + godSelfOff);
-            } else {
-                player.setInvulnerable(true);
-                String godSelfOn = plugin.getLanguageConfig(player).getString("God.Self.Activated");
-                if (godSelfOn == null) {
-                    player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Activated' not found! Please contact the Admin!");
-                    return true;
-                }
-                if (godSelfOn.contains("&"))
-                    godSelfOn = godSelfOn.replace('&', '§');
-                player.sendMessage(plugin.getPrefix() + godSelfOn);
-            }
+            toggleGod(player, sender, false);
             return true;
         } else if (args.length == 1) {
-            Player player = Bukkit.getPlayer(args[0]);
-            if (player != null) {
-                if (!sender.hasPermission(new Permission(plugin.getPermissionBase() + "god.others", PermissionDefault.OP))) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target != null) {
+                if (!sender.hasPermission(getPlugin().getPermissionBase() + "god.others")) {
+                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
                     return true;
                 }
-                if (player.isInvulnerable()) {
-                    player.setInvulnerable(false);
-                    if (!Main.getSilent().contains(sender.getName())) {
-                        String godSelfOff = plugin.getLanguageConfig(player).getString("God.Self.Deactivated");
-                        if (godSelfOff == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Deactivated' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        if (godSelfOff.contains("&"))
-                            godSelfOff = godSelfOff.replace('&', '§');
-                        player.sendMessage(plugin.getPrefix() + godSelfOff);
-                    }
-                    String godOtherOff = plugin.getLanguageConfig(sender).getString("God.Other.Deactivated");
-                    if (godOtherOff == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cConfig 'God.Other.Deactivated' not found! Please contact the Admin!");
-                        return true;
-                    }
-                    if (godOtherOff.contains("%Player%"))
-                        godOtherOff = godOtherOff.replace("%Player%", player.getName());
-                    if (godOtherOff.contains("&"))
-                        godOtherOff = godOtherOff.replace('&', '§');
-                    sender.sendMessage(plugin.getPrefix() + godOtherOff);
-                } else {
-                    player.setInvulnerable(true);
-                    if (!Main.getSilent().contains(sender.getName())) {
-                        String godSelfOn = plugin.getLanguageConfig(player).getString("God.Self.Activated");
-                        if (godSelfOn == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cConfig 'God.Self.Activated' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        if (godSelfOn.contains("&"))
-                            godSelfOn = godSelfOn.replace('&', '§');
-                        player.sendMessage(plugin.getPrefix() + godSelfOn);
-                    }
-                    String godOtherOff = plugin.getLanguageConfig(sender).getString("God.Other.Activated");
-                    if (godOtherOff == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cConfig 'God.Other.Activated' not found! Please contact the Admin!");
-                        return true;
-                    }
-                    if (godOtherOff.contains("%Player%"))
-                        godOtherOff = godOtherOff.replace("%Player%", player.getName());
-                    if (godOtherOff.contains("&"))
-                        godOtherOff = godOtherOff.replace('&', '§');
-                    sender.sendMessage(plugin.getPrefix() + godOtherOff);
-                }
+                toggleGod(target, sender, true);
             } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
+                sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(args[0]));
             }
             return true;
         } else {
-            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/god"));
-            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/god <SpielerName>"));
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/god"));
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/god <SpielerName>"));
             return true;
         }
+    }
+
+    private void toggleGod(Player target, CommandSender sender, boolean notifySender) {
+        boolean enabling = !target.isInvulnerable();
+        if (enabling) {
+            target.setInvulnerable(true);
+            if (!Main.getSilent().contains(sender.getName())) {
+                String msg = getPlugin().getLanguageConfig(target).getString("God.Self.Activated");
+                if (msg == null) msg = "§aYou are now invulnerable!";
+                if (msg.contains("&")) msg = msg.replace('&', '§');
+                target.sendMessage(getPlugin().getPrefix() + ReplaceCharConfig.replaceParagraph(msg));
+            }
+            if (notifySender) {
+                String other = getPlugin().getLanguageConfig(sender).getString("God.Other.Activated");
+                if (other == null) other = "§aEnabled godmode for %Player%";
+                other = other.replace("%Player%", target.getName());
+                if (other.contains("&")) other = other.replace('&', '§');
+                sender.sendMessage(getPlugin().getPrefix() + ReplaceCharConfig.replaceParagraph(other));
+            }
+        } else {
+            target.setInvulnerable(false);
+            if (!Main.getSilent().contains(sender.getName())) {
+                String msg = getPlugin().getLanguageConfig(target).getString("God.Self.Deactivated");
+                if (msg == null) msg = "§cYou are no longer invulnerable!";
+                if (msg.contains("&")) msg = msg.replace('&', '§');
+                target.sendMessage(getPlugin().getPrefix() + ReplaceCharConfig.replaceParagraph(msg));
+            }
+            if (notifySender) {
+                String other = getPlugin().getLanguageConfig(sender).getString("God.Other.Deactivated");
+                if (other == null) other = "§cDisabled godmode for %Player%";
+                other = other.replace("%Player%", target.getName());
+                if (other.contains("&")) other = other.replace('&', '§');
+                sender.sendMessage(getPlugin().getPrefix() + ReplaceCharConfig.replaceParagraph(other));
+            }
+        }
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (args.length == 1) {
+            List<String> names = new ArrayList<>();
+            String prefix = args[0].toLowerCase();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (p.getName().toLowerCase().startsWith(prefix)) names.add(p.getName());
+            }
+            Collections.sort(names);
+            return names;
+        }
+        return super.onTabComplete(sender, command, label, args);
     }
 }

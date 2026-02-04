@@ -11,7 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -70,7 +70,8 @@ public class MySQLManager {
         } else {
             if (SQL.isTableExists(tableName)) {
                 if (SQL.exists(tableName, "Player", player.getName())) {
-                    SQL.updateData(tableName, "Money", String.valueOf(amount), "Player = '" + player.getName() + "'");
+                    SQL.updateData(tableName, "Money", String.valueOf(amount), "Player = '" + player.getName() + "'"
+                    );
                 } else {
                     // Correct and safe way to insert data using the insertData method
                     SQL.insertData(
@@ -80,13 +81,11 @@ public class MySQLManager {
                     );
                 }
             } else {
-                BigDecimal bd = new BigDecimal(amount);
-                int packedInt = bd.scaleByPowerOfTen(4).intValue();
+                // Keep storing money consistently as string representation of the double
                 SQL.createTable(tableName, "Player TEXT(256)", "Name TEXT(255)", "Money TEXT", "BankBalance DOUBLE", "BankName TEXT", "BankOwner TEXT", "BankMembers TEXT");
-                // Safe insertion of data using the correct method
                 SQL.insertData(
                         tableName,
-                        new String[]{player.getName(), String.valueOf(packedInt)},
+                        new String[]{player.getName(), String.valueOf(amount)},
                         "Player", "Money"
                 );
             }
@@ -169,24 +168,17 @@ public class MySQLManager {
      * @param amount amount to adding to the Bank
      */
     protected void setBankMoney(String name, double amount) {
-        int i = 0;
         List<String> players = new ArrayList<>();
         try {
             if (Main.getInstance().isMysql()) {
-                ResultSet resultSet;
-                try (Statement statement = MySQL.getConnection().createStatement()) {
-                    resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + name + "';");
+                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + name + "';")) {
                     while (resultSet.next()) {
-                        i++;
                         players.add(resultSet.getString("Player"));
                     }
                 }
             } else if (Main.getInstance().isSQL()) {
-                ResultSet resultSet;
-                try (Statement statement = Objects.requireNonNull(SQLite.connect()).createStatement()) {
-                    resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + name + "';");
+                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + name + "';")) {
                     while (resultSet.next()) {
-                        i++;
                         players.add(resultSet.getString("Player"));
                     }
                 }
@@ -195,10 +187,8 @@ public class MySQLManager {
             Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
         }
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-            for (int x = 0; x <= i; x++) {
-                for (String player : players) {
-                    SQL.updateData(tableName, "BankBalance", String.valueOf(amount), "Player = '" + player + "'");
-                }
+            for (String player : players) {
+                SQL.updateData(tableName, "BankBalance", String.valueOf(amount), "Player = '" + player + "'");
             }
         }
     }
@@ -210,16 +200,12 @@ public class MySQLManager {
     protected double getBankMoney(String name) {
         try {
             if (Main.getInstance().isMysql()) {
-                ResultSet resultSet;
-                try (Statement statement = MySQL.getConnection().createStatement()) {
-                    resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + name + "';");
+                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankBalance FROM " + tableName + " WHERE BankName ='" + name + "' LIMIT 1;")) {
                     if (resultSet.next())
                         return resultSet.getDouble("BankBalance");
                 }
             } else if (Main.getInstance().isSQL()) {
-                ResultSet resultSet;
-                try (Statement statement = Objects.requireNonNull(SQLite.connect()).createStatement()) {
-                    resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + name + "';");
+                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankBalance FROM " + tableName + " WHERE BankName ='" + name + "' LIMIT 1;")) {
                     if (resultSet.next())
                         return resultSet.getDouble("BankBalance");
                 }
@@ -252,37 +238,23 @@ public class MySQLManager {
     protected boolean isBankOwner(String name, OfflinePlayer player) {
         try {
             if (Main.getInstance().isMysql()) {
-                try (Statement statement = MySQL.getConnection().createStatement()) {
-                    ResultSet resultSet;
-                    if (isOnlineMode()) {
-                        resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE Player = '" + player.getUniqueId() + "';");
-                        if (resultSet.next())
-                            if (resultSet.getString("BankName").equalsIgnoreCase(name) && resultSet.getString("BankOwner").equalsIgnoreCase(player.getUniqueId().toString()))
-                                return true;
-                    } else {
-                        resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE Player = '" + player.getName() + "';");
-                        if (resultSet.next())
-                            if (resultSet.getString("BankName").equalsIgnoreCase(name) && resultSet.getString("BankOwner").equalsIgnoreCase(player.getName()))
-                                return true;
+                try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankName, BankOwner FROM " + tableName + " WHERE Player = '" + (isOnlineMode() ? player.getUniqueId() : player.getName()) + "';")) {
+                    if (resultSet.next()) {
+                        String bank = resultSet.getString("BankName");
+                        String owner = resultSet.getString("BankOwner");
+                        String expectedOwner = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+                        if (bank != null && owner != null && bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(expectedOwner))
+                            return true;
                     }
                 }
             } else if (Main.getInstance().isSQL()) {
-                try (Statement statement = Objects.requireNonNull(SQLite.connect()).createStatement()) {
-                    ResultSet resultSet;
-                    if (isOnlineMode()) {
-                        resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE Player = '" + player.getUniqueId() + "';");
-                        if (resultSet.next()) {
-                            if (resultSet.getString("BankName").equalsIgnoreCase(name) && resultSet.getString("BankOwner").equalsIgnoreCase(player.getUniqueId().toString())) {
-                                return true;
-                            }
-                        }
-                    } else {
-                        resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE Player = '" + player.getName() + "';");
-                        if (resultSet.next()) {
-                            if (resultSet.getString("BankName").equalsIgnoreCase(name) && resultSet.getString("BankOwner").equalsIgnoreCase(player.getName())) {
-                                return true;
-                            }
-                        }
+                try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT BankName, BankOwner FROM " + tableName + " WHERE Player = '" + (isOnlineMode() ? player.getUniqueId() : player.getName()) + "';")) {
+                    if (resultSet.next()) {
+                        String bank = resultSet.getString("BankName");
+                        String owner = resultSet.getString("BankOwner");
+                        String expectedOwner = isOnlineMode() ? player.getUniqueId().toString() : player.getName();
+                        if (bank != null && owner != null && bank.equalsIgnoreCase(name) && owner.equalsIgnoreCase(expectedOwner))
+                            return true;
                     }
                 }
             }
@@ -382,21 +354,15 @@ public class MySQLManager {
                         members.addAll(players);
                     }
                     if (Main.getInstance().isMysql()) {
-                        try {
-                            ResultSet resultSet;
-                            try (Statement statement = MySQL.getConnection().createStatement()) {
-                                resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + bankName + "';");
-                                while (resultSet.next()) {
-                                    pls.add(resultSet.getString("Player"));
-                                }
+                        try (Statement statement = MySQL.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + bankName + "';")) {
+                            while (resultSet.next()) {
+                                pls.add(resultSet.getString("Player"));
                             }
                         } catch (Exception ex) {
                             Main.getInstance().getLogger4J().log(Level.ERROR, "Error", ex);
                         }
                     } else if (Main.getInstance().isSQL()) {
-                        try {
-                            Statement statement = Objects.requireNonNull(SQLite.connect()).createStatement();
-                            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName ='" + bankName + "';");
+                        try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT Player FROM " + tableName + " WHERE BankName ='" + bankName + "';")) {
                             while (resultSet.next()) {
                                 pls.add(resultSet.getString("Player"));
                             }
@@ -477,7 +443,7 @@ public class MySQLManager {
                 }
             }
         }
-        return null;
+        return new ArrayList<>();
     }
 
     /**
@@ -490,16 +456,16 @@ public class MySQLManager {
                 if (Main.getInstance().isMysql()) {
                     ResultSet resultSet;
                     try (Statement statement = MySQL.getConnection().createStatement()) {
-                        resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName IS NOT NULL");
+                        resultSet = statement.executeQuery("SELECT DISTINCT BankName FROM " + tableName + " WHERE BankName IS NOT NULL");
                         while (resultSet.next()) {
                             banks.add(resultSet.getString("BankName"));
                         }
                     }
                 } else if (Main.getInstance().isSQL()) {
-                    Statement statement = Objects.requireNonNull(SQLite.connect()).createStatement();
-                    ResultSet resultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE BankName IS NOT NULL");
-                    while (resultSet.next()) {
-                        banks.add(resultSet.getString("BankName"));
+                    try (Connection conn = Objects.requireNonNull(SQLite.connect()); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT DISTINCT BankName FROM " + tableName + " WHERE BankName IS NOT NULL")) {
+                        while (resultSet.next()) {
+                            banks.add(resultSet.getString("BankName"));
+                        }
                     }
                 }
             } catch (Exception ex) {

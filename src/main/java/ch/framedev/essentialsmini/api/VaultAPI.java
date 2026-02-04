@@ -37,6 +37,18 @@ public class VaultAPI extends AbstractEconomy {
         BACKEND_MANAGER = Main.getInstance().getDatabaseManager().getBackendManager();
     }
 
+    // Ensure BACKEND_MANAGER is available before using it
+    private static void ensureBackend() {
+        if (BACKEND_MANAGER == null) {
+            try {
+                if (Main.getInstance() != null && Main.getInstance().getDatabaseManager() != null) {
+                    init();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     @SuppressWarnings("unused")
     public interface Callback<T> {
         T onSuccess(T object);
@@ -136,7 +148,8 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             return new MySQLManager().getMoney(Bukkit.getOfflinePlayer(playerName));
         } else if (Main.getInstance().isMongoDB()) {
-            if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
+            ensureBackend();
+            if (BACKEND_MANAGER != null && BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                 return (double) BACKEND_MANAGER.get(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data");
         } else {
             return new MoneyFileManager().getMoney(Bukkit.getOfflinePlayer(playerName));
@@ -181,8 +194,9 @@ public class VaultAPI extends AbstractEconomy {
             if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
                 new MySQLManager().removeMoney(Bukkit.getOfflinePlayer(playerName), amount);
             } else if (Main.getInstance().isMongoDB()) {
+                ensureBackend();
                 //noinspection deprecation
-                if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
+                if (BACKEND_MANAGER != null && BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                     BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(playerName), "money", balance, "essentialsmini_data");
             } else {
                 new MoneyFileManager().removeMoney(Bukkit.getOfflinePlayer(playerName), amount);
@@ -211,7 +225,8 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             new MySQLManager().addMoney(Bukkit.getOfflinePlayer(playerName), amount);
         } else if (Main.getInstance().isMongoDB()) {
-            if (BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
+            ensureBackend();
+            if (BACKEND_MANAGER != null && BACKEND_MANAGER.exists(Bukkit.getOfflinePlayer(playerName), "money", "essentialsmini_data"))
                 BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(playerName), "money", balance, "essentialsmini_data");
         } else {
             new MoneyFileManager().addMoney(Bukkit.getOfflinePlayer(playerName), amount);
@@ -234,8 +249,11 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             new MySQLManager().createBank(Bukkit.getOfflinePlayer(player), name);
         } else if (Main.getInstance().isMongoDB()) {
-            BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(player), "bankowner", Bukkit.getOfflinePlayer(player).getUniqueId().toString(), "essentialsmini_data");
-            BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(player), "bankname", name, "essentialsmini_data");
+            ensureBackend();
+            if (BACKEND_MANAGER != null) {
+                BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(player), "bankowner", Bukkit.getOfflinePlayer(player).getUniqueId().toString(), "essentialsmini_data");
+                BACKEND_MANAGER.updateUser(Bukkit.getOfflinePlayer(player), "bankname", name, "essentialsmini_data");
+            }
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
@@ -250,9 +268,11 @@ public class VaultAPI extends AbstractEconomy {
     public EconomyResponse deleteBank(String name) {
         final EconomyResponse[] economyResponse = {null};
                 if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-                    if (new MySQLManager().removeBank(name))
+                    if (new MySQLManager().removeBank(name)) {
                         economyResponse[0] = new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.SUCCESS, "");
-                    economyResponse[0] = new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Error while Deleting Bank!");
+                    } else {
+                        economyResponse[0] = new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Error while Deleting Bank!");
+                    }
                 } else {
                     File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
                     FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
@@ -271,7 +291,18 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             economyResponse[0] = new EconomyResponse(new MySQLManager().getBankMoney(name), new MySQLManager().getBankMoney(name), EconomyResponse.ResponseType.SUCCESS, "");
         } else if (Main.getInstance().isMongoDB()) {
-            economyResponse[0] = new EconomyResponse((double) BACKEND_MANAGER.getObject("bankname", name, "bank", "essentialsmini_data"), (double) BACKEND_MANAGER.getObject("bankname", name, "bank", "essentialsmini_data"), EconomyResponse.ResponseType.SUCCESS, "");
+            ensureBackend();
+            if (BACKEND_MANAGER != null) {
+                Object obj = BACKEND_MANAGER.getObject("bankname", name, "bank", "essentialsmini_data");
+                if (obj instanceof Number) {
+                    double val = ((Number) obj).doubleValue();
+                    economyResponse[0] = new EconomyResponse(val, val, EconomyResponse.ResponseType.SUCCESS, "");
+                } else {
+                    economyResponse[0] = new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.SUCCESS, "");
+                }
+            } else {
+                economyResponse[0] = new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.SUCCESS, "");
+            }
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
@@ -298,26 +329,35 @@ public class VaultAPI extends AbstractEconomy {
         final EconomyResponse[] economyResponses = {null};
         double balance = bankBalance(name).amount;
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
+            // check funds first
+            if (!bankHas(name, amount).transactionSuccess()) {
+                return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
+            }
             balance -= amount;
-            if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
             new MySQLManager().setBankMoney(name, balance);
+            economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, "");
+            return economyResponses[0];
         } else if (Main.getInstance().isMongoDB()) {
+            // check funds first
+            if (!bankHas(name, amount).transactionSuccess()) {
+                return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
+            }
             balance -= amount;
-            if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
-            BACKEND_MANAGER.updateData("bankname", name, "bank", balance, "essentialsmini_data");
+            ensureBackend();
+            if (BACKEND_MANAGER != null)
+                BACKEND_MANAGER.updateData("bankname", name, "bank", balance, "essentialsmini_data");
+            return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, "");
         } else {
+            if (!bankHas(name, amount).transactionSuccess()) {
+                return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
+            }
+            balance -= amount;
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
             FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-            if (!bankHas(name, amount).transactionSuccess())
-                economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Not enough Money");
-            balance -= amount;
             cfg.set("Banks." + name + ".balance", balance);
             save(file, cfg);
+            return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, "");
         }
-        economyResponses[0] = new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, "");
-        return economyResponses[0];
     }
 
     @Override
@@ -330,7 +370,9 @@ public class VaultAPI extends AbstractEconomy {
         } else if (Main.getInstance().isMongoDB()) {
             double balance = bankBalance(name).balance;
             balance += amount;
-            BACKEND_MANAGER.updateData("bankname", name, "bank", balance, "essentialsmini_data");
+            ensureBackend();
+            if (BACKEND_MANAGER != null)
+                BACKEND_MANAGER.updateData("bankname", name, "bank", balance, "essentialsmini_data");
             return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.SUCCESS, "");
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
@@ -349,7 +391,8 @@ public class VaultAPI extends AbstractEconomy {
             if (!new MySQLManager().isBankOwner(name, Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(player))))
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
         } else if (Main.getInstance().isMongoDB()) {
-            if (!((String) BACKEND_MANAGER.get(Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(player)), "bankowner", "essentialsmini_data")).equalsIgnoreCase(Bukkit.getOfflinePlayer(player).getUniqueId().toString()))
+            ensureBackend();
+            if (BACKEND_MANAGER != null && !((String) BACKEND_MANAGER.get(Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(player)), "bankowner", "essentialsmini_data")).equalsIgnoreCase(Bukkit.getOfflinePlayer(player).getUniqueId().toString()))
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
@@ -368,7 +411,8 @@ public class VaultAPI extends AbstractEconomy {
             if (!new MySQLManager().isBankMember(name, Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(player))))
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't a member");
         } else if (Main.getInstance().isMongoDB()) {
-            if (!Main.getInstance().getVaultManager().getBankMembers(name).contains(player))
+            ensureBackend();
+            if (BACKEND_MANAGER != null && !Main.getInstance().getVaultManager().getBankMembers(name).contains(player))
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't a member");
         } else {
             File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
@@ -387,9 +431,10 @@ public class VaultAPI extends AbstractEconomy {
         if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
             return new MySQLManager().getBanks();
         } else if (Main.getInstance().isMongoDB()) {
+            ensureBackend();
             List<String> data = new ArrayList<>();
             for (OfflinePlayer offlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (((String) BACKEND_MANAGER.get(offlinePlayer, "bankowner", "essentialsmini_data")).equalsIgnoreCase(offlinePlayer.getUniqueId().toString()))
+                if (BACKEND_MANAGER != null && ((String) BACKEND_MANAGER.get(offlinePlayer, "bankowner", "essentialsmini_data")).equalsIgnoreCase(offlinePlayer.getUniqueId().toString()))
                     data.add((String) BACKEND_MANAGER.get(offlinePlayer, "bankname", "essentialsmini_data"));
             }
             return data;

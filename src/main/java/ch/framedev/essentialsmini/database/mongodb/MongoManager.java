@@ -12,49 +12,79 @@ import java.util.List;
 
 public class MongoManager {
 
-    final String databasestring = Main.getInstance().getConfig().getString("MongoDB.Database");
-    final String username = Main.getInstance().getConfig().getString("MongoDB.User");
-    final String password = Main.getInstance().getConfig().getString("MongoDB.Password");
-    private final String hostname = Main.getInstance().getConfig().getString("MongoDB.Host");
-    private final int port = Main.getInstance().getConfig().getInt("MongoDB.Port");
+    private final String databasestring;
+    private final String username;
+    private final String password;
+    private final String hostname;
+    private final int port;
     private MongoClient client;
     private MongoDatabase database;
 
     public MongoManager() {
-
+        // Safely retrieve config values with null checks
+        this.databasestring = Main.getInstance().getConfig().getString("MongoDB.Database", "database");
+        this.username = Main.getInstance().getConfig().getString("MongoDB.User", "username");
+        this.password = Main.getInstance().getConfig().getString("MongoDB.Password");
+        this.hostname = Main.getInstance().getConfig().getString("MongoDB.Host", "localhost");
+        this.port = Main.getInstance().getConfig().getInt("MongoDB.Port", 27017);
     }
 
     public void connectLocalHost() {
+        if (hostname == null || hostname.isEmpty()) {
+            throw new IllegalStateException("MongoDB hostname is not configured");
+        }
+
         this.client = MongoClients.create(
                 MongoClientSettings.builder()
                         .applyToClusterSettings(builder ->
                                 builder.hosts(List.of(new ServerAddress(hostname, port))))
                         .build());
-        this.database = this.client.getDatabase(databasestring != null ? databasestring : "database");
+        this.database = this.client.getDatabase(databasestring);
     }
 
     public void connect() {
-        MongoCredential credential;
-        if (password != null) {
-            credential = MongoCredential.createCredential(username != null ? username : "username", databasestring != null ? databasestring : "database", password.toCharArray());
-        } else {
-            credential = MongoCredential.createCredential("username", databasestring != null ? databasestring : "database", new char[0]);
+        if (hostname == null || hostname.isEmpty()) {
+            throw new IllegalStateException("MongoDB hostname is not configured");
         }
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("MongoDB username is not configured");
+        }
+        if (databasestring == null || databasestring.isEmpty()) {
+            throw new IllegalStateException("MongoDB database name is not configured");
+        }
+
+        MongoCredential credential;
+        if (password != null && !password.isEmpty()) {
+            credential = MongoCredential.createCredential(username, databasestring, password.toCharArray());
+        } else {
+            credential = MongoCredential.createCredential(username, databasestring, new char[0]);
+        }
+
         this.client = MongoClients.create(
                 MongoClientSettings.builder()
                         .credential(credential)
                         .applyToClusterSettings(builder ->
                                 builder.hosts(List.of(new ServerAddress(hostname, port))))
                         .build());
-        this.database = this.client.getDatabase(databasestring != null ? databasestring : "database");
-    }
-
-
-    public MongoClient getClient() {
-        return client;
+        this.database = this.client.getDatabase(databasestring);
     }
 
     public MongoDatabase getDatabase() {
+        if (database == null) {
+            throw new IllegalStateException("Database is not initialized. Call connect() or connectLocalHost() first.");
+        }
         return database;
+    }
+
+    public void disconnect() {
+        if (client != null) {
+            client.close();
+            client = null;
+            database = null;
+        }
+    }
+
+    public boolean isConnected() {
+        return client != null && database != null;
     }
 }

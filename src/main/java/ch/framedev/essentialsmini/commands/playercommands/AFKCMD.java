@@ -3,9 +3,6 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.abstracts.ListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -35,16 +32,16 @@ import java.util.Objects;
  */
 
 public class AFKCMD implements CommandExecutor {
-    private static HashMap<String, String> afkPlayerMap;
-    private static HashMap<String, Long> afkTimeMap;
+    // Initialize static maps here to avoid NPE if static methods are called before an instance is constructed
+    private static final HashMap<String, String> afkPlayerMap = new HashMap<>();
+    private static final HashMap<String, Long> afkTimeMap = new HashMap<>();
     private final Main plugin;
     private final HashMap<String, Location> locationMap;
 
     public AFKCMD(Main plugin) {
         this.plugin = plugin;
         this.locationMap = new HashMap<>();
-        afkPlayerMap = new HashMap<>();
-        afkTimeMap = new HashMap<>();
+        // afkPlayerMap and afkTimeMap are already initialized above
         int afkTime = plugin.getConfig().getInt("AFK.Time", 120);
         Objects.requireNonNull(plugin.getCommand("afk")).setExecutor(this);
         new Events(plugin);
@@ -52,7 +49,12 @@ public class AFKCMD implements CommandExecutor {
     }
 
     public static void putPlayerToAfkMap(String PlayerName) {
-        afkPlayerMap.put(PlayerName, Objects.requireNonNull(Bukkit.getPlayer(PlayerName)).getPlayerListName());
+        Player p = Bukkit.getPlayer(PlayerName);
+        if (p != null) {
+            afkPlayerMap.put(PlayerName, p.getPlayerListName());
+        } else {
+            Bukkit.getLogger().warning("putPlayerToAfkMap: player not online: " + PlayerName);
+        }
     }
 
     public static void removePlayerFromAfkMap(String playerName) {
@@ -64,8 +66,13 @@ public class AFKCMD implements CommandExecutor {
     }
 
     public static void putPlayerToTimeMap(String playerName) {
-        afkTimeMap.put(playerName, Objects.requireNonNull(Bukkit.getPlayer(playerName)).getPlayerTime());
-        Objects.requireNonNull(Bukkit.getPlayer(playerName)).resetPlayerTime();
+        Player p = Bukkit.getPlayer(playerName);
+        if (p != null) {
+            afkTimeMap.put(playerName, p.getPlayerTime());
+            p.resetPlayerTime();
+        } else {
+            Bukkit.getLogger().warning("putPlayerToTimeMap: player not online: " + playerName);
+        }
     }
 
     public static void removePlayerFromTimeMap(String playerName) {
@@ -86,10 +93,10 @@ public class AFKCMD implements CommandExecutor {
             if (player.hasPermission(plugin.getPermissionBase() + "afk")) {
                 if (command.getName().equalsIgnoreCase("afk")) {
                     if (isPlayerAfk(player.getName())) {
-                        afk(player, true, "");
+                        afk(player, true);
                         return true;
                     }
-                    afk(player, false, "");
+                    afk(player, false);
                     return true;
                 }
             } else {
@@ -100,44 +107,58 @@ public class AFKCMD implements CommandExecutor {
         return false;
     }
 
-    @SuppressWarnings({"unused", "deprecation"})
-    public void afk(Player player, boolean afk, String reason) {
+    public void afk(Player player, boolean afk) {
         String isAfkMessage = this.plugin.getConfig().getString("AFK.IsAFK");
         String notAfkMessage = this.plugin.getConfig().getString("AFK.IsNotAFK");
 
 
         if (afk) {
-            if (notAfkMessage != null && notAfkMessage.matches(".*\\[Time].*")) {
-                String afkTime = returnAfkTime(player.getName());
-                notAfkMessage = notAfkMessage.replace("[Time]", "");
-                Objects.requireNonNull(Bukkit.getPlayer(player.getName())).setPlayerListName(getAfkPlayerName(player.getName()));
-                removePlayerFromAfkMap(player.getName());
-                notAfkMessage = ReplaceCharConfig.replaceParagraph(notAfkMessage);
-                TextComponent textComponent = new TextComponent(player.getName());
-                textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new ComponentBuilder(player.getName())).create()));
-                notAfkMessage = ReplaceCharConfig.replaceObjectWithData(notAfkMessage, "[Player]", player.getName());
-                Bukkit.broadcastMessage(notAfkMessage);
-                Bukkit.getConsoleSender().sendMessage("§7" + player.getName() + " is no longer AFK " + afkTime);
+            // 'afk'==true here means the player was AFK and is now returning
+            String afkTime = returnAfkTime(player.getName());
+
+            // Restore player list name if we stored it earlier
+            String previousListName = getAfkPlayerName(player.getName());
+            if (previousListName != null) {
+                Player online = Bukkit.getPlayer(player.getName());
+                if (online != null) online.setPlayerListName(previousListName);
             }
+
+            // Remove from internal maps
+            removePlayerFromAfkMap(player.getName());
+            removePlayerFromTimeMap(player.getName());
+
+            if (notAfkMessage != null) {
+                notAfkMessage = ReplaceCharConfig.replaceParagraph(notAfkMessage);
+                notAfkMessage = ReplaceCharConfig.replaceObjectWithData(notAfkMessage, "[Player]", player.getName());
+                // Replace [Time] placeholder if present
+                notAfkMessage = notAfkMessage.replace("[Time]", afkTime);
+                Bukkit.broadcastMessage(notAfkMessage);
+            }
+
+            Bukkit.getConsoleSender().sendMessage("§7" + player.getName() + " is no longer AFK " + afkTime);
         } else {
 
-            TextComponent tc = new TextComponent();
-            tc.setText(player.getName());
-            tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new ComponentBuilder(player.getName())).create()));
             putPlayerToAfkMap(player.getName());
             putPlayerToTimeMap(player.getName());
-            isAfkMessage = ReplaceCharConfig.replaceParagraph(isAfkMessage);
-            isAfkMessage = ReplaceCharConfig.replaceObjectWithData(isAfkMessage, "[Player]", player.getName());
-            Bukkit.broadcastMessage(isAfkMessage);
+            if (isAfkMessage != null) {
+                isAfkMessage = ReplaceCharConfig.replaceParagraph(isAfkMessage);
+                isAfkMessage = ReplaceCharConfig.replaceObjectWithData(isAfkMessage, "[Player]", player.getName());
+                Bukkit.broadcastMessage(isAfkMessage);
+            }
         }
     }
 
 
     String returnAfkTime(String playerName) {
-        long oldTime = getPlayerAfkTime(playerName);
-        long currentTime = Objects.requireNonNull(Bukkit.getPlayer(playerName)).getPlayerTime();
-        long minutes = (currentTime - oldTime) / 20L / 60L;
-        long seconds = (currentTime - oldTime) / 20L % 60L;
+        Long oldTimeObj = getPlayerAfkTime(playerName);
+        if (oldTimeObj == null) return "0s";
+        Player p = Bukkit.getPlayer(playerName);
+        if (p == null) return "0s";
+        long oldTime = oldTimeObj;
+        long currentTime = p.getPlayerTime();
+        long diffTicks = Math.max(0L, currentTime - oldTime);
+        long minutes = diffTicks / 20L / 60L;
+        long seconds = diffTicks / 20L % 60L;
         return (minutes == 0L) ? (seconds + "s") : (minutes + "m" + seconds + "s");
     }
 
@@ -160,7 +181,7 @@ public class AFKCMD implements CommandExecutor {
                     int movX = event.getFrom().getBlockX() - toLocation.getBlockX();
                     int movZ = event.getFrom().getBlockZ() - toLocation.getBlockZ();
                     if (Math.abs(movX) > 0 || Math.abs(movZ) > 0) {
-                        AFKCMD.this.afk(event.getPlayer(), true, "");
+                        AFKCMD.this.afk(event.getPlayer(), true);
                     }
                 }
             }
@@ -181,7 +202,6 @@ public class AFKCMD implements CommandExecutor {
                 String playerName = event.getPlayer().getName();
                 AFKCMD.removePlayerFromAfkMap(event.getPlayer().getName());
                 AFKCMD.removePlayerFromTimeMap(event.getPlayer().getName());
-                AFKCMD.this.returnAfkTime(event.getPlayer().getName());
                 AFKCMD.this.getLocationMap().remove(playerName);
             }
         }
@@ -192,7 +212,6 @@ public class AFKCMD implements CommandExecutor {
                 String playerName = event.getPlayer().getName();
                 AFKCMD.removePlayerFromAfkMap(event.getPlayer().getName());
                 AFKCMD.removePlayerFromTimeMap(event.getPlayer().getName());
-                AFKCMD.this.returnAfkTime(event.getPlayer().getName());
                 AFKCMD.this.getLocationMap().remove(playerName);
             }
         }
@@ -203,7 +222,6 @@ public class AFKCMD implements CommandExecutor {
                 String playerName = event.getPlayer().getName();
                 AFKCMD.removePlayerFromAfkMap(event.getPlayer().getName());
                 AFKCMD.removePlayerFromTimeMap(event.getPlayer().getName());
-                AFKCMD.this.returnAfkTime(event.getPlayer().getName());
                 AFKCMD.this.getLocationMap().remove(playerName);
             }
         }
@@ -239,7 +257,7 @@ public class AFKCMD implements CommandExecutor {
                 if (AFKCMD.this.getLocationMap().containsKey(player.getName()) && AFKCMD.this.getLocationMap().get(player.getName()).equals(player.getLocation()) && !AFKCMD.isPlayerAfk(player.getName())) {
                     long idleTime = (this.afkTime * 20L);
                     player.setPlayerTime(-idleTime, true);
-                    AFKCMD.this.afk(player, false, "");
+                    AFKCMD.this.afk(player, false);
                 }
                 AFKCMD.this.getLocationMap().put(player.getName(), player.getLocation());
             }

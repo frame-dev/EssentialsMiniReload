@@ -34,6 +34,7 @@ public abstract class CommandBase implements CommandExecutor, TabCompleter {
      */
     public void setup(String cmdName, CommandExecutor executor) {
         plugin.getCommands().put(cmdName, executor);
+        plugin.getLogger4J().info("[CommandBase] " + cmdName + " has been setup");
     }
 
     /**

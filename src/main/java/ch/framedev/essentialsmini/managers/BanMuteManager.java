@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 public class BanMuteManager {
 
     // Database table for MySQL / SQLite
-    private final String table = "essentialsmini_ban-mute";
+    private final String table = "essentialsmini_ban_mute";
 
     public BanMuteManager() {
         if (Main.getInstance().isMongoDB()) {
@@ -245,7 +245,9 @@ public class BanMuteManager {
                 Map<String, String> tempMuteMap = new HashMap<>();
                 tempMuteMap.put("TempMute", tempMute.get().getString("expiresAt"));
                 tempMuteMap.put("TempMuteReason", tempMute.get().getString("reason"));
-                CompletableFuture.completedFuture(tempMuteMap);
+                resultFuture.complete(tempMuteMap);
+            } else {
+                resultFuture.complete(null);
             }
         }
         return resultFuture;
@@ -262,8 +264,8 @@ public class BanMuteManager {
             }
         } else {
             // MongoDB implementation here
-            Optional<Document> tempBan = BackendManagerBanMute.getInstance(Main.getInstance()).getTempBan(player);
-            return tempBan.isPresent();
+            Optional<Document> tempMute = BackendManagerBanMute.getInstance(Main.getInstance()).getTempMute(player);
+            return tempMute.isPresent();
         }
         return false;
     }
@@ -325,10 +327,13 @@ public class BanMuteManager {
             // MongoDB implementation here
             Optional<Document> tempBan = BackendManagerBanMute.getInstance(Main.getInstance()).getTempBan(player);
             if (tempBan.isPresent()) {
+                String expiresAt = tempBan.get().getString("expiresAt");
+                String reason = tempBan.get().getString("reason");
                 Map<String, String> tempBanMap = new HashMap<>();
-                tempBanMap.put("TempBan", tempBan.get().getString("expiresAt"));
-                tempBanMap.put("TempBanReason", tempBan.get().getString("reason"));
-                return tempBanMap;
+                if (expiresAt != null) {
+                    tempBanMap.put(expiresAt, reason != null ? reason : "");
+                    return tempBanMap;
+                }
             }
         }
         return null;
@@ -336,19 +341,33 @@ public class BanMuteManager {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isExpiredTempBan(OfflinePlayer player) {
-        ensureTableExists();
+        if(isSQL()) {
+            ensureTableExists();
 
-        if (isTempBan(player)) {
-            Date[] date = {null};
-            getTempBan(player).forEach((s, s2) -> {
+            if (isTempBan(player)) {
+                Date[] date = {null};
+                getTempBan(player).forEach((s, s2) -> {
+                    try {
+                        date[0] = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(s);
+                    } catch (ParseException e) {
+                        Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to parse date: " + s, e);
+                    }
+                });
+
+                return date[0] != null && date[0].getTime() < System.currentTimeMillis();
+            }
+        } else {
+            // MongoDB implementation here
+            Optional<Document> tempBan = BackendManagerBanMute.getInstance(Main.getInstance()).getTempBan(player);
+            if (tempBan.isPresent()) {
+                String expiresAt = tempBan.get().getString("expiresAt");
                 try {
-                    date[0] = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(s);
+                    Date date = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(expiresAt);
+                    return date != null && date.getTime() < System.currentTimeMillis();
                 } catch (ParseException e) {
-                    Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to parse date: " + s, e);
+                    Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to parse date: " + expiresAt, e);
                 }
-            });
-
-            return date[0] != null && date[0].getTime() < System.currentTimeMillis();
+            }
         }
 
         return true;
@@ -428,17 +447,22 @@ public class BanMuteManager {
 
     public List<String> getAllBannedPlayers() {
         List<String> playerNames = new ArrayList<>();
-        ensureTableExists();
+        if(isSQL()) {
+            ensureTableExists();
 
-        try (Connection conn = SQL.getConnection(); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
-            while (resultSet.next()) {
-                String playerName = resultSet.getString("Player");
-                if (playerName != null && isPermBan(Bukkit.getOfflinePlayer(playerName))) {
-                    playerNames.add(playerName);
+            try (Connection conn = SQL.getConnection(); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
+                while (resultSet.next()) {
+                    String playerName = resultSet.getString("Player");
+                    if (playerName != null && isPermBan(Bukkit.getOfflinePlayer(playerName))) {
+                        playerNames.add(playerName);
+                    }
                 }
+            } catch (SQLException e) {
+                Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to fetch all banned players", e);
             }
-        } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to fetch all banned players", e);
+        } else {
+            // MongoDB implementation here
+            return BackendManagerBanMute.getInstance(Main.getInstance()).getAllBannedPlayers();
         }
 
         return playerNames;

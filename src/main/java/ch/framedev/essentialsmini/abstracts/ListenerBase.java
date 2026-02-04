@@ -29,6 +29,7 @@ public abstract class ListenerBase implements Listener {
      */
     public void setupListener(Listener listener) {
         plugin.getListeners().add(listener);
+        plugin.getLogger4J().info("[CommandBase] " + listener + " has been setup");
     }
 
     /**

@@ -35,16 +35,7 @@ public class HealCMD extends CommandBase {
         if (args.length == 0) {
             if (sender instanceof Player player) {
                 if (sender.hasPermission("essentialsmini.heal")) {
-                    player.setHealth(20);
-                    player.setFireTicks(0);
-                    player.setFoodLevel(20);
-
-                    // Heal messages from the selected Language Message File
-                    String heal = plugin.getLanguageConfig(player).getString("Heal.Self");
-                    if (heal == null) return true;
-                    if (heal.contains("&"))
-                        heal = heal.replace('&', '§');
-                    player.sendMessage(plugin.getPrefix() + heal);
+                    healPlayerAndNotify(player, sender, false);
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
@@ -57,29 +48,7 @@ public class HealCMD extends CommandBase {
                 if (sender.hasPermission("essentialsmini.heal.others")) {
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         if (player != null) {
-                            player.setHealth(20);
-                            player.setFireTicks(0);
-                            player.setFoodLevel(20);
-                            if (!Main.getSilent().contains(sender.getName())) {
-                                String heal = plugin.getLanguageConfig(player).getString("Heal.Self");
-                                if (heal == null) {
-                                    player.sendMessage(plugin.getPrefix() + "§cConfig 'Heal.Self' not found! Please contact the Admin!");
-                                    return true;
-                                }
-                                if (heal.contains("&"))
-                                    heal = heal.replace('&', '§');
-                                player.sendMessage(plugin.getPrefix() + heal);
-                            }
-                            String healOther = plugin.getLanguageConfig(player).getString("Heal.Other");
-                            if (healOther == null) {
-                                player.sendMessage(plugin.getPrefix() + "§cConfig 'Heal.Other' not found! Please contact the Admin!");
-                                return true;
-                            }
-                            if (healOther.contains("&"))
-                                healOther = healOther.replace('&', '§');
-                            if (healOther.contains("%Player%"))
-                                healOther = healOther.replace("%Player%", player.getName());
-                            sender.sendMessage(plugin.getPrefix() + healOther);
+                            healPlayerAndNotify(player, sender, true);
                         }
                     }
                 } else {
@@ -89,29 +58,7 @@ public class HealCMD extends CommandBase {
                 if (sender.hasPermission("essentialsmini.heal.others")) {
                     Player player = Bukkit.getPlayer(args[0]);
                     if (player != null) {
-                        player.setHealth(20);
-                        player.setFireTicks(0);
-                        player.setFoodLevel(20);
-                        if (!Main.getSilent().contains(sender.getName())) {
-                            String heal = plugin.getLanguageConfig(player).getString("Heal.Self");
-                            if (heal == null) {
-                                player.sendMessage(plugin.getPrefix() + "§cConfig 'Heal.Self' not found! Please contact the Admin!");
-                                return true;
-                            }
-                            if (heal.contains("&"))
-                                heal = heal.replace('&', '§');
-                            player.sendMessage(plugin.getPrefix() + heal);
-                        }
-                        String healOther = plugin.getLanguageConfig(player).getString("Heal.Other");
-                        if (healOther == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cConfig 'Heal.Other' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        if (healOther.contains("&"))
-                            healOther = healOther.replace('&', '§');
-                        if (healOther.contains("%Player%"))
-                            healOther = healOther.replace("%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + healOther);
+                        healPlayerAndNotify(player, sender, true);
                     } else {
                         sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
                     }
@@ -123,6 +70,34 @@ public class HealCMD extends CommandBase {
         } else {
             sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/heal §coder §6/heal <PlayerName>"));
             return true;
+        }
+    }
+
+    // Centralized heal + notify logic. notifySender controls whether the command sender
+    // receives the "other" message (Heal.Other) and whether the target gets notified
+    // depending on Main.getSilent().
+    private void healPlayerAndNotify(Player target, CommandSender sender, boolean notifySender) {
+        // Heal the player
+        target.setHealth(20);
+        target.setFireTicks(0);
+        target.setFoodLevel(20);
+
+        // Message to target (respect silent)
+        if (!Main.getSilent().contains(sender.getName())) {
+            String selfMsg = plugin.getLanguageConfig(target).getString("Heal.Self");
+            if (selfMsg == null) selfMsg = "§aYou have been healed!";
+            if (selfMsg.contains("&")) selfMsg = selfMsg.replace('&', '§');
+            target.sendMessage(plugin.getPrefix() + selfMsg);
+        }
+
+        // Message to sender (notify about other player healed)
+        if (notifySender) {
+            // Heal.Other should come from sender's language, not target's
+            String otherMsg = plugin.getLanguageConfig(sender).getString("Heal.Other");
+            if (otherMsg == null) otherMsg = "§aHealed %Player%";
+            otherMsg = otherMsg.replace("%Player%", target.getName());
+            if (otherMsg.contains("&")) otherMsg = otherMsg.replace('&', '§');
+            sender.sendMessage(plugin.getPrefix() + otherMsg);
         }
     }
 

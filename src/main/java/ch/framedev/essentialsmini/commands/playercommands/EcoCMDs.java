@@ -38,7 +38,16 @@ public class EcoCMDs extends CommandBase {
         setupTabCompleter("eco", this);
     }
 
-    @SuppressWarnings("deprecation")
+    // Helper: require an OfflinePlayer by name, send a 'not online/name' message when missing
+    private OfflinePlayer requireOfflinePlayer(CommandSender sender, String name) {
+        OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(name);
+        if (player.getName() == null) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(name));
+            return null;
+        }
+        return player;
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (command.getName().equalsIgnoreCase("pay")) {
@@ -63,24 +72,31 @@ public class EcoCMDs extends CommandBase {
                                                 got = new TextUtils().replaceAndWithParagraph(got);
                                                 got = new TextUtils().replaceObject(got, "[Player]", sender.getName());
                                                 got = new TextUtils().replaceObject(got, "[Money]", amount + plugin.getCurrencySymbol());
+                                                player.sendMessage(plugin.getPrefix() + got);
                                             }
-                                            player.sendMessage(plugin.getPrefix() + got);
                                             sender.sendMessage(plugin.getPrefix() + send);
                                         } else {
-                                            String moneySet = plugin.getLanguageConfig(player).getString("Money.MSG.NotEnough");
+                                            // send 'not enough' to the payer (sender), not the loop target
+                                            String moneySet = plugin.getLanguageConfig(p).getString("Money.MSG.NotEnough");
                                             if (moneySet == null) {
-                                                player.sendMessage(plugin.getPrefix() + "§cMessage config 'Money.MSG.NotEnough' is missing!");
+                                                p.sendMessage(plugin.getPrefix() + "§cMessage config 'Money.MSG.NotEnough' is missing!");
                                                 return true;
                                             }
                                             moneySet = ReplaceCharConfig.replaceParagraph(moneySet);
                                             moneySet = ReplaceCharConfig.replaceObjectWithData(moneySet, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
                                             sender.sendMessage(plugin.getPrefix() + moneySet);
+                                            return true;
                                         }
                                     }
                                 }
                             } else {
-                                OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                                if (player.hasPlayedBefore() && player.getName() != null) {
+                                OfflinePlayer player = requireOfflinePlayer(sender, args[1]);
+                                if (player == null) return true;
+                                if(player.getName() == null) {
+                                    sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
+                                    return true;
+                                }
+                                if (player.hasPlayedBefore()) {
                                     if (plugin.getVaultManager().getEco().has(p, amount)) {
                                         plugin.getVaultManager().getEco().withdrawPlayer(p, amount);
                                         plugin.getVaultManager().getEco().depositPlayer(player, amount);
@@ -95,8 +111,8 @@ public class EcoCMDs extends CommandBase {
                                                 got = new TextUtils().replaceAndWithParagraph(got);
                                                 got = new TextUtils().replaceObject(got, "[Player]", sender.getName());
                                                 got = new TextUtils().replaceObject(got, "[Money]", amount + plugin.getCurrencySymbol());
+                                                ((Player) player).sendMessage(plugin.getPrefix() + got);
                                             }
-                                            ((Player) player).sendMessage(plugin.getPrefix() + got);
                                         }
                                         sender.sendMessage(plugin.getPrefix() + send);
                                     } else {
@@ -149,11 +165,12 @@ public class EcoCMDs extends CommandBase {
                 return true;
             } else if (args.length == 1) {
                 if (sender.hasPermission(plugin.getPermissionBase() + "balance.others")) {
-                    OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[0]);
+                    OfflinePlayer player = requireOfflinePlayer(sender, args[0]);
+                    if (player == null) return true;
                     String balance = plugin.getLanguageConfig(sender).getString("Money.MoneyBalance.Other.MSG");
                     if (balance != null) {
                         balance = new TextUtils().replaceAndWithParagraph(balance);
-                    }
+                    } else balance = "";
                     balance = new TextUtils().replaceObject(balance, "[Target]", player.getName());
                     balance = new TextUtils().replaceObject(balance, "[Money]", plugin.getVaultManager().getEco().format(plugin.getVaultManager().getEco().getBalance(player)) + plugin.getCurrencySymbol());
                     sender.sendMessage(plugin.getPrefix() + balance);
@@ -196,9 +213,15 @@ public class EcoCMDs extends CommandBase {
                                 double amount = Double.parseDouble(args[1]);
                                 OfflinePlayer player;
                                 if (Bukkit.getOnlineMode()) {
-                                    player = Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(args[2]));
+                                    UUID id = UUIDFetcher.getUUID(args[2]);
+                                    if (id == null) {
+                                        sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[2]));
+                                        return true;
+                                    }
+                                    player = Bukkit.getOfflinePlayer(id);
                                 } else {
-                                    player = Bukkit.getOfflinePlayer(args[2]);
+                                    player = requireOfflinePlayer(sender, args[2]);
+                                    if (player == null) return true;
                                 }
                                 plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                 String setOther = plugin.getLanguageConfig(sender).getString("Money.MoneySet.Other.MSG");
@@ -206,7 +229,7 @@ public class EcoCMDs extends CommandBase {
                                     setOther = new TextUtils().replaceAndWithParagraph(setOther);
                                     setOther = new TextUtils().replaceObject(setOther, "[Target]", player.getName());
                                     setOther = new TextUtils().replaceObject(setOther, "[Money]", plugin.getVaultManager().getEco().getBalance(player) + plugin.getCurrencySymbol());
-                                }
+                                } else setOther = "";
                                 if (player.isOnline()) {
                                     String set = plugin.getLanguageConfig((Player) player).getString("Money.MSG.Set");
                                     if (set != null) {
@@ -214,10 +237,8 @@ public class EcoCMDs extends CommandBase {
                                         set = new TextUtils().replaceObject(set, "[Money]", amount + plugin.getCurrencySymbol());
                                     }
                                     if (!Main.getSilent().contains(sender.getName())) {
-                                        if (player.isOnline()) {
-                                            Player online = (Player) player;
-                                            online.sendMessage(plugin.getPrefix() + set);
-                                        }
+                                        Player online = (Player) player;
+                                        online.sendMessage(plugin.getPrefix() + set);
                                     }
                                 }
                                 sender.sendMessage(plugin.getPrefix() + setOther);
@@ -255,14 +276,15 @@ public class EcoCMDs extends CommandBase {
                         if (sender.hasPermission(plugin.getPermissionBase() + "eco.add.others")) {
                             if (isDouble(args[1])) {
                                 double amount = Double.parseDouble(args[1]);
-                                OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[2]);
+                                OfflinePlayer player = requireOfflinePlayer(sender, args[2]);
+                                if (player == null) return true;
                                 plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                 String setOther = plugin.getLanguageConfig(sender).getString("Money.MoneySet.Other.MSG");
                                 if (setOther != null) {
                                     setOther = new TextUtils().replaceAndWithParagraph(setOther);
                                     setOther = new TextUtils().replaceObject(setOther, "[Target]", player.getName());
                                     setOther = new TextUtils().replaceObject(setOther, "[Money]", plugin.getVaultManager().getEco().getBalance(player) + plugin.getCurrencySymbol());
-                                }
+                                } else setOther = "";
                                 sender.sendMessage(plugin.getPrefix() + setOther);
                                 if (!Main.getSilent().contains(sender.getName()))
                                     if (player.isOnline()) {
@@ -309,7 +331,9 @@ public class EcoCMDs extends CommandBase {
                         if (sender.hasPermission(plugin.getPermissionBase() + "eco.set.others")) {
                             if (isDouble(args[1])) {
                                 double amount = Double.parseDouble(args[1]);
-                                OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[2]);
+                                OfflinePlayer player;
+                                player = requireOfflinePlayer(sender, args[2]);
+                                if (player == null) return true;
                                 plugin.getVaultManager().getEco().withdrawPlayer(player, plugin.getVaultManager().getEco().getBalance(player));
                                 plugin.getVaultManager().getEco().depositPlayer(player, amount);
                                 String setOther = plugin.getLanguageConfig(sender).getString("Money.MoneySet.Other.MSG");
@@ -317,7 +341,7 @@ public class EcoCMDs extends CommandBase {
                                     setOther = new TextUtils().replaceAndWithParagraph(setOther);
                                     setOther = new TextUtils().replaceObject(setOther, "[Target]", player.getName());
                                     setOther = new TextUtils().replaceObject(setOther, "[Money]", amount + plugin.getCurrencySymbol());
-                                }
+                                } else setOther = "";
                                 sender.sendMessage(plugin.getPrefix() + setOther);
                                 if (!Main.getSilent().contains(sender.getName()))
                                     if (player.isOnline()) {

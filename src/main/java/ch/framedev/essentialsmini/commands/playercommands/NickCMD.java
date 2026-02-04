@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.utils.SkinApplier;
+// import ch.framedev.essentialsmini.utils.SkinApplier;
 import ch.framedev.essentialsmini.utils.SkinChanger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;

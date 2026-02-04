@@ -12,6 +12,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 /*
  * ===================================================
@@ -26,7 +27,8 @@ public class BackCMD extends CommandListenerBase {
     private final Main plugin;
 
     // death HashMap
-    private final HashMap<Player, Location> deaths = new HashMap<>();
+    // store UUIDs rather than Player objects to avoid memory leaks and stale references
+    private final HashMap<UUID, Location> deaths = new HashMap<>();
 
     public BackCMD(Main plugin) {
         super(plugin, "back");
@@ -41,23 +43,33 @@ public class BackCMD extends CommandListenerBase {
                     sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                     return true;
                 }
-                if (!deaths.containsKey(player)) {
+                UUID uuid = player.getUniqueId();
+                if (!deaths.containsKey(uuid)) {
                     String message = plugin.getLanguageConfig(player).getString("NoDeathLocationFound");
                     if (message != null) {
                         message = new TextUtils().replaceAndWithParagraph(message);
+                    } else {
+                        message = "";
                     }
                     player.sendMessage(plugin.getPrefix() + message);
                     return true;
                 }
                 /*  Player Teleports to the Death Location */
-                if (player.teleport(deaths.get(player))) {
+                Location loc = deaths.get(uuid);
+                boolean teleported = false;
+                if (loc != null) {
+                    teleported = player.teleport(loc);
+                }
+                if (teleported) {
                     String message = plugin.getLanguageConfig(player).getString("DeathTeleport");
                     if (message != null) {
                         message = new TextUtils().replaceAndWithParagraph(message);
+                    } else {
+                        message = "";
                     }
                     player.sendMessage(plugin.getPrefix() + message);
                     /* Death Point remove */
-                    deaths.remove(player);
+                    deaths.remove(uuid);
                     return true;
                 }
             }
@@ -69,11 +81,13 @@ public class BackCMD extends CommandListenerBase {
     public void onDeath(PlayerDeathEvent event) {
         if (!plugin.getConfig().getBoolean("Back")) return;
         Player player = event.getEntity();
-        deaths.put(player, player.getLocation());
+        // store by UUID to avoid retaining Player instance
+        deaths.put(player.getUniqueId(), player.getLocation());
         String message = plugin.getLanguageConfig(player).getString("DeathCommandUsage");
         if (message != null) {
             message = new TextUtils().replaceAndWithParagraph(message);
         }
+        if (message == null) message = "";
         player.sendMessage(plugin.getPrefix() + message);
     }
 }

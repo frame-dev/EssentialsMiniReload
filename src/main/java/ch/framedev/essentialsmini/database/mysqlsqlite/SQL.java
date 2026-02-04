@@ -36,6 +36,13 @@ public class SQL {
     }
 
     public static void createTable(String tableName, String... columns) {
+        if (tableName == null || tableName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (columns == null || columns.length == 0) {
+            throw new IllegalArgumentException("Columns must not be null or empty");
+        }
+
         String columnDefinition = String.join(",", columns);
         String sql;
 
@@ -48,11 +55,24 @@ public class SQL {
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to create table: " + tableName, e);
         }
     }
 
     public static void createTableAsync(String tableName, Callback<Boolean> callback, String... columns) {
+        if (tableName == null || tableName.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (columns == null || columns.length == 0) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Columns must not be null or empty"));
+            }
+            return;
+        }
+
         executor.execute(() -> {
             String columnDefinition = String.join(",", columns);
             String sql;
@@ -64,20 +84,30 @@ public class SQL {
             }
 
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-                int update = stmt.executeUpdate();
-                if (update != 0)
+                stmt.executeUpdate();
+                if (callback != null) {
                     callback.accept(true);
-                else
-                    callback.accept(false);
+                }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static void insertData(String table, Object[] data, String... columns) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (columns == null || columns.length == 0) {
+            throw new IllegalArgumentException("Columns must not be null or empty");
+        }
+        if (data == null) {
+            throw new IllegalArgumentException("Data must not be null");
+        }
         if (columns.length != data.length) {
-            throw new IllegalArgumentException("Number of columns and data elements must match.");
+            throw new IllegalArgumentException("Number of columns (" + columns.length + ") and data elements (" + data.length + ") must match.");
         }
 
         // Join the column names with commas
@@ -97,13 +127,34 @@ public class SQL {
             stmt.executeUpdate();
         } catch (SQLException e) {
             // Log any SQL exceptions at the ERROR level
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to insert data into table: " + table, e);
         }
     }
 
     public static void insertDataAsync(String table, Callback<Boolean> callback, Object[] data, String... columns) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (columns == null || columns.length == 0) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Columns must not be null or empty"));
+            }
+            return;
+        }
+        if (data == null) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Data must not be null"));
+            }
+            return;
+        }
         if (columns.length != data.length) {
-            throw new IllegalArgumentException("Number of columns and data elements must match.");
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Number of columns (" + columns.length + ") and data elements (" + data.length + ") must match."));
+            }
+            return;
         }
 
         // Join the column names with commas
@@ -122,13 +173,14 @@ public class SQL {
                 }
                 // Execute the statement
                 int update = stmt.executeUpdate();
-                if (update != 0)
-                    callback.accept(true);
-                else
-                    callback.accept(false);
+                if (callback != null) {
+                    callback.accept(update > 0);
+                }
             } catch (SQLException e) {
                 // Log any SQL exceptions at the ERROR level
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
@@ -307,33 +359,64 @@ public class SQL {
 
 
     public static void deleteDataInTable(String table, String where) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (where == null || where.trim().isEmpty()) {
+            throw new IllegalArgumentException("WHERE clause must not be null or empty");
+        }
+
         String sql = "DELETE FROM " + table + " WHERE " + where;
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            Main.getInstance().getLogger4J().log(Level.INFO, "Deleted " + affectedRows + " rows from table: " + table);
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to delete data from table: " + table, e);
         }
     }
 
     public static void deleteDataInTableAsync(String table, String where, Callback<Boolean> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (where == null || where.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("WHERE clause must not be null or empty"));
+            }
+            return;
+        }
+
         String sql = "DELETE FROM " + table + " WHERE " + where;
 
         executor.execute(() -> {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int update = stmt.executeUpdate();
-                if (update != 0) {
-                    callback.accept(true);
-                } else {
-                    callback.accept(false);
+                if (callback != null) {
+                    callback.accept(update > 0);
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static boolean exists(String table, String column, String data) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (column == null || column.trim().isEmpty()) {
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+        if (data == null) {
+            return false;
+        }
+
         String sql = "SELECT 1 FROM " + table + " WHERE " + column + " = ? LIMIT 1";
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -342,27 +425,54 @@ public class SQL {
                 return rs.next();
             }
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to check existence in table: " + table, e);
             return false;
         }
     }
 
     public static void existsAsync(String table, String column, String data, Callback<Boolean> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (column == null || column.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Column name must not be null or empty"));
+            }
+            return;
+        }
+
         String sql = "SELECT 1 FROM " + table + " WHERE " + column + " = ? LIMIT 1";
 
         executor.execute(() -> {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, data);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    callback.accept(rs.next());
+                    if (callback != null) {
+                        callback.accept(rs.next());
+                    }
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static Object get(String table, String selected, String column, String data) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (selected == null || selected.trim().isEmpty()) {
+            throw new IllegalArgumentException("Selected column must not be null or empty");
+        }
+        if (column == null || column.trim().isEmpty()) {
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+
         String sql = "SELECT " + selected + " FROM " + table + " WHERE " + column + " = ?";
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -373,24 +483,45 @@ public class SQL {
                 }
             }
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to get data from table: " + table, e);
         }
         return null;
     }
 
     public static void getAsync(String table, String selected, String column, String data, Callback<Object> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (selected == null || selected.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Selected column must not be null or empty"));
+            }
+            return;
+        }
+        if (column == null || column.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Column name must not be null or empty"));
+            }
+            return;
+        }
+
         String sql = "SELECT " + selected + " FROM " + table + " WHERE " + column + " = ?";
 
         executor.execute(() -> {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, data);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
+                    if (rs.next() && callback != null) {
                         callback.accept(rs.getObject(selected));
                     }
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
@@ -398,16 +529,28 @@ public class SQL {
     public static void getAsync(String table, String[] selected, String column, String data, Callback<List<Map<String, Object>>> callback) {
         // Validate input parameters
         if (table == null || table.trim().isEmpty()) {
-            throw new IllegalArgumentException("Table name must not be null or empty");
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
         }
         if (selected == null || selected.length == 0) {
-            throw new IllegalArgumentException("Selected columns must not be null or empty");
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Selected columns must not be null or empty"));
+            }
+            return;
         }
         if (column == null || column.trim().isEmpty()) {
-            throw new IllegalArgumentException("Column name must not be null or empty");
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Column name must not be null or empty"));
+            }
+            return;
         }
         if (data == null) {
-            throw new IllegalArgumentException("Data must not be null");
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Data must not be null"));
+            }
+            return;
         }
 
         // Build the selected columns string
@@ -430,42 +573,62 @@ public class SQL {
                         }
                         results.add(row);
                     }
-                    callback.accept(results);
+                    if (callback != null) {
+                        callback.accept(results);
+                    }
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static void deleteTable(String table) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+
         String sql = "DROP TABLE IF EXISTS " + table;
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
+            Main.getInstance().getLogger4J().log(Level.INFO, "Dropped table: " + table);
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to drop table: " + table, e);
         }
     }
 
     public static void deleteTableAsync(String table, Callback<Boolean> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+
         String sql = "DROP TABLE IF EXISTS " + table;
 
         executor.execute(() -> {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-                int update = stmt.executeUpdate();
-                if (update != 0) {
+                stmt.executeUpdate();
+                if (callback != null) {
                     callback.accept(true);
-                } else {
-                    callback.accept(false);
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static boolean isTableExists(String table) {
+        if (table == null || table.trim().isEmpty()) {
+            return false;
+        }
+
         String sql = Main.getInstance().isMysql() ?
                 "SHOW TABLES LIKE ?" :
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?";
@@ -476,12 +639,19 @@ public class SQL {
                 return rs.next();
             }
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to check table existence: " + table, e);
             return false;
         }
     }
 
     public static void isTableExistsAsync(String table, Callback<Boolean> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.accept(false);
+            }
+            return;
+        }
+
         String sql = Main.getInstance().isMysql() ?
                 "SHOW TABLES LIKE ?" :
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?";
@@ -490,15 +660,32 @@ public class SQL {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, table);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    callback.accept(rs.next());
+                    if (callback != null) {
+                        callback.accept(rs.next());
+                    }
                 }
             } catch (SQLException e) {
-                callback.onError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
 
     public static <T> T get(String table, String selected, String column, String data, Class<T> type) {
+        if (table == null || table.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name must not be null or empty");
+        }
+        if (selected == null || selected.trim().isEmpty()) {
+            throw new IllegalArgumentException("Selected column must not be null or empty");
+        }
+        if (column == null || column.trim().isEmpty()) {
+            throw new IllegalArgumentException("Column name must not be null or empty");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Type class must not be null");
+        }
+
         String sql = "SELECT " + selected + " FROM " + table + " WHERE " + column + " = ?";
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -509,24 +696,53 @@ public class SQL {
                 }
             }
         } catch (SQLException e) {
-            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to execute statement", e);
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to get typed data from table: " + table, e);
+        } catch (ClassCastException e) {
+            Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to cast result to type: " + type.getName(), e);
         }
         return null;
     }
 
     public static <T> void get(String table, String selected, String column, String data, Class<T> type, Callback<T> callback) {
+        if (table == null || table.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Table name must not be null or empty"));
+            }
+            return;
+        }
+        if (selected == null || selected.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Selected column must not be null or empty"));
+            }
+            return;
+        }
+        if (column == null || column.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Column name must not be null or empty"));
+            }
+            return;
+        }
+        if (type == null) {
+            if (callback != null) {
+                callback.onError(new IllegalArgumentException("Type class must not be null"));
+            }
+            return;
+        }
+
         String sql = "SELECT " + selected + " FROM " + table + " WHERE " + column + " = ?";
 
         executor.execute(() -> {
             try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, data);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
+                    if (rs.next() && callback != null) {
                         callback.accept(type.cast(rs.getObject(selected)));
                     }
                 }
-            } catch (SQLException e) {
-                callback.onError(e);
+            } catch (SQLException | ClassCastException e) {
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
         });
     }
@@ -537,6 +753,10 @@ public class SQL {
     }
 
     public static void getConnectionAsync(Callback<Connection> callback) {
+        if (callback == null) {
+            return;
+        }
+
         executor.execute(() -> {
             try {
                 callback.accept(Main.getInstance().isMysql() ? MySQL.getConnection() : SQLite.connect());
@@ -544,5 +764,24 @@ public class SQL {
                 callback.onError(e);
             }
         });
+    }
+
+    /**
+     * Shuts down the executor service gracefully.
+     * Should be called when the plugin is disabled to release resources.
+     */
+    public static void shutdown() {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    Main.getInstance().getLogger4J().log(Level.ERROR, "Executor service did not terminate");
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

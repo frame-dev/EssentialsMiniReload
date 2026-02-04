@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class ItemCMD extends CommandBase {
 
@@ -27,7 +28,8 @@ public class ItemCMD extends CommandBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!sender.hasPermission("essentialsmini.item")) {
+        // use permission base for consistency (e.g. essentialsmini.)
+        if (!sender.hasPermission(plugin.getPermissionBase() + "item")) {
             sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
             return true;
         }
@@ -37,14 +39,15 @@ public class ItemCMD extends CommandBase {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                 return true;
             }
-            String name = args[0];
-            Material material = Material.getMaterial(name.toUpperCase());
+            String name = args[0].trim();
+            Material material = Material.matchMaterial(name);
             if (material == null) {
                 String message = plugin.getLanguageConfig(player).getString("Item.notFound");
                 if (message == null) {
                     player.sendMessage(plugin.getPrefix() + "§cConfig 'Item.notFound' not found! Please contact the Admin!");
                 } else {
-                    message = message.replace("&", "§").replace("%Item%", name);
+                    message = ReplaceCharConfig.replaceParagraph(message);
+                    message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", name);
                     player.sendMessage(plugin.getPrefix() + message);
                 }
                 return true;
@@ -63,8 +66,8 @@ public class ItemCMD extends CommandBase {
         }
 
         if (args.length == 2) {
-            String name = args[0];
-            Material material = Material.getMaterial(name.toUpperCase());
+            String name = args[0].trim();
+            Material material = Material.matchMaterial(name);
             if (material == null) {
                 sender.sendMessage(plugin.getPrefix() + "§cDieses Item existiert nicht! §6" + name);
                 return true;
@@ -75,7 +78,13 @@ public class ItemCMD extends CommandBase {
                     sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                     return true;
                 }
-                player.getInventory().addItem(new ItemStack(material, amount));
+                ItemStack stack = new ItemStack(material, Math.max(1, Math.min(amount, 64)));
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+                if (!leftover.isEmpty()) {
+                    // Drop leftovers at player's location
+                    leftover.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
+                    player.sendMessage(plugin.getPrefix() + "§cYour inventory was full; extra items were dropped on the ground.");
+                }
                 if (!Main.getSilent().contains(sender.getName())) {
                     String message = plugin.getLanguageConfig(player).getString("Item.Get");
                     if (message == null) {
@@ -93,7 +102,11 @@ public class ItemCMD extends CommandBase {
                     sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
                     return true;
                 }
-                target.getInventory().addItem(new ItemStack(material));
+                Map<Integer, ItemStack> leftoverTarget = target.getInventory().addItem(new ItemStack(material));
+                if (!leftoverTarget.isEmpty()) {
+                    leftoverTarget.values().forEach(item -> target.getWorld().dropItemNaturally(target.getLocation(), item));
+                    sender.sendMessage(plugin.getPrefix() + "§cTarget's inventory was full; extra items were dropped on the ground.");
+                }
                 String message = plugin.getLanguageConfig(sender).getString("Item.Other");
                 if (message == null) {
                     sender.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Other' not found! Please contact the Admin!");
@@ -109,8 +122,8 @@ public class ItemCMD extends CommandBase {
         }
 
         if (args.length == 3) {
-            String name = args[0];
-            Material material = Material.getMaterial(name.toUpperCase());
+            String name = args[0].trim();
+            Material material = Material.matchMaterial(name);
             if (material == null) {
                 sender.sendMessage(plugin.getPrefix() + "§cDieses Item existiert nicht! §6" + name);
                 return true;
@@ -127,7 +140,12 @@ public class ItemCMD extends CommandBase {
                 sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[2]));
                 return true;
             }
-            target.getInventory().addItem(new ItemStack(material, amount));
+            ItemStack stack3 = new ItemStack(material, Math.max(1, Math.min(amount, 64)));
+            Map<Integer, ItemStack> leftover3 = target.getInventory().addItem(stack3);
+            if (!leftover3.isEmpty()) {
+                leftover3.values().forEach(item -> target.getWorld().dropItemNaturally(target.getLocation(), item));
+                sender.sendMessage(plugin.getPrefix() + "§cTarget's inventory was full; extra items were dropped on the ground.");
+            }
             String message = plugin.getLanguageConfig(sender).getString("Item.Other");
             if (message == null) {
                 sender.sendMessage(plugin.getPrefix() + "§cConfig 'Item.Other' not found! Please contact the Admin!");
@@ -150,7 +168,7 @@ public class ItemCMD extends CommandBase {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length == 1 && sender.hasPermission("essentialsmini.item")) {
+        if (args.length == 1 && sender.hasPermission(plugin.getPermissionBase() + "item")) {
             List<String> matches = new ArrayList<>();
             for (Material material : Material.values()) {
                 if (material.name().toLowerCase().startsWith(args[0].toLowerCase())) {
