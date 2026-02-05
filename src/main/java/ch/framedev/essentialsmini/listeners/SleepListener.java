@@ -30,33 +30,60 @@ public class SleepListener implements Listener {
 
     @EventHandler
     public void onPlayerSleep(PlayerBedEnterEvent event) {
-        if (plugin.getConfig().getBoolean("SkipNight")) {
-            if (event.getPlayer().getWorld().getTime() >= 12542 && event.getPlayer().getWorld().getTime() <= 23460 || event.getPlayer().getWorld().isThundering()) {
-                if (!sleep) {
-                    sleep = true;
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            String message = plugin.getLanguageConfig(event.getPlayer()).getString("SkipNight");
-                            message = new TextUtils().replaceAndWithParagraph(message);
-                            message = new TextUtils().replaceObject(message, "%Player%", event.getPlayer().getName());
-                            Bukkit.broadcastMessage(message);
-                            event.getPlayer().getWorld().setTime(0);
-                            event.getPlayer().getWorld().setThundering(false);
-                            event.getPlayer().getWorld().setStorm(false);
-                            event.setCancelled(true);
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    sleep = false;
-                                }
-                            }.runTaskLater(plugin, 320);
-                        }
-                    }.runTaskLater(plugin, 120);
-                } else {
-                    event.setUseBed(Event.Result.DENY);
-                }
+        if (event == null) {
+            return;
+        }
+        if (!plugin.getConfig().getBoolean("SkipNight")) return;
+
+        long time = event.getPlayer().getWorld().getTime();
+        boolean isNight = time >= 12542 && time <= 23460;
+        boolean isThundering = event.getPlayer().getWorld().isThundering();
+
+        if (!isNight && !isThundering) {
+            return;
+        }
+
+        if (sleep) {
+            event.setUseBed(Event.Result.DENY);
+            return;
+        }
+        sleep = true;
+        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, new RunSkipNight(event), 120);
+    }
+
+    private class RunSkipNight implements Runnable {
+
+        private final PlayerBedEnterEvent event;
+
+        public RunSkipNight(PlayerBedEnterEvent event) {
+            this.event = event;
+        }
+
+        @Override
+        public void run() {
+            if (event == null) {
+                sleep = false;
+                return;
             }
+
+            String message = plugin.getLanguageConfig(event.getPlayer()).getString("SkipNight");
+            if (message != null) {
+                message = new TextUtils().replaceAndWithParagraph(message);
+                message = new TextUtils().replaceObject(message, "%Player%", event.getPlayer().getName());
+                Bukkit.broadcastMessage(message);
+            }
+
+            event.getPlayer().getWorld().setTime(0);
+            event.getPlayer().getWorld().setThundering(false);
+            event.getPlayer().getWorld().setStorm(false);
+            event.setCancelled(true);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    sleep = false;
+                }
+            }.runTaskLater(plugin, 320);
         }
     }
 }

@@ -43,25 +43,29 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         super(plugin);
         Objects.requireNonNull(plugin.getCommand("signremove")).setExecutor(this);
         if (plugin.getConfig().getBoolean("Economy.Activate")) {
-            eco = plugin.getVaultManager().getEco();
+            if (plugin.getVaultManager() != null) {
+                eco = plugin.getVaultManager().getEco();
+            }
         }
     }
 
     @EventHandler
     public void onSignChangeBalance(SignChangeEvent e) {
-        if(e.getLine(0) == null) return;
-        if (Objects.requireNonNull(e.getLine(0)).equalsIgnoreCase("[balance]")) {
-            if (e.getPlayer().hasPermission("essentialsmini.signs.create")) {
-                String signName = Main.getInstance().getConfig().getString("MoneySign.Balance");
-                if (signName == null) {
-                    e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Balance is not set!");
-                    return;
-                }
-                signName = signName.replace('&', '§');
-                e.setLine(0, signName);
-            } else {
-                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+        if (e == null || e.getPlayer() == null) return;
+
+        String line0 = e.getLine(0);
+        if (line0 == null || !line0.equalsIgnoreCase("[balance]")) return;
+
+        if (e.getPlayer().hasPermission("essentialsmini.signs.create")) {
+            String signName = Main.getInstance().getConfig().getString("MoneySign.Balance");
+            if (signName == null) {
+                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Balance is not set!");
+                return;
             }
+            signName = signName.replace('&', '§');
+            e.setLine(0, signName);
+        } else {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
         }
     }
 
@@ -77,275 +81,504 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
     @SuppressWarnings({"deprecation", "DataFlowIssue"})
     @EventHandler
     public void onClickBalance(PlayerInteractEvent e) {
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (e.getHand() == EquipmentSlot.OFF_HAND) {
-                return;
-            }
-            if(e.getHand() == null) return;
-            if(e.getClickedBlock() == null) return;
-            if (e.getHand().equals(EquipmentSlot.HAND) &&
-                e.getClickedBlock().getState() instanceof Sign s) {
-                if (e.getPlayer().getGameMode() == GameMode.CREATIVE && e.getItem() != null && e.getItem().getType() == Material.NETHER_STAR) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.update")) {
-                        String signNameBuy = Main.getInstance().getConfig().getString("MoneySign.Buy");
-                        if (signNameBuy == null) {
-                            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Buy is not set!");
-                            return;
-                        }
-                        signNameBuy = signNameBuy.replace('&', '§');
-                        if (s.getLine(0).equalsIgnoreCase(signNameBuy)) {
-                            s.setLine(1, s.getLine(1));
-                            int money;
-                            StringBuilder num = new StringBuilder();
-                            for (char c : s.getLine(3).toCharArray()) {
-                                if (isCharNumber(c)) {
-                                    num.append(c);
-                                }
-                            }
-                            money = Integer.parseInt(num.toString());
-                            s.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
-                        }
-                        String signNameSell = Main.getInstance().getConfig().getString("MoneySign.Sell");
-                        if (signNameSell == null) {
-                            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Sell is not set!");
-                            return;
-                        }
-                        signNameSell = signNameSell.replace('&', '§');
-                        if (s.getLine(0).equalsIgnoreCase(signNameSell)) {
-                            s.setLine(1, s.getLine(1));
-                            int money;
-                            StringBuilder num = new StringBuilder();
-                            for (char c : s.getLine(3).toCharArray()) {
-                                if (isCharNumber(c)) {
-                                    num.append(c);
-                                }
-                            }
-                            money = Integer.parseInt(num.toString());
-                            s.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
-                        }
-                        s.update();
-                        e.getPlayer().sendMessage("§aUpdated");
-                        e.setCancelled(true);
-                        e.setUseInteractedBlock(Event.Result.DENY);
-                        return;
-                    }
-                }
-                String signName = Main.getInstance().getConfig().getString("MoneySign.Balance");
-                if (signName == null) {
-                    e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Balance is not set!");
-                    return;
-                }
-                signName = signName.replace('&', '§');
-                if (s.getLine(0).equalsIgnoreCase(signName)) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.use")) {
-                        String money = eco.format(eco.getBalance(e.getPlayer()));
-                        String text = Main.getInstance().getConfig().getString("Money.MSG.Balance");
-                        if (text == null) {
-                            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: Money.MSG.Balance is not set!");
-                            return;
-                        }
-                        text = text.replace("[Money]", money);
-                        text = text.replace('&', '§');
-                        e.getPlayer().sendMessage(text + Main.getInstance().getCurrencySymbolMulti());
-                    } else {
-                        e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-                    }
-                    e.setUseInteractedBlock(Event.Result.DENY);
-                    e.setCancelled(true);
-                }
-                String signNameFree = Main.getInstance().getConfig().getString("MoneySign.Free");
-                if (signNameFree == null) {
-                    e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Free is not set!");
-                    return;
-                }
-                signNameFree = signNameFree.replace('&', '§');
-                if (s.getLine(0).equalsIgnoreCase(signNameFree)) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.use")) {
-                        String[] args = s.getLines();
-                        Material name = Material.getMaterial(args[1].toUpperCase());
-                        Inventory inventory = Bukkit.createInventory(null, 3*9, "Free");
-                        for(int i = 0; i < inventory.getSize(); i++) {
-                            inventory.setItem(i, new ItemStack(name, 64));
-                        }
-                        e.getPlayer().openInventory(inventory);
-                    } else {
-                        e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-                    }
-                    e.setCancelled(true);
-                    e.setUseInteractedBlock(Event.Result.DENY);
-                }
-                String signNameBuy = Main.getInstance().getConfig().getString("MoneySign.Buy");
-                if (signNameBuy == null) {
-                    e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Buy is not set!");
-                    return;
-                }
-                signNameBuy = signNameBuy.replace('&', '§');
-                if (s.getLine(0).equalsIgnoreCase(signNameBuy)) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.use")) {
-                        String[] args = s.getLines();
-                        Material name = Material.getMaterial(args[1].toUpperCase());
+        if (e == null || e.getPlayer() == null) return;
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (e.getHand() == EquipmentSlot.OFF_HAND || e.getHand() == null) return;
+        if (e.getClickedBlock() == null) return;
 
-                        int amount = Integer.parseInt(args[2]);
+        if (!e.getHand().equals(EquipmentSlot.HAND)) return;
+        if (!(e.getClickedBlock().getState() instanceof Sign s)) return;
 
-                        int money = Integer.parseInt(args[3].replace(Main.getInstance().getCurrencySymbolMulti(), ""));
-                        if (s.getLine(1).equalsIgnoreCase(name.name()) && s.getLine(2).equalsIgnoreCase(amount + "") && s.getLine(3).equalsIgnoreCase(money + Main.getInstance().getCurrencySymbolMulti())) {
-                            if (eco.getBalance(e.getPlayer()) < money) {
-                                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + Main.getInstance().getCurrencySymbolMulti());
-                                e.setCancelled(true);
-                                e.setUseInteractedBlock(Event.Result.DENY);
-                                return;
-                            }
-                            ItemStack item = new ItemStack(name);
-                            item.setAmount(amount);
-                            e.getPlayer().getInventory().addItem(item);
-                            eco.withdrawPlayer(e.getPlayer(), money);
-                            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§aDu hast §6" + item.getAmount() + "x " + name.name() + " §afür §6" + money + Main.getInstance().getCurrencySymbolMulti() + " §agekauft.");
-                        }
-                    } else {
-                        e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-                    }
-                    e.setCancelled(true);
-                    e.setUseInteractedBlock(Event.Result.DENY);
-                }
-                String signNameSell = Main.getInstance().getConfig().getString("MoneySign.Sell");
-                if (signNameSell == null) {
-                    e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Sell is not set!");
-                    return;
-                }
-                signNameSell = signNameSell.replace('&', '§');
-                if (s.getLine(0).equalsIgnoreCase(signNameSell)) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.use")) {
-                        String[] args = s.getLines();
-                        Material name = Material.getMaterial(args[1].toUpperCase());
-                        int amount = Integer.parseInt(args[2]);
-                        int money = Integer.parseInt(args[3].replace(Main.getInstance().getCurrencySymbolMulti(), ""));
-                        if (s.getLine(1).equalsIgnoreCase(name.name())
-                                && s.getLine(2).equalsIgnoreCase(amount + "")
-                                && s.getLine(3).equalsIgnoreCase(money + Main.getInstance().getCurrencySymbolMulti())) {
-                            if (e.getPlayer().getInventory().contains(name, amount)) {
-                                ItemStack item = new ItemStack(name);
-                                item.setAmount(amount);
-                                e.getPlayer().getInventory().removeItem(item);
-                                eco.depositPlayer(e.getPlayer(), money);
-                                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§aDu hast §6" + item.getAmount() + "x " + name.name() + " §afür §6" + money + Main.getInstance().getCurrencySymbolMulti() + " §averkauft.");
-                                return;
-                            }
-                            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + name.name());
-                        }
-                    } else {
-                        e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-                    }
-                    e.setCancelled(true);
-                    e.setUseInteractedBlock(Event.Result.DENY);
-                } else if (s.getLine(0).equalsIgnoreCase("§6Buy")) {
-                    if (e.getPlayer().hasPermission("essentialsmini.signs.use")) {
-                        if (Main.getInstance().getConfig().getBoolean("PlayerShop")) {
-                            ItemStack itemStack = cfg.getItemStack("Items." + s.getLine(1).replace('§', '&') + ".item");
-                            if (itemStack == null) {
-                                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDieser Shop existiert nicht!");
-                                e.setCancelled(true);
-                                e.setUseInteractedBlock(Event.Result.DENY);
-                                return;
-                            }
-                            itemStack.setAmount(Integer.parseInt(s.getLine(2)));
-                            if (e.getPlayer().getName().equalsIgnoreCase(cfg.getString("Items." + s.getLine(1).replace('§', '&') + ".player"))) {
-                                e.getPlayer().sendMessage("§c§lYou cannot Buy your own Item!");
-                                e.setCancelled(true);
-                                e.setUseInteractedBlock(Event.Result.DENY);
-                                return;
-                            }
-                            if (eco.has(e.getPlayer(), Double.parseDouble(s.getLine(3)))) {
-                                eco.withdrawPlayer(e.getPlayer(), Double.parseDouble(s.getLine(3)));
-                                eco.depositPlayer(Bukkit.getOfflinePlayer(Objects.requireNonNull(cfg.getString("Items." + s.getLine(1).replace('§', '&') + ".player"))), Double.parseDouble(s.getLine(3)));
-                                e.getPlayer().getInventory().addItem(itemStack);
-                            } else {
-                                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + Main.getInstance().getCurrencySymbolMulti());
-                            }
-                        }
-                    } else {
-                        e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-                    }
-                    e.setCancelled(true);
-                    e.setUseInteractedBlock(Event.Result.DENY);
-                }
+        // Check if eco is initialized
+        if (eco == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cEconomy system is not available!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        String[] lines = s.getLines();
+        if (lines == null || lines.length < 4) return;
+
+        // Handle sign update with nether star in creative mode
+        if (e.getPlayer().getGameMode() == GameMode.CREATIVE && e.getItem() != null && e.getItem().getType() == Material.NETHER_STAR) {
+            if (handleSignUpdate(e, s, lines)) return;
+        }
+
+        // Handle balance sign
+        if (handleBalanceSign(e, s, lines[0])) return;
+
+        // Handle free sign
+        if (handleFreeSign(e, s, lines)) return;
+
+        // Handle buy sign
+        if (handleBuySign(e, s, lines)) return;
+
+        // Handle sell sign
+        if (handleSellSign(e, s, lines)) return;
+
+        // Handle player shop buy sign
+        handlePlayerShopBuySign(e, s, lines);
+    }
+
+    private boolean handleSignUpdate(PlayerInteractEvent e, Sign s, String[] lines) {
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.update")) {
+            return false;
+        }
+
+        String signNameBuy = Main.getInstance().getConfig().getString("MoneySign.Buy");
+        if (signNameBuy != null) {
+            signNameBuy = signNameBuy.replace('&', '§');
+            if (lines[0] != null && lines[0].equalsIgnoreCase(signNameBuy)) {
+                updateSignMoney(s, 3);
+                s.update();
+                e.getPlayer().sendMessage("§aUpdated");
+                e.setCancelled(true);
+                e.setUseInteractedBlock(Event.Result.DENY);
+                return true;
             }
+        }
+
+        String signNameSell = Main.getInstance().getConfig().getString("MoneySign.Sell");
+        if (signNameSell != null) {
+            signNameSell = signNameSell.replace('&', '§');
+            if (lines[0] != null && lines[0].equalsIgnoreCase(signNameSell)) {
+                updateSignMoney(s, 3);
+                s.update();
+                e.getPlayer().sendMessage("§aUpdated");
+                e.setCancelled(true);
+                e.setUseInteractedBlock(Event.Result.DENY);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateSignMoney(Sign sign, int lineIndex) {
+        String line = sign.getLine(lineIndex);
+        if (line == null) return;
+
+        StringBuilder num = new StringBuilder();
+        for (char c : line.toCharArray()) {
+            if (isCharNumber(c)) {
+                num.append(c);
+            }
+        }
+
+        if (num.length() > 0) {
+            int money = Integer.parseInt(num.toString());
+            sign.setLine(lineIndex, money + Main.getInstance().getCurrencySymbolMulti());
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
+    private boolean handleBalanceSign(PlayerInteractEvent e, Sign s, String line0) {
+        String signName = Main.getInstance().getConfig().getString("MoneySign.Balance");
+        if (signName == null) return false;
+
+        signName = signName.replace('&', '§');
+        if (line0 == null || !line0.equalsIgnoreCase(signName)) return false;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.use")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            e.setUseInteractedBlock(Event.Result.DENY);
+            e.setCancelled(true);
+            return true;
+        }
+
+        String money = eco.format(eco.getBalance(e.getPlayer()));
+        String text = Main.getInstance().getConfig().getString("Money.MSG.Balance");
+        if (text == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: Money.MSG.Balance is not set!");
+        } else {
+            text = text.replace("[Money]", money);
+            text = text.replace('&', '§');
+            e.getPlayer().sendMessage(text + Main.getInstance().getCurrencySymbolMulti());
+        }
+
+        e.setUseInteractedBlock(Event.Result.DENY);
+        e.setCancelled(true);
+        return true;
+    }
+
+    private boolean handleFreeSign(PlayerInteractEvent e, Sign s, String[] lines) {
+        String signNameFree = Main.getInstance().getConfig().getString("MoneySign.Free");
+        if (signNameFree == null) return false;
+
+        signNameFree = signNameFree.replace('&', '§');
+        if (lines[0] == null || !lines[0].equalsIgnoreCase(signNameFree)) return false;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.use")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        if (lines[1] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign configuration!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        Material name = Material.getMaterial(lines[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + lines[1]);
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        Inventory inventory = Bukkit.createInventory(null, 3 * 9, "Free");
+        for (int i = 0; i < inventory.getSize(); i++) {
+            inventory.setItem(i, new ItemStack(name, 64));
+        }
+        e.getPlayer().openInventory(inventory);
+
+        e.setCancelled(true);
+        e.setUseInteractedBlock(Event.Result.DENY);
+        return true;
+    }
+
+    private boolean handleBuySign(PlayerInteractEvent e, Sign s, String[] lines) {
+        String signNameBuy = Main.getInstance().getConfig().getString("MoneySign.Buy");
+        if (signNameBuy == null) return false;
+
+        signNameBuy = signNameBuy.replace('&', '§');
+        if (lines[0] == null || !lines[0].equalsIgnoreCase(signNameBuy)) return false;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.use")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        // Validate sign data
+        if (lines[1] == null || lines[2] == null || lines[3] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign configuration!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        Material name = Material.getMaterial(lines[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + lines[1]);
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        int amount;
+        int money;
+        try {
+            amount = Integer.parseInt(lines[2]);
+            money = Integer.parseInt(lines[3].replace(Main.getInstance().getCurrencySymbolMulti(), ""));
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid number format on sign!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        if (lines[1].equalsIgnoreCase(name.name()) &&
+                lines[2].equalsIgnoreCase(amount + "") &&
+                lines[3].equalsIgnoreCase(money + Main.getInstance().getCurrencySymbolMulti())) {
+
+            if (eco.getBalance(e.getPlayer()) < money) {
+                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + Main.getInstance().getCurrencySymbolMulti());
+                e.setCancelled(true);
+                e.setUseInteractedBlock(Event.Result.DENY);
+                return true;
+            }
+
+            ItemStack item = new ItemStack(name, amount);
+            e.getPlayer().getInventory().addItem(item);
+            eco.withdrawPlayer(e.getPlayer(), money);
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§aDu hast §6" + amount + "x " + name.name() + " §afür §6" + money + Main.getInstance().getCurrencySymbolMulti() + " §agekauft.");
+        }
+
+        e.setCancelled(true);
+        e.setUseInteractedBlock(Event.Result.DENY);
+        return true;
+    }
+
+    private boolean handleSellSign(PlayerInteractEvent e, Sign s, String[] lines) {
+        String signNameSell = Main.getInstance().getConfig().getString("MoneySign.Sell");
+        if (signNameSell == null) return false;
+
+        signNameSell = signNameSell.replace('&', '§');
+        if (lines[0] == null || !lines[0].equalsIgnoreCase(signNameSell)) return false;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.use")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        // Validate sign data
+        if (lines[1] == null || lines[2] == null || lines[3] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign configuration!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        Material name = Material.getMaterial(lines[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + lines[1]);
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        int amount;
+        int money;
+        try {
+            amount = Integer.parseInt(lines[2]);
+            money = Integer.parseInt(lines[3].replace(Main.getInstance().getCurrencySymbolMulti(), ""));
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid number format on sign!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return true;
+        }
+
+        if (lines[1].equalsIgnoreCase(name.name()) &&
+                lines[2].equalsIgnoreCase(amount + "") &&
+                lines[3].equalsIgnoreCase(money + Main.getInstance().getCurrencySymbolMulti())) {
+
+            if (e.getPlayer().getInventory().contains(name, amount)) {
+                ItemStack item = new ItemStack(name, amount);
+                e.getPlayer().getInventory().removeItem(item);
+                eco.depositPlayer(e.getPlayer(), money);
+                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§aDu hast §6" + amount + "x " + name.name() + " §afür §6" + money + Main.getInstance().getCurrencySymbolMulti() + " §averkauft.");
+            } else {
+                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + name.name());
+            }
+        }
+
+        e.setCancelled(true);
+        e.setUseInteractedBlock(Event.Result.DENY);
+        return true;
+    }
+
+    private void handlePlayerShopBuySign(PlayerInteractEvent e, Sign s, String[] lines) {
+        if (lines[0] == null || !lines[0].equalsIgnoreCase("§6Buy")) return;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.use")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) {
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        if (lines[1] == null || lines[2] == null || lines[3] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign configuration!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        String itemKey = lines[1].replace('§', '&');
+        ItemStack itemStack = cfg.getItemStack("Items." + itemKey + ".item");
+        if (itemStack == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDieser Shop existiert nicht!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        try {
+            itemStack.setAmount(Integer.parseInt(lines[2]));
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid amount on sign!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        String shopOwner = cfg.getString("Items." + itemKey + ".player");
+        if (shopOwner == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cShop owner not found!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        if (e.getPlayer().getName().equalsIgnoreCase(shopOwner)) {
+            e.getPlayer().sendMessage("§c§lYou cannot Buy your own Item!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        double price;
+        try {
+            price = Double.parseDouble(lines[3]);
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid price on sign!");
+            e.setCancelled(true);
+            e.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        if (eco.has(e.getPlayer(), price)) {
+            eco.withdrawPlayer(e.getPlayer(), price);
+            eco.depositPlayer(Bukkit.getOfflinePlayer(shopOwner), price);
+            e.getPlayer().getInventory().addItem(itemStack);
+        } else {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cDu hast nicht genug §6" + Main.getInstance().getCurrencySymbolMulti());
+        }
+
+        e.setCancelled(true);
+        e.setUseInteractedBlock(Event.Result.DENY);
+    }
+
     @EventHandler
     public void signChange(SignChangeEvent e) {
+        if (e == null || e.getPlayer() == null) return;
+
+        String line0 = e.getLine(0);
+        if (line0 == null || !line0.equalsIgnoreCase("buy")) return;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.create")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            return;
+        }
+
         String signName = Main.getInstance().getConfig().getString("MoneySign.Buy");
+        if (signName == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Buy is not set!");
+            return;
+        }
         signName = signName.replace('&', '§');
-        if (e.getLine(0).equalsIgnoreCase("buy")) {
-            String[] args = e.getLines();
-            Material name = Material.getMaterial(args[1].toUpperCase());
-            int amount = Integer.parseInt(args[2]);
-            int money = Integer.parseInt(args[3]);
-            if (e.getPlayer().hasPermission("essentialsmini.signs.create")) {
-                if (e.getLine(1).equalsIgnoreCase(name.name()) &&
-                        e.getLine(2).equalsIgnoreCase(amount + "") &&
-                        e.getLine(3).equalsIgnoreCase(money + "")) {
-                    e.setLine(0, signName);
-                    e.setLine(1, name.name());
-                    e.setLine(2, amount + "");
-                    e.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
-                }
-            } else {
-                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-            }
+
+        String[] args = e.getLines();
+        if (args.length < 4 || args[1] == null || args[2] == null || args[3] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign format! Use: buy / material / amount / price");
+            return;
+        }
+
+        Material name = Material.getMaterial(args[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + args[1]);
+            return;
+        }
+
+        int amount;
+        int money;
+        try {
+            amount = Integer.parseInt(args[2]);
+            money = Integer.parseInt(args[3]);
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid number format!");
+            return;
+        }
+
+        if (e.getLine(1).equalsIgnoreCase(name.name()) &&
+                e.getLine(2).equalsIgnoreCase(amount + "") &&
+                e.getLine(3).equalsIgnoreCase(money + "")) {
+            e.setLine(0, signName);
+            e.setLine(1, name.name());
+            e.setLine(2, amount + "");
+            e.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @EventHandler
     public void SignChangeFree(SignChangeEvent e) {
+        if (e == null || e.getPlayer() == null) return;
+
+        String line0 = e.getLine(0);
+        if (line0 == null || !line0.equalsIgnoreCase("free")) return;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.create")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            return;
+        }
+
         String signName = Main.getInstance().getConfig().getString("MoneySign.Free");
         if (signName == null) {
             e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Free is not set!");
             return;
         }
         signName = signName.replace('&', '§');
-        if (e.getLine(0).equalsIgnoreCase("free")) {
-            if (e.getPlayer().hasPermission("essentialsmini.signs.create")) {
-                String[] args = e.getLines();
-                Material name = Material.getMaterial(args[1].toUpperCase());
-                if (e.getLine(1).equalsIgnoreCase(name.name())) {
-                    e.setLine(0, signName);
-                    e.setLine(1, name.name());
-                }
-            } else {
-                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-            }
+
+        String[] args = e.getLines();
+        if (args.length < 2 || args[1] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign format! Use: free / material");
+            return;
+        }
+
+        Material name = Material.getMaterial(args[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + args[1]);
+            return;
+        }
+
+        if (e.getLine(1).equalsIgnoreCase(name.name())) {
+            e.setLine(0, signName);
+            e.setLine(1, name.name());
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @EventHandler
     public void signChangeSell(SignChangeEvent e) {
+        if (e == null || e.getPlayer() == null) return;
+
+        String line0 = e.getLine(0);
+        if (line0 == null || !line0.equalsIgnoreCase("sell")) return;
+
+        if (!e.getPlayer().hasPermission("essentialsmini.signs.create")) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            return;
+        }
+
         String signName = Main.getInstance().getConfig().getString("MoneySign.Sell");
         if (signName == null) {
             e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cConfiguration Error: MoneySign.Sell is not set!");
             return;
         }
         signName = signName.replace('&', '§');
-        if (e.getLine(0).equalsIgnoreCase("sell")) {
-            if (e.getPlayer().hasPermission("essentialsmini.signs.create")) {
-                String[] args = e.getLines();
-                Material name = Material.getMaterial(args[1].toUpperCase());
-                int amount = Integer.parseInt(args[2]);
-                int money = Integer.parseInt(args[3]);
-                if (e.getLine(1).equalsIgnoreCase(name.name()) &&
-                        e.getLine(2).equalsIgnoreCase(amount + "") &&
-                        e.getLine(3).equalsIgnoreCase(money + "")) {
-                    e.setLine(0, signName);
-                    e.setLine(1, name.name());
-                    e.setLine(2, amount + "");
-                    e.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
-                }
-            } else {
-                e.getPlayer().sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
-            }
+
+        String[] args = e.getLines();
+        if (args.length < 4 || args[1] == null || args[2] == null || args[3] == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid sign format! Use: sell / material / amount / price");
+            return;
+        }
+
+        Material name = Material.getMaterial(args[1].toUpperCase());
+        if (name == null) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid material: " + args[1]);
+            return;
+        }
+
+        int amount;
+        int money;
+        try {
+            amount = Integer.parseInt(args[2]);
+            money = Integer.parseInt(args[3]);
+        } catch (NumberFormatException ex) {
+            e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cInvalid number format!");
+            return;
+        }
+
+        if (e.getLine(1).equalsIgnoreCase(name.name()) &&
+                e.getLine(2).equalsIgnoreCase(amount + "") &&
+                e.getLine(3).equalsIgnoreCase(money + "")) {
+            e.setLine(0, signName);
+            e.setLine(1, name.name());
+            e.setLine(2, amount + "");
+            e.setLine(3, money + Main.getInstance().getCurrencySymbolMulti());
         }
     }
 
@@ -358,114 +591,142 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onPlayerClickSign(PlayerInteractEvent event) {
-        if (Main.getInstance().getConfig().getBoolean("PlayerShop")) {
-            if (event.getItem() == null) return;
-            ItemStack item = event.getItem();
-            if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                if (event.getClickedBlock() == null) return;
-                if (event.getClickedBlock().getState() instanceof Sign sign) {
-                    if (event.getPlayer().hasPermission("essentialsmini.signs.create")) {
-                        if (sign.getLine(0).equalsIgnoreCase("Item")) {
-                            sign.setLine(0, "");
-                            cmdMessage.put(event.getPlayer(), "itemname");
-                            event.getPlayer().sendMessage("§aWie soll das Item heissen?");
-                            playerSign.put(event.getPlayer(), sign);
-                            event.setCancelled(true);
-                            event.setUseInteractedBlock(Event.Result.DENY);
-                            itemHash.put(event.getPlayer(), item);
-                        }
-                    }
-                }
-            }
-        }
+        if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) return;
+        if (event == null || event.getPlayer() == null) return;
+        if (event.getItem() == null) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
+        if (!(event.getClickedBlock().getState() instanceof Sign sign)) return;
+        if (!event.getPlayer().hasPermission("essentialsmini.signs.create")) return;
+
+        String[] lines = sign.getLines();
+        if (lines == null || lines.length < 1 || lines[0] == null) return;
+        if (!lines[0].equalsIgnoreCase("Item")) return;
+
+        ItemStack item = event.getItem();
+        sign.setLine(0, "");
+        cmdMessage.put(event.getPlayer(), "itemname");
+        event.getPlayer().sendMessage("§aWie soll das Item heissen?");
+        playerSign.put(event.getPlayer(), sign);
+        event.setCancelled(true);
+        event.setUseInteractedBlock(Event.Result.DENY);
+        itemHash.put(event.getPlayer(), item);
     }
 
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onAsync(AsyncPlayerChatEvent event) {
-        if (Main.getInstance().getConfig().getBoolean("PlayerShop")) {
-            if (!cmdMessage.isEmpty() && cmdMessage.containsKey(event.getPlayer()) && cmdMessage.get(event.getPlayer()).equalsIgnoreCase("itemname")) {
-                Sign sign = playerSign.get(event.getPlayer());
-                sign.setWaxed(true);
-                cmdMessage.remove(event.getPlayer());
-                sign.setLine(1, ChatColor.translateAlternateColorCodes('&', event.getMessage()));
-                event.setCancelled(true);
-                cmdMessage.put(event.getPlayer(), "amount");
-                event.getPlayer().sendMessage("§aWie viel soll man kaufen können?");
-                cfg.set("Items." + event.getMessage() + ".item", itemHash.get(event.getPlayer()));
-                cfg.set("Items." + event.getMessage() + ".player", event.getPlayer().getName());
-                cfg.set("Items." + event.getMessage() + ".location", sign.getLocation());
+        if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) return;
+        if (event == null || event.getPlayer() == null) return;
+        if (cmdMessage.isEmpty() || !cmdMessage.containsKey(event.getPlayer())) return;
+
+        Player player = event.getPlayer();
+        String message = event.getMessage();
+        if (message == null) return;
+
+        String command = cmdMessage.get(player);
+        if (command == null) return;
+
+        Sign sign = playerSign.get(player);
+        if (sign == null) return;
+
+        if (command.equalsIgnoreCase("itemname")) {
+            sign.setWaxed(true);
+            cmdMessage.remove(player);
+            sign.setLine(1, ChatColor.translateAlternateColorCodes('&', message));
+            event.setCancelled(true);
+            cmdMessage.put(player, "amount");
+            player.sendMessage("§aWie viel soll man kaufen können?");
+
+            ItemStack item = itemHash.get(player);
+            if (item != null) {
+                cfg.set("Items." + message + ".item", item);
+                cfg.set("Items." + message + ".player", player.getName());
+                cfg.set("Items." + message + ".location", sign.getLocation());
                 try {
                     cfg.save(file);
                 } catch (IOException e) {
                     getPlugin().getLogger4J().error("Could not save items.yml", e);
                 }
-                sign.update(true);
-                playerSign.remove(event.getPlayer());
-                playerSign.put(event.getPlayer(), sign);
-            } else if (!cmdMessage.isEmpty() && cmdMessage.containsKey(event.getPlayer()) && cmdMessage.get(event.getPlayer()).equalsIgnoreCase("amount")) {
-                Sign sign = playerSign.get(event.getPlayer());
-                sign.setEditable(true);
-                cmdMessage.remove(event.getPlayer());
-                sign.setLine(2, event.getMessage());
-                event.setCancelled(true);
-                cmdMessage.put(event.getPlayer(), "price");
-                event.getPlayer().sendMessage("§aWie viel soll es kosten?");
-                sign.update(true);
-                playerSign.remove(event.getPlayer());
-                playerSign.put(event.getPlayer(), sign);
-            } else if (!cmdMessage.isEmpty() && cmdMessage.containsKey(event.getPlayer()) && cmdMessage.get(event.getPlayer()).equalsIgnoreCase("price")) {
-                Sign sign = playerSign.get(event.getPlayer());
-                sign.setLine(0, "§6Buy");
-                sign.setLine(3, event.getMessage());
-                event.setCancelled(true);
-                cmdMessage.remove(event.getPlayer());
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        sign.update(true, true);
-                    }
-                }.runTaskLater(Main.getInstance(), 60);
             }
+
+            sign.update(true);
+            playerSign.remove(player);
+            playerSign.put(player, sign);
+
+        } else if (command.equalsIgnoreCase("amount")) {
+            sign.setEditable(true);
+            cmdMessage.remove(player);
+            sign.setLine(2, message);
+            event.setCancelled(true);
+            cmdMessage.put(player, "price");
+            player.sendMessage("§aWie viel soll es kosten?");
+            sign.update(true);
+            playerSign.remove(player);
+            playerSign.put(player, sign);
+
+        } else if (command.equalsIgnoreCase("price")) {
+            sign.setLine(0, "§6Buy");
+            sign.setLine(3, message);
+            event.setCancelled(true);
+            cmdMessage.remove(player);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    sign.update(true, true);
+                }
+            }.runTaskLater(Main.getInstance(), 60);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length >= 1) {
-            if (sender.hasPermission("essentialsmini.signs.delete")) {
-                if (Main.getInstance().getConfig().getBoolean("PlayerShop")) {
-                    StringBuilder signName = new StringBuilder();
-                    for (String s : args) {
-                        if (s.equalsIgnoreCase("signremove")) {
-                            s.replace(s, "");
-                        } else if (args[0].equalsIgnoreCase(s)) {
-                            signName.append(s);
-                        } else {
-                            signName.append(" ").append(s);
-                        }
-                    }
-                    if (cfg.contains("Items." + signName + ".item")) {
-                        Location location = cfg.getLocation("Items." + signName + ".location");
-                        if (location != null) {
-                            location.getBlock().setType(Material.AIR);
-                        }
-                        cfg.set("Items." + signName, null);
-                        try {
-                            cfg.save(file);
-                        } catch (IOException e) {
-                            getPlugin().getLogger4J().error("Could not save items.yml", e);
-                        }
-                        sender.sendMessage("§cDieser Shop wurde entfernt!");
-                    } else {
-                        sender.sendMessage("§cDieser Shop existiert nicht!");
-                    }
-                }
+        if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) {
+            sender.sendMessage(Main.getInstance().getPrefix() + "§cPlayer shop is disabled!");
+            return true;
+        }
+
+        if (args.length < 1) {
+            sender.sendMessage(Main.getInstance().getPrefix() + "§cUsage: /signremove <shop name>");
+            return true;
+        }
+
+        if (!sender.hasPermission("essentialsmini.signs.delete")) {
+            sender.sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+            return true;
+        }
+
+        StringBuilder signName = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (i == 0) {
+                signName.append(args[i]);
             } else {
-                sender.sendMessage(Main.getInstance().getPrefix() + Main.getInstance().getNoPerms());
+                signName.append(" ").append(args[i]);
             }
         }
-        return false;
+
+        String shopKey = "Items." + signName;
+        if (!cfg.contains(shopKey + ".item")) {
+            sender.sendMessage("§cDieser Shop existiert nicht!");
+            return true;
+        }
+
+        Location location = cfg.getLocation(shopKey + ".location");
+        if (location != null) {
+            location.getBlock().setType(Material.AIR);
+        }
+
+        cfg.set(shopKey, null);
+        try {
+            cfg.save(file);
+            sender.sendMessage("§cDieser Shop wurde entfernt!");
+        } catch (IOException e) {
+            getPlugin().getLogger4J().error("Could not save items.yml", e);
+            sender.sendMessage("§cError saving config file!");
+        }
+
+        return true;
     }
 }

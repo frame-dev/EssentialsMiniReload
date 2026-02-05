@@ -23,6 +23,9 @@ public class RegisterManager {
 
     private PlayerListeners playerListeners;
 
+    // TrashInventory for cleanup
+    private TrashInventory trashInventory;
+
     /**
      * Constructor of RegisterManager
      * Register all Events and Commands
@@ -103,7 +106,7 @@ public class RegisterManager {
         new RepairCMD(plugin);
         new HealCMD(plugin);
         new FeedCMD(plugin);
-        new TrashInventory(plugin);
+        trashInventory = new TrashInventory(plugin);
         new KitCMD(plugin);
         new GodCMD(plugin);
         new SpeedCMD(plugin);
@@ -159,5 +162,14 @@ public class RegisterManager {
     @SuppressWarnings("unused")
     public MuteCMD getMuteCMD() {
         return muteCMD;
+    }
+
+    /**
+     * Cleanup method to be called on plugin disable
+     */
+    public void cleanup() {
+        if (trashInventory != null) {
+            trashInventory.cleanup();
+        }
     }
 }

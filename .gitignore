@@ -21,3 +21,5 @@ dependency-reduced-pom.xml
 *.iml
 /actions-runner/
 runActionRunner.sh
+deploy.ps1
+write.sh.secure

@@ -37,6 +37,11 @@ SQLite:
   Path: 'plugins/EssentialsMini'
   FileName: 'database'
   Use: false
+PostgreSQL:
+  Url: ' '
+  User: ' '
+  Password: ' '
+  Use: false
 MongoDB:
   Host: ' '
   Port: 27017

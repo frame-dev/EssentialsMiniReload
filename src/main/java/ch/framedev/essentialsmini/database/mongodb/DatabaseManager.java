@@ -14,6 +14,7 @@ package ch.framedev.essentialsmini.database.mongodb;
 import ch.framedev.essentialsmini.api.VaultAPI;
 import ch.framedev.essentialsmini.database.mysqlsqlite.MySQL;
 import ch.framedev.essentialsmini.database.mysqlsqlite.SQLite;
+import ch.framedev.essentialsmini.database.postgresql.PostgreSQL;
 import ch.framedev.essentialsmini.main.Main;
 
 public record DatabaseManager(Main plugin) {
@@ -29,6 +30,10 @@ public record DatabaseManager(Main plugin) {
         // SQLite Database
         if (plugin.isSQL()) {
             new SQLite(plugin.getConfig().getString("SQLite.Path", "path"), plugin.getConfig().getString("SQLite.FileName", "database"));
+        }
+
+        if(plugin.isPostgres()) {
+            new PostgreSQL(plugin.getConfig().getString("PostgreSQL.Url", "url"), plugin.getConfig().getString("PostgreSQL.User", "user"), plugin.getConfig().getString("PostgreSQL.Password", "password"));
         }
 
         if (plugin.isMongoDB()) {

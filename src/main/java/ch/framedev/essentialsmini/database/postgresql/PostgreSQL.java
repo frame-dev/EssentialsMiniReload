@@ -18,7 +18,7 @@ public class PostgreSQL {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            // Driver not present on classpath - log and continue; connection attempts will fail later.
+            // Driver doesn't present on classpath - log and continue; connection attempts will fail later.
             try {
                 Main.getInstance().getLogger4J().warn("PostgreSQL JDBC driver not found on classpath.", e);
             } catch (Throwable t) {

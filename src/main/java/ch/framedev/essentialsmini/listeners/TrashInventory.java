@@ -11,9 +11,21 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Trash inventory system that allows players to delete items
+ * Each player gets their own unique trash inventory
+ */
 public class TrashInventory extends CommandListenerBase {
 
-    private final Inventory inventory = Bukkit.createInventory(null, 9 * 6, "Trash");
+    private static final String TRASH_TITLE = "Trash";
+    private static final int TRASH_SIZE = 9 * 6; // 6 rows
+
+    // Track which inventories belong to which players
+    private final Map<UUID, Inventory> playerTrashInventories = new ConcurrentHashMap<>();
     private final Main plugin;
 
     public TrashInventory(Main plugin) {
@@ -22,23 +34,76 @@ public class TrashInventory extends CommandListenerBase {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!sender.hasPermission("essentialsmini.trash")) {
             sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
             return true;
         }
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
             return true;
         }
-        player.openInventory(inventory);
+
+        // Create or get existing trash inventory for this player
+        Inventory trashInventory = getOrCreateTrashInventory(player);
+        player.openInventory(trashInventory);
+
         return true;
+    }
+
+    /**
+     * Get or create a unique trash inventory for the player
+     * @param player the player
+     * @return the player's trash inventory
+     */
+    private Inventory getOrCreateTrashInventory(Player player) {
+        UUID playerId = player.getUniqueId();
+
+        // Check if player already has a trash inventory
+        Inventory existing = playerTrashInventories.get(playerId);
+        if (existing != null) {
+            return existing;
+        }
+
+        // Create new trash inventory for this player
+        Inventory newTrash = Bukkit.createInventory(null, TRASH_SIZE, TRASH_TITLE);
+        playerTrashInventories.put(playerId, newTrash);
+
+        return newTrash;
     }
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (event.getInventory().equals(inventory)) {
-            event.getInventory().clear();
+        // Check if this is a trash inventory by title
+        String title = event.getView().getTitle();
+        if (!title.equals(TRASH_TITLE)) {
+            return;
         }
+
+        // Get player UUID
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+
+        UUID playerId = player.getUniqueId();
+        Inventory playerTrash = playerTrashInventories.get(playerId);
+
+        // Verify this is the player's trash inventory
+        if (playerTrash != null && event.getInventory().equals(playerTrash)) {
+            // Clear the inventory contents (delete items)
+            event.getInventory().clear();
+
+            // Remove from the tracking map to prevent memory leaks
+            playerTrashInventories.remove(playerId);
+        }
+    }
+
+    /**
+     * Clean up all trash inventories (called on plugin disable)
+     */
+    public void cleanup() {
+        playerTrashInventories.values().forEach(Inventory::clear);
+        playerTrashInventories.clear();
     }
 }

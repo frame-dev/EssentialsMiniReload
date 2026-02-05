@@ -68,6 +68,9 @@ public class Main extends JavaPlugin {
     // Variables for the plugin
     private Variables variables;
 
+    // RegisterManager for cleanup
+    private RegisterManager registerManager;
+
     private boolean debug;
 
 
@@ -141,7 +144,7 @@ public class Main extends JavaPlugin {
             }
         }
         // Register Commands, TabCompleters and Listeners
-        new RegisterManager(this);
+        this.registerManager = new RegisterManager(this);
 
         // Register KitManager and create custom config
         new KitManager().createCustomConfig();
@@ -171,6 +174,11 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Cleanup RegisterManager (including TrashInventory)
+        if (registerManager != null) {
+            registerManager.cleanup();
+        }
+
         // Save Backpacks
         Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::save);
 
@@ -333,6 +341,10 @@ public class Main extends JavaPlugin {
 
     public boolean isSQL() {
         return getConfig().getBoolean("SQLite.Use", false);
+    }
+
+    public boolean isPostgres() {
+        return getConfig().getBoolean("PostgreSQL.Use", false);
     }
 
     public static Main getInstance() {

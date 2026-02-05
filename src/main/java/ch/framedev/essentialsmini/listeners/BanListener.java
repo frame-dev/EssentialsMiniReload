@@ -27,40 +27,51 @@ public class BanListener extends ListenerBase {
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(AsyncPlayerPreLoginEvent e) {
-        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-            if (!new BanMuteManager().isExpiredTempBan(Bukkit.getOfflinePlayer(e.getUniqueId()))) {
-                final String[] reason = new String[1];
-                if (new BanMuteManager().getTempBan(Bukkit.getOfflinePlayer(e.getUniqueId())) != null) {
-                    new BanMuteManager().getTempBan(Bukkit.getOfflinePlayer(e.getUniqueId())).forEach((s, s2) -> {
+        if (e == null) return;
+        boolean useDb = getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB();
+        var player = Bukkit.getOfflinePlayer(e.getUniqueId());
+        String playerName = e.getName();
+        BanMuteManager manager = new BanMuteManager();
+
+        if (useDb) {
+            var tempBan = manager.getTempBan(player);
+            if (tempBan != null) {
+                boolean expired = manager.isExpiredTempBan(player);
+                if (!expired) {
+                    final String[] reason = new String[1];
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss");
+                    tempBan.forEach((expiresAt, banReason) -> {
                         try {
-                            Bukkit.getServer().getBanList(BanList.Type.NAME).addBan(e.getName(), "§aYou are Banned. Reason:§c " + s2, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(s), "true");
-                            long rest = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(s).getTime() - new Date().getTime();
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTimeInMillis(rest);
-                            String t = String.format("%tT", calendar.getTimeInMillis()-TimeZone.getDefault().getRawOffset());
-                            reason[0] = "§aYou are Banned. Reason:§c " + s2 + " §aExpired at §6: " + s + " §aWait another : §6" + t;
+                            Date expires = formatter.parse(expiresAt);
+                            if (expires != null) {
+                                String safeReason = banReason != null ? banReason : "Unknown";
+                                Bukkit.getServer().getBanList(BanList.Type.NAME)
+                                        .addBan(playerName, "§aYou are Banned. Reason:§c " + safeReason, expires, "true");
+                                long rest = expires.getTime() - System.currentTimeMillis();
+                                Calendar calendar = Calendar.getInstance();
+                                calendar.setTimeInMillis(rest);
+                                String t = String.format("%tT", calendar.getTimeInMillis() - TimeZone.getDefault().getRawOffset());
+                                reason[0] = "§aYou are Banned. Reason:§c " + safeReason + " §aExpired at §6: " + expiresAt + " §aWait another : §6" + t;
+                            }
                         } catch (ParseException parseException) {
                             getPlugin().getLogger4J().error(parseException.getMessage(), parseException);
                         }
                     });
-                    // Set the login result to kick banned with the reason
                     e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_BANNED);
-                    e.setKickMessage(reason[0]);
+                    e.setKickMessage(reason[0] != null ? reason[0] : "§cYou are temporarily banned.");
+                    return;
                 }
-            } else {
-                // Remove expired temp ban
-                new BanMuteManager().removeTempBan(Bukkit.getOfflinePlayer(e.getUniqueId()));
+                manager.removeTempBan(player);
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.ALLOWED);
             }
         }
-        // Check if player is banned in the Database
-        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-            if (new BanMuteManager().isPermBan(Bukkit.getOfflinePlayer(e.getUniqueId()))) {
+
+        if (useDb) {
+            if (manager.isPermBan(player)) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + new BanMuteManager().getPermBanReason(Bukkit.getOfflinePlayer(e.getUniqueId())));
+                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + manager.getPermBanReason(player));
             }
         } else {
-            // Check if player is banned in the BanFileManager
             if (BanFileManager.cfg.getBoolean(e.getName() + ".isBanned")) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
                 e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + BanFileManager.cfg.getString(e.getName() + ".reason"));
