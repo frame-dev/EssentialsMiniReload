@@ -1,0 +1,136 @@
+name: Release Latest Jar
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag. Leave empty to use the Maven project version."
+        required: false
+        type: string
+      release_name:
+        description: "Release title. Leave empty to use the tag."
+        required: false
+        type: string
+      branch:
+        description: "Branch to search for the latest Maven Build artifact."
+        required: false
+        default: "main"
+        type: string
+      draft:
+        description: "Create the release as a draft."
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark the release as a prerelease."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    name: Release jar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Resolve release metadata
+        id: metadata
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag_name }}" ]; then
+            TAG="${{ inputs.tag_name }}"
+          else
+            VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+            TAG="v${VERSION}"
+          fi
+
+          if [ -n "${{ inputs.release_name }}" ]; then
+            NAME="${{ inputs.release_name }}"
+          else
+            NAME="${TAG}"
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Find latest Maven Build run
+        id: build-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ inputs.branch }}
+        shell: bash
+        run: |
+          RUN_ID="$(gh run list \
+            --workflow maven-build.yml \
+            --branch "$BRANCH" \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')"
+
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+            echo "No successful Maven Build run found on branch '$BRANCH'." >&2
+            exit 1
+          fi
+
+          echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Download latest jar artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-artifact
+          gh run download "${{ steps.build-run.outputs.run_id }}" \
+            --name EssentialsMini-jar \
+            --dir release-artifact
+
+      - name: Resolve jar path
+        id: jar
+        shell: bash
+        run: |
+          JAR_PATH="$(find release-artifact -type f -name '*.jar' ! -name 'original-*.jar' | head -n 1)"
+          if [ -z "$JAR_PATH" ]; then
+            echo "No jar file found in downloaded artifact." >&2
+            exit 1
+          fi
+
+          echo "path=${JAR_PATH}" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.metadata.outputs.tag }}
+          RELEASE_NAME: ${{ steps.metadata.outputs.name }}
+          JAR_PATH: ${{ steps.jar.outputs.path }}
+        shell: bash
+        run: |
+          EXTRA_FLAGS=()
+          if [ "${{ inputs.draft }}" = "true" ]; then
+            EXTRA_FLAGS+=(--draft)
+          fi
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            EXTRA_FLAGS+=(--prerelease)
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$JAR_PATH" --clobber
+          else
+            gh release create "$TAG" "$JAR_PATH" \
+              --title "$RELEASE_NAME" \
+              --notes "Automated release from Maven Build run ${{ steps.build-run.outputs.run_id }}." \
+              "${EXTRA_FLAGS[@]}"
+          fi
