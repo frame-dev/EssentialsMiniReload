@@ -5,163 +5,259 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.utils.Cooldown;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
+import ch.framedev.essentialsmini.utils.TextUtils;
 import ch.framedev.essentialsmini.utils.Variables;
 import org.bukkit.command.Command;
-import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class KitCMD extends CommandBase {
 
+    private static final String KITS = "kits";
+    private static final String CREATE_KIT = "createkit";
+    private static final String KITS_USAGE = "§6/kits <kitname>";
+    private static final String CREATE_KIT_USAGE = "§6/createkit <KitName> [cooldown] [cost]";
+    private static final String KIT_ROOT = "Items";
+    private static final String NOT_ENOUGH_MONEY_KEY = Variables.MONEY_MESSAGE + ".MSG.NotEnough";
+    private static final String DEFAULT_NOT_ENOUGH_MONEY = "§cYou don't have enough money §6:%Money%";
+
     private final Main plugin;
-    // Map<playerName, Map<kitName, Cooldown>>
-    public final HashMap<String, HashMap<String, Cooldown>> cooldowns = new HashMap<>();
-    private final boolean eco;
+    public final Map<UUID, Map<String, Cooldown>> cooldowns = new HashMap<>();
 
     public KitCMD(Main plugin) {
-        super(plugin, "kits", "createkit");
+        super(plugin, KITS, CREATE_KIT);
         this.plugin = plugin;
-        this.eco = plugin.getVaultManager() != null;
-    }
-
-    // Get (or create) per-player cooldown map
-    private HashMap<String, Cooldown> getUserCooldownMap(String playerName) {
-        return cooldowns.computeIfAbsent(playerName, k -> new HashMap<>());
-    }
-
-    // Check if player is on cooldown for kit. If yes, send formatted message and return true.
-    private boolean checkAndNotifyCooldown(Player p, String kitName) {
-        HashMap<String, Cooldown> userMap = cooldowns.get(p.getName());
-        if (userMap == null) return false;
-        Cooldown cd = userMap.get(kitName);
-        if (cd == null) return false;
-        if (!cd.check()) {
-            long secondsLeft = cd.getSecondsLeft();
-            long minutes = secondsLeft / 60;
-            long seconds = secondsLeft % 60;
-            String format = String.format("%02d:%02d", minutes, seconds);
-            p.sendMessage(plugin.getPrefix() + "§cYou can't use that command for another " + format + "!");
-            return true;
-        }
-        return false;
-    }
-
-    // Set cooldown for player/kit
-    private void setCooldown(Player p, String kitName, int seconds) {
-        HashMap<String, Cooldown> userMap = getUserCooldownMap(p.getName());
-        userMap.put(kitName, new Cooldown(seconds, System.currentTimeMillis()));
-        cooldowns.put(p.getName(), userMap);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof Player p) {
-            if (command.getName().equalsIgnoreCase("kits")) {
-                if (args.length != 0) {
-                    String name = args[0];
-                    if (!p.hasPermission(plugin.getPermissionBase() + "kits." + name)) {
-                        p.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                        return true;
-                    }
-                    if (args.length != 1) {
-                        p.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("§6/kits <kitname>"));
-                        return true;
-                    }
-                    if (!KitManager.getCustomConfig().contains("Items." + name)) {
-                        p.sendMessage(plugin.getPrefix() + "§cDieses Kit existiert nicht!");
-                        return true;
-                    }
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
 
-                    KitManager kit = new KitManager();
-                    int cost = kit.getCost(name);
-                    int cdSeconds = kit.getCooldown(name);
+        String commandName = command.getName().toLowerCase(Locale.ROOT);
+        return switch (commandName) {
+            case KITS -> handleKits(player, args);
+            case CREATE_KIT -> handleCreateKit(player, args);
+            default -> false;
+        };
+    }
 
-                    // First handle cooldown checks
-                    if (cdSeconds > 0) {
-                        if (checkAndNotifyCooldown(p, name)) return true;
-                    }
-
-                    // If kit is free
-                    if (cost <= 0) {
-                        // set cooldown if needed
-                        if (cdSeconds > 0) setCooldown(p, name, cdSeconds);
-                        kit.loadKits(name, p);
-                        return true;
-                    }
-
-                    // Paid kit
-                    if (!eco) {
-                        p.sendMessage(plugin.getPrefix() + "§cEconomy not enabled!");
-                        return true;
-                    }
-
-                    if (!plugin.getVaultManager().getEconomy().has(p, cost)) {
-                        String notEnough = plugin.getLanguageConfig(sender).getString(Variables.MONEY_MESSAGE + ".MSG.NotEnough");
-                        notEnough = new TextUtils().replaceAndWithParagraph(notEnough);
-                        notEnough = ReplaceCharConfig.replaceObjectWithData(notEnough, "%Money%", plugin.getVaultManager().getEco().getBalance(p) + plugin.getCurrencySymbol());
-                        p.sendMessage(plugin.getPrefix() + notEnough);
-                        return true;
-                    }
-
-                    plugin.getVaultManager().getEconomy().withdrawPlayer(p, cost);
-                    if (cdSeconds > 0) setCooldown(p, name, cdSeconds);
-                    kit.loadKits(name, p);
-                    return true;
-                }
-            }
-            if (command.getName().equalsIgnoreCase("createkit")) {
-                if (!p.hasPermission(plugin.getPermissionBase() + "createkit")) {
-                    p.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                if (args.length == 1 || args.length == 2 || args.length == 3) {
-                    ItemStack[] items = p.getInventory().getContents();
-                    try {
-                        if (args.length == 1) {
-                            new KitManager().createKit(args[0], items);
-                        } else if (args.length == 2) {
-                            new KitManager().createKit(args[0], items, Integer.parseInt(args[1]));
-                        } else {
-                            new KitManager().createKit(args[0], items, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-                        }
-                        p.sendMessage(plugin.getPrefix() + "§aKit Created §6" + args[0]);
-                        p.getInventory().clear();
-                    } catch (NumberFormatException nfe) {
-                        p.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("§6/createkit <KitName> [cost] [cooldown]"));
-                    }
-                } else {
-                    p.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("§6/createkit <KitName> [cost] [cooldown]"));
-                }
-            }
-        } else {
-            sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+    private boolean handleKits(Player player, String[] args) {
+        if (args.length != 1) {
+            sendWrongArgs(player, KITS_USAGE);
+            return true;
         }
+
+        String kitName = args[0];
+        if (!hasPermission(player, plugin.getPermissionBase() + "kits." + kitName)) return true;
+
+        KitManager kitManager = new KitManager();
+        if (!kitExists(kitName)) {
+            send(player, "§cDieses Kit existiert nicht!");
+            return true;
+        }
+
+        KitOptions options = new KitOptions(
+                Math.max(0, kitManager.getCost(kitName)),
+                Math.max(0, kitManager.getCooldown(kitName))
+        );
+
+        if (isOnCooldown(player, kitName)) return true;
+        if (!chargeKitCost(player, options.cost())) return true;
+
+        if (options.cooldownSeconds() > 0) {
+            setCooldown(player, kitName, options.cooldownSeconds());
+        }
+        kitManager.loadKits(kitName, player);
+        return true;
+    }
+
+    private boolean handleCreateKit(Player player, String[] args) {
+        if (!hasPermission(player, plugin.getPermissionBase() + "createkit")) return true;
+
+        if (args.length < 1 || args.length > 3) {
+            sendWrongArgs(player, CREATE_KIT_USAGE);
+            return true;
+        }
+
+        KitOptions options = parseCreateKitOptions(player, args);
+        if (options == null) return true;
+
+        ItemStack[] contents = player.getInventory().getContents();
+        KitManager kitManager = new KitManager();
+        if (options.cost() > 0) {
+            kitManager.createKit(args[0], contents, options.cooldownSeconds(), options.cost());
+        } else if (options.cooldownSeconds() > 0) {
+            kitManager.createKit(args[0], contents, options.cooldownSeconds());
+        } else {
+            kitManager.createKit(args[0], contents);
+        }
+
+        send(player, "§aKit Created §6" + args[0]);
+        player.getInventory().clear();
+        return true;
+    }
+
+    private KitOptions parseCreateKitOptions(Player player, String[] args) {
+        int cooldown = 0;
+        int cost = 0;
+
+        if (args.length >= 2) {
+            Integer parsedCooldown = parseNonNegativeInt(args[1]);
+            if (parsedCooldown == null) {
+                sendWrongArgs(player, CREATE_KIT_USAGE);
+                return null;
+            }
+            cooldown = parsedCooldown;
+        }
+
+        if (args.length == 3) {
+            Integer parsedCost = parseNonNegativeInt(args[2]);
+            if (parsedCost == null) {
+                sendWrongArgs(player, CREATE_KIT_USAGE);
+                return null;
+            }
+            cost = parsedCost;
+        }
+
+        return new KitOptions(cost, cooldown);
+    }
+
+    private boolean chargeKitCost(Player player, int cost) {
+        if (cost <= 0) return true;
+
+        if (plugin.getVaultManager() == null || plugin.getVaultManager().getEconomy() == null) {
+            send(player, "§cEconomy not enabled!");
+            return false;
+        }
+
+        if (!plugin.getVaultManager().getEconomy().has(player, cost)) {
+            sendNotEnoughMoney(player);
+            return false;
+        }
+
+        plugin.getVaultManager().getEconomy().withdrawPlayer(player, cost);
+        return true;
+    }
+
+    private boolean isOnCooldown(Player player, String kitName) {
+        Map<String, Cooldown> playerCooldowns = cooldowns.get(player.getUniqueId());
+        if (playerCooldowns == null) return false;
+
+        Cooldown cooldown = playerCooldowns.get(kitName.toLowerCase(Locale.ROOT));
+        if (cooldown == null || cooldown.check()) {
+            if (cooldown != null) {
+                playerCooldowns.remove(kitName.toLowerCase(Locale.ROOT));
+            }
+            return false;
+        }
+
+        send(player, "§cYou can't use that command for another " + formatDuration(cooldown.getSecondsLeft()) + "!");
+        return true;
+    }
+
+    private void setCooldown(Player player, String kitName, int seconds) {
+        cooldowns
+                .computeIfAbsent(player.getUniqueId(), ignored -> new HashMap<>())
+                .put(kitName.toLowerCase(Locale.ROOT), new Cooldown(seconds, System.currentTimeMillis()));
+    }
+
+    private String formatDuration(long totalSeconds) {
+        long safeSeconds = Math.max(0, totalSeconds);
+        return String.format(Locale.ROOT, "%02d:%02d", safeSeconds / 60, safeSeconds % 60);
+    }
+
+    private boolean kitExists(String kitName) {
+        FileConfiguration config = KitManager.getCustomConfig();
+        return config != null && config.contains(KIT_ROOT + "." + kitName);
+    }
+
+    private Integer parseNonNegativeInt(String value) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed < 0 ? null : parsed;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private void sendNotEnoughMoney(Player player) {
+        String message = plugin.getLanguageConfig(player).getString(NOT_ENOUGH_MONEY_KEY, DEFAULT_NOT_ENOUGH_MONEY);
+        if (message == null) message = DEFAULT_NOT_ENOUGH_MONEY;
+
+        double balance = plugin.getVaultManager() == null || plugin.getVaultManager().getEco() == null
+                ? 0D
+                : plugin.getVaultManager().getEco().getBalance(player);
+        message = new TextUtils().replaceAndWithParagraph(message);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Money%", balance + plugin.getCurrencySymbol());
+        send(player, message);
+    }
+
+    private boolean hasPermission(Player player, String permission) {
+        if (player.hasPermission(permission)) return true;
+
+        send(player, plugin.getNoPerms(player));
         return false;
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) return player;
+
+        sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer(null));
+        return null;
+    }
+
+    private void sendWrongArgs(CommandSender sender, String usage) {
+        send(sender, plugin.getWrongArgs(sender instanceof Player player ? player : null, usage));
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("kits") && args.length == 1) {
-            ArrayList<String> list = new ArrayList<>();
-            ConfigurationSection cs = KitManager.getCustomConfig().getConfigurationSection("Items");
-            if (cs == null) {
-                return list; // No kits available
-            }
-            for (String s : cs.getKeys(false)) {
-                if (sender.hasPermission(plugin.getPermissionBase() + "kits." + s)) {
-                    list.add(s);
-                }
-            }
-            return list;
+        String commandName = command.getName().toLowerCase(Locale.ROOT);
+        if (commandName.equals(KITS) && args.length == 1) {
+            return matchingKits(sender, args[0]);
         }
-        if (command.getName().equalsIgnoreCase("createkit") && args.length == 1) {
+
+        if (commandName.equals(CREATE_KIT) && args.length == 1) {
             return Collections.singletonList("Kit_Name");
         }
-        return null;
+
+        return Collections.emptyList();
+    }
+
+    private List<String> matchingKits(CommandSender sender, String prefix) {
+        FileConfiguration config = KitManager.getCustomConfig();
+        if (config == null) return Collections.emptyList();
+
+        ConfigurationSection section = config.getConfigurationSection(KIT_ROOT);
+        if (section == null) return Collections.emptyList();
+
+        List<String> visibleKits = new ArrayList<>();
+        for (String kitName : section.getKeys(false)) {
+            if (sender.hasPermission(plugin.getPermissionBase() + "kits." + kitName)) {
+                visibleKits.add(kitName);
+            }
+        }
+        return TabCompleteUtils.matchingStrings(visibleKits, prefix);
+    }
+
+    private record KitOptions(int cost, int cooldownSeconds) {
     }
 }

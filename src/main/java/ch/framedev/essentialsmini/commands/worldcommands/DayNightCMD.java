@@ -68,11 +68,15 @@ public class DayNightCMD extends CommandBase {
                 return true;
             }
             if (command.getName().equalsIgnoreCase("pltime")) {
+                if (args.length != 1) {
+                    sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/pltime <time|day|night>"));
+                    return true;
+                }
                 if (player.hasPermission("essentialsmini.playertime")) {
                     try {
                         player.setPlayerTime(Integer.parseInt(args[0]), false);
                     } catch (Exception ex) {
-                        switch (args[0]) {
+                        switch (args[0].toLowerCase()) {
                             case "day":
                                 player.setPlayerTime(0, false);
                                 break;
@@ -86,13 +90,19 @@ public class DayNightCMD extends CommandBase {
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
+                return true;
             }
             if (command.getName().equalsIgnoreCase("resetpltime")) {
+                if (args.length != 0) {
+                    sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/resetpltime"));
+                    return true;
+                }
                 if (player.hasPermission("essentialsmini.playertime")) {
                     player.resetPlayerTime();
                 } else {
                     sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
                 }
+                return true;
             }
         } else {
             if (command.getName().equalsIgnoreCase("day")) {
@@ -113,6 +123,10 @@ public class DayNightCMD extends CommandBase {
                 sender.sendMessage(plugin.getPrefix() + message);
                 for (World world : Bukkit.getWorlds())
                     world.setTime(13000);
+                return true;
+            }
+            if (command.getName().equalsIgnoreCase("pltime") || command.getName().equalsIgnoreCase("resetpltime")) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
                 return true;
             }
         }

@@ -274,9 +274,9 @@ public class PlayerListeners implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (event == null || event.getEntity() == null) return;
 
-        if (KillCMD.suicidPlayers.contains(event.getEntity())) {
+        if (KillCMD.suicidPlayers.contains(event.getEntity().getUniqueId())) {
             event.setDeathMessage(null);
-            KillCMD.suicidPlayers.remove(event.getEntity());
+            KillCMD.suicidPlayers.remove(event.getEntity().getUniqueId());
         }
     }
 

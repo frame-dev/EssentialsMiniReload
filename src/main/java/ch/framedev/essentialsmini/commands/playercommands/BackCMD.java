@@ -12,6 +12,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /*
@@ -28,7 +29,8 @@ public class BackCMD extends CommandListenerBase {
 
     // death HashMap
     // store UUIDs rather than Player objects to avoid memory leaks and stale references
-    private final HashMap<UUID, Location> deaths = new HashMap<>();
+    private final Map<UUID, Location> deaths = new HashMap<>();
+    private final TextUtils textUtils = new TextUtils();
 
     public BackCMD(Main plugin) {
         super(plugin, "back");
@@ -37,57 +39,51 @@ public class BackCMD extends CommandListenerBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("back")) {
-            if (plugin.getConfig().getBoolean("Back")) {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                UUID uuid = player.getUniqueId();
-                if (!deaths.containsKey(uuid)) {
-                    String message = plugin.getLanguageConfig(player).getString("NoDeathLocationFound");
-                    if (message != null) {
-                        message = new TextUtils().replaceAndWithParagraph(message);
-                    } else {
-                        message = "";
-                    }
-                    player.sendMessage(plugin.getPrefix() + message);
-                    return true;
-                }
-                /*  Player Teleports to the Death Location */
-                Location loc = deaths.get(uuid);
-                boolean teleported = false;
-                if (loc != null) {
-                    teleported = player.teleport(loc);
-                }
-                if (teleported) {
-                    String message = plugin.getLanguageConfig(player).getString("DeathTeleport");
-                    if (message != null) {
-                        message = new TextUtils().replaceAndWithParagraph(message);
-                    } else {
-                        message = "";
-                    }
-                    player.sendMessage(plugin.getPrefix() + message);
-                    /* Death Point remove */
-                    deaths.remove(uuid);
-                    return true;
-                }
-            }
+        if (!command.getName().equalsIgnoreCase("back")) {
+            return false;
         }
-        return false;
+
+        if (isBackDisabled()) {
+            return true;
+        }
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+            return true;
+        }
+
+        UUID uuid = player.getUniqueId();
+        Location deathLocation = deaths.get(uuid);
+        if (deathLocation == null) {
+            sendLang(player, "NoDeathLocationFound");
+            return true;
+        }
+
+        if (!player.teleport(deathLocation)) {
+            return true;
+        }
+
+        sendLang(player, "DeathTeleport");
+        deaths.remove(uuid);
+        return true;
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
-        if (!plugin.getConfig().getBoolean("Back")) return;
+        if (isBackDisabled()) return;
         Player player = event.getEntity();
         // store by UUID to avoid retaining Player instance
         deaths.put(player.getUniqueId(), player.getLocation());
-        String message = plugin.getLanguageConfig(player).getString("DeathCommandUsage");
-        if (message != null) {
-            message = new TextUtils().replaceAndWithParagraph(message);
-        }
-        if (message == null) message = "";
+        sendLang(player, "DeathCommandUsage");
+    }
+
+    private boolean isBackDisabled() {
+        return !plugin.getConfig().getBoolean("Back");
+    }
+
+    private void sendLang(Player player, String key) {
+        String message = plugin.getLanguageConfig(player).getString(key);
+        message = textUtils.replaceAndWithParagraph(message == null ? "" : message);
         player.sendMessage(plugin.getPrefix() + message);
     }
 }

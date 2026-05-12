@@ -97,10 +97,6 @@ commands:
     aliases:
       - bp
       - bpack
-  essentialsmini:
-    aliases:
-      - essmini
-    description: Command for all Children Commands
   sleep:
     description: Use this command as Sleep bag the Bed despawn at 7 seconds
   item:
@@ -305,7 +301,9 @@ permissions:
       essentialsmini.summon: true
       essentialsmini.sethome: true
       essentialsmini.setspawn: true
+      essentialsmini.spawn: true
       essentialsmini.fly: true
+      essentialsmini.fly.others: true
       essentialsmini.vanish: true
       essentialsmini.vanish.see: true
       essentialsmini.invsee: true
@@ -314,38 +312,55 @@ permissions:
       essentialsmini.setwarp: true
       essentialsmini.warp: true
       essentialsmini.warps: true
+      essentialsmini.delwarp: true
       essentialsmini.gamemode: true
       essentialsmini.gamemode.others: true
       essentialsmini.online: true
+      essentialsmini.offline: true
       essentialsmini.day: true
       essentialsmini.night: true
+      essentialsmini.sun: true
+      essentialsmini.rain: true
+      essentialsmini.thunder: true
       essentialsmini.ignorejoin: true
+      essentialsmini.ignoreleave: true
       essentialsmini.tphereall: true
       essentialsmini.suicid: true
+      essentialsmini.suicid.others: true
       essentialsmini.killall: true
       essentialsmini.item: true
       essentialsmini.sleep: true
+      essentialsmini.home: true
+      essentialsmini.deletehome.others: true
       essentialsmini.showlocation: true
       essentialsmini.showcrafting: true
       essentialsmini.position: true
       essentialsmini.plugins: true
+      essentialsmini.me: true
+      essentialsmini.tabcomplete: true
       essentialsmini.enderchest: true
       essentialsmini.enderchest.others: true
       essentialsmini.enderchest.owner: true
       essentialsmini.trash: true
+      essentialsmini.backpack.see: true
+      essentialsmini.backpack.delete: true
       essentialsmini.worldutils: true
       essentialsmini.restart: true
       essentialsmini.feed: true
       essentialsmini.feed.others: true
       essentialsmini.heal: true
       essentialsmini.heal.others: true
+      essentialsmini.repair: true
+      essentialsmini.repair.others: true
       essentialsmini.generatekey: true
       essentialsmini.removekey: true
       essentialsmini.enchant: true
       essentialsmini.enchant.others: true
       essentialsmini.showitem: true
+      essentialsmini.playerhead: true
       essentialsmini.playerdata: true
       essentialsmini.god: true
+      essentialsmini.godmode: true
       essentialsmini.god.others: true
       essentialsmini.sethealth: true
       essentialsmini.sethealth.others: true
@@ -353,12 +368,17 @@ permissions:
       essentialsmini.signs.use: true
       essentialsmini.signs.create: true
       essentialsmini.signs.update: true
+      essentialsmini.signs.delete: true
       essentialsmini.playertime: true
       essentialsmini.balance: true
       essentialsmini.balance.others: true
+      essentialsmini.eco.add: true
+      essentialsmini.eco.add.others: true
       essentialsmini.eco.set: true
       essentialsmini.eco.set.others: true
       essentialsmini.pay: true
+      essentialsmini.msg: true
+      essentialsmini.spy: true
       essentialsmini.msgtoggle: true
       essentialsmini.msgtoggle.bypass: true
       essentialsmini.tptoggle: true
@@ -366,6 +386,8 @@ permissions:
       essentialsmini.silent: true
       essentialsmini.flyspeed: true
       essentialsmini.flyspeed.others: true
+      essentialsmini.speed: true
+      essentialsmini.lightningstrike: true
       essentialsmini.mute: true
       essentialsmini.tempban: true
       essentialsmini.ban: true
@@ -380,18 +402,28 @@ permissions:
       essentialsmini.bank.withdraw: true
       essentialsmini.bank.addmember: true
       essentialsmini.bank.removemember: true
+      essentialsmini.bank.info: true
+      essentialsmini.bank.list: true
+      essentialsmini.bank.listmembers: true
+      essentialsmini.bank.transfer: true
       essentialsmini.workbench: true
       essentialsmini.balancetop: true
       essentialsmini.xp: true
+      essentialsmini.createkit: true
       essentialsmini.checkupdates: true
       essentialsmini.globalmute: true
       essentialsmini.globalmute.bypass: true
       essentialsmini.plweather: true
+      essentialsmini.playerweather: true
       essentialsmini.maintenance: true
       essentialsmini.maintenance.bypass: true
       essentialsmini.staffchat: true
       essentialsmini.top: true
       essentialsmini.mail: true
+      essentialsmini.mail.read.others: true
+      essentialsmini.mail.clear.others: true
+      essentialsmini.nick: true
+      essentialsmini.book: true
       essentialsmini.reload: true
       essentialsmini.economy: true
       essentialsmini.help: true
@@ -401,8 +433,14 @@ permissions:
     default: op
   essentialsmini.setspawn:
     default: op
+  essentialsmini.spawn:
+    default: op
   essentialsmini.fly:
     default: op
+  essentialsmini.fly.others:
+    default: op
+    children:
+      essentialsmini.fly: true
   essentialsmini.plugins:
     default: op
   essentialsmini.help:
@@ -425,6 +463,8 @@ permissions:
     default: op
   essentialsmini.warps:
     default: op
+  essentialsmini.delwarp:
+    default: op
   essentialsmini.gamemode:
     default: op
   essentialsmini.gamemode.others:
@@ -437,22 +477,42 @@ permissions:
       essentialsmini.vanish: true
   essentialsmini.online:
     default: op
+  essentialsmini.offline:
+    default: op
   essentialsmini.day:
     default: op
   essentialsmini.night:
     default: op
+  essentialsmini.sun:
+    default: op
+  essentialsmini.rain:
+    default: op
+  essentialsmini.thunder:
+    default: op
   essentialsmini.ignorejoin:
+    default: op
+  essentialsmini.ignoreleave:
     default: op
   essentialsmini.tphereall:
     default: op
   essentialsmini.suicid:
     default: op
+  essentialsmini.suicid.others:
+    default: op
+    children:
+      essentialsmini.suicid: true
   essentialsmini.killall:
     default: op
   essentialsmini.item:
     default: op
   essentialsmini.sleep:
     default: op
+  essentialsmini.home:
+    default: op
+  essentialsmini.deletehome.others:
+    default: op
+    children:
+      essentialsmini.home: true
   essentialsmini.enderchest:
     default: op
   essentialsmini.enderchest.others:
@@ -460,6 +520,10 @@ permissions:
     children:
       essentialsmini.enderchest: true
   essentialsmini.trash:
+    default: op
+  essentialsmini.backpack.see:
+    default: op
+  essentialsmini.backpack.delete:
     default: op
   essentialsmini.restart:
     default: op
@@ -475,6 +539,12 @@ permissions:
     default: op
     children:
       essentialsmini.heal: true
+  essentialsmini.repair:
+    default: op
+  essentialsmini.repair.others:
+    default: op
+    children:
+      essentialsmini.repair: true
   essentialsmini.generatekey:
     default: op
   essentialsmini.removekey:
@@ -487,10 +557,16 @@ permissions:
       essentialsmini.enchant: true
   essentialsmini.showitem:
     default: op
+  essentialsmini.playerhead:
+    default: op
   essentialsmini.playerdata:
     default: op
   essentialsmini.god:
     default: op
+  essentialsmini.godmode:
+    default: op
+    children:
+      essentialsmini.god: true
   essentialsmini.god.others:
     default: op
     children:
@@ -509,7 +585,9 @@ permissions:
     default: op
   essentialsmini.signs.create:
     default: op
-  essentialsmini.playertimer:
+  essentialsmini.signs.delete:
+    default: op
+  essentialsmini.playertime:
     default: op
   essentialsmini.invsee.owner:
     default: op
@@ -525,6 +603,12 @@ permissions:
     default: op
     children:
       essentialsmini.balance: true
+  essentialsmini.eco.add:
+    default: op
+  essentialsmini.eco.add.others:
+    default: op
+    children:
+      essentialsmini.eco.add: true
   essentialsmini.eco.set:
     default: op
   essentialsmini.eco.set.others:
@@ -532,6 +616,10 @@ permissions:
     children:
       essentialsmini.eco.set: true
   essentialsmini.pay:
+    default: op
+  essentialsmini.msg:
+    default: op
+  essentialsmini.spy:
     default: op
   essentialsmini.msgtoggle:
     default: op
@@ -553,6 +641,10 @@ permissions:
     default: op
     children:
       essentialsmini.flyspeed: true
+  essentialsmini.speed:
+    default: op
+  essentialsmini.lightningstrike:
+    default: op
   essentialsmini.mute:
     default: op
   essentialsmini.tempban:
@@ -560,6 +652,8 @@ permissions:
   essentialsmini.ban:
     default: op
   essentialsmini.unban:
+    default: op
+  essentialsmini.tempmute:
     default: op
   essentialsmini.muteinfo:
     default: op
@@ -581,11 +675,21 @@ permissions:
     default: op
   essentialsmini.bank.removemember:
     default: op
+  essentialsmini.bank.info:
+    default: op
+  essentialsmini.bank.list:
+    default: op
+  essentialsmini.bank.listmembers:
+    default: op
+  essentialsmini.bank.transfer:
+    default: op
   essentialsmini.workbench:
     default: op
   essentialsmini.balancetop:
     default: op
   essentialsmini.xp:
+    default: op
+  essentialsmini.createkit:
     default: op
   essentialsmini.checkupdates:
     default: op
@@ -597,6 +701,10 @@ permissions:
       essentialsmini.globalmute: true
   essentialsmini.plweather:
     default: op
+  essentialsmini.playerweather:
+    default: op
+    children:
+      essentialsmini.plweather: true
   essentialsmini.maintenance:
     default: op
   essentialsmini.maintenance.bypass:
@@ -608,6 +716,18 @@ permissions:
   essentialsmini.top:
     default: op
   essentialsmini.mail:
+    default: op
+  essentialsmini.mail.read.others:
+    default: op
+    children:
+      essentialsmini.mail: true
+  essentialsmini.mail.clear.others:
+    default: op
+    children:
+      essentialsmini.mail: true
+  essentialsmini.nick:
+    default: op
+  essentialsmini.book:
     default: op
   essentialsmini.reload:
     default: op

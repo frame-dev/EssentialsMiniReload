@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  * Compatible with Java 11+.
  */
 @SuppressWarnings("unused")
-public class UUIDFetcher {
+public class  UUIDFetcher {
 
     // ✅ Constants
     public static final long FEBRUARY_2015 = 1422748800000L;

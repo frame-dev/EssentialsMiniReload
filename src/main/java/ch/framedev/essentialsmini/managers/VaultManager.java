@@ -20,51 +20,35 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class VaultManager {
 
+    private static final String ECO_FILE_NAME = "eco.yml";
+    private static final String ACCOUNTS_PATH = "accounts";
+    private static final String BANKS_PATH = "Banks.";
+    private static final String BANK_MEMBERS_PATH = ".members";
+    private static final String DEFAULT_ONLINE_ACCOUNT = "14555508-6819-4434-aa6a-e5ce1509ea35";
+    private static final String DEFAULT_OFFLINE_ACCOUNT = "sambakuchen";
+
+    private final Main plugin;
     private final Economy eco;
+    private final File file;
+    private final FileConfiguration cfg;
+    private MySQLManager mySQLManager;
 
     public VaultManager(Main plugin) {
-        File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-        if (!file.exists()) {
-            if(!file.getParentFile().mkdirs())
-                System.err.println("Could not create directory");
-            try {
-                if(!file.createNewFile())
-                    System.err.println("Could not create new file");
-            } catch (IOException e) {
-                plugin.getLogger4J().error(e.getMessage(), e);
-            }
-        }
-        if (Bukkit.getServer().getOnlineMode()) {
-            if (!cfg.contains("accounts")) {
-                ArrayList<String> accounts = new ArrayList<>();
-                accounts.add("14555508-6819-4434-aa6a-e5ce1509ea35");
-                cfg.set("accounts", accounts);
-                try {
-                    cfg.save(file);
-                } catch (IOException e) {
-                    plugin.getLogger4J().error(e.getMessage(), e);
-                }
-                plugin.getLogger4J().info("Economy Accounts created!");
-            }
-        } else {
-            if (!cfg.contains("accounts")) {
-                ArrayList<String> accounts = new ArrayList<>();
-                accounts.add("sambakuchen");
-                cfg.set("accounts", accounts);
-                try {
-                    cfg.save(file);
-                } catch (IOException e) {
-                    plugin.getLogger4J().error(e.getMessage(), e);
-                }
-                plugin.getLogger4J().info("Economy Accounts created!");
-            }
-        }
-        if(plugin.isMongoDB()) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder() + "/money", ECO_FILE_NAME);
+        this.cfg = YamlConfiguration.loadConfiguration(file);
+
+        createStorageFile();
+        createDefaultAccounts();
+
+        if (plugin.isMongoDB()) {
             VaultAPI.init();
         }
-        plugin.getServer().getServicesManager().register(Economy.class, new VaultAPI(), plugin, ServicePriority.High);
-        eco = new VaultAPI();
+
+        VaultAPI vaultAPI = new VaultAPI();
+        plugin.getServer().getServicesManager().register(Economy.class, vaultAPI, plugin, ServicePriority.High);
+        eco = vaultAPI;
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!eco.hasAccount(player)) {
                 eco.createPlayerAccount(player);
@@ -75,15 +59,13 @@ public class VaultManager {
     }
 
     public List<String> getBanks() {
-        return Main.getInstance().getVaultManager().getEco().getBanks();
+        return eco.getBanks();
     }
 
     public List<String> getAccounts() {
-        return Main.getInstance().getVaultManager().getAccounts();
+        loadConfig();
+        return new ArrayList<>(cfg.getStringList(ACCOUNTS_PATH));
     }
-
-    private final File file = new File(Main.getInstance().getDataFolder() + "/money", "eco.yml");
-    private final FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 
     /**
      * Add a User to the Bank
@@ -93,35 +75,32 @@ public class VaultManager {
      */
     @SuppressWarnings("unchecked")
     public void addBankMember(String bankName, OfflinePlayer player) {
-        if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-            new MySQLManager().addBankMember(bankName, player);
-        } else if (Main.getInstance().isMongoDB()) {
-            List<String> users = (List<String>) Main.getInstance().getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
-            if (users != null && !users.contains(player.getName())) users.add(player.getName());
-            Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankname", bankName, "essentialsmini_data");
-            Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
-            Main.getInstance().getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
+        String playerName = getPlayerName(player);
+        if (isInvalidBankRequest(bankName, playerName)) {
+            return;
+        }
+
+        if (plugin.isMysql() || plugin.isSQL()) {
+            getMySQLManager().addBankMember(bankName, player);
+        } else if (plugin.isMongoDB()) {
+            List<String> users = (List<String>) plugin.getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
+            if (users == null) {
+                users = new ArrayList<>();
+            }
+            if (!users.contains(playerName)) {
+                users.add(playerName);
+            }
+            plugin.getDatabaseManager().getBackendManager().updateUser(player, "bankname", bankName, "essentialsmini_data");
+            plugin.getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
+            plugin.getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
         } else {
-            try {
-                cfg.load(file);
-            } catch (IOException | InvalidConfigurationException e) {
-                Main.getInstance().getLogger4J().error(e.getMessage(), e);
+            loadConfig();
+            List<String> players = cfg.getStringList(getBankMembersPath(bankName));
+            if (!players.contains(playerName)) {
+                players.add(playerName);
             }
-            if (!cfg.contains("Banks." + bankName + ".members")) {
-                List<String> players = new ArrayList<>();
-                players.add(player.getName());
-                cfg.set("Banks." + bankName + ".members", players);
-            } else {
-                List<String> players = cfg.getStringList("Banks." + bankName + ".members");
-                if (!players.contains(player.getName()))
-                    players.add(player.getName());
-                cfg.set("Banks." + bankName + ".members", players);
-            }
-            try {
-                cfg.save(file);
-            } catch (IOException e) {
-                Main.getInstance().getLogger4J().error(e.getMessage(), e);
-            }
+            cfg.set(getBankMembersPath(bankName), players);
+            saveConfig();
         }
     }
 
@@ -133,31 +112,28 @@ public class VaultManager {
      */
     @SuppressWarnings("unchecked")
     public void removeBankMember(String bankName, OfflinePlayer player) {
-        if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-            new MySQLManager().removeBankMember(bankName, player);
-        } else if (Main.getInstance().isMongoDB()) {
-            List<String> users = (List<String>) Main.getInstance().getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
+        String playerName = getPlayerName(player);
+        if (isInvalidBankRequest(bankName, playerName)) {
+            return;
+        }
+
+        if (plugin.isMysql() || plugin.isSQL()) {
+            getMySQLManager().removeBankMember(bankName, player);
+        } else if (plugin.isMongoDB()) {
+            List<String> users = (List<String>) plugin.getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
             if (users != null) {
-                users.remove(player.getName());
+                users.remove(playerName);
             }
-            Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankname", "", "essentialsmini_data");
-            Main.getInstance().getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
-            Main.getInstance().getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
+            plugin.getDatabaseManager().getBackendManager().updateUser(player, "bankname", "", "essentialsmini_data");
+            plugin.getDatabaseManager().getBackendManager().updateUser(player, "bankmembers", users, "essentialsmini_data");
+            plugin.getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
         } else {
-            try {
-                cfg.load(file);
-            } catch (IOException | InvalidConfigurationException e) {
-                Main.getInstance().getLogger4J().error(e.getMessage(), e);
-            }
-            if (cfg.contains("Banks." + bankName + ".members")) {
-                List<String> players = cfg.getStringList("Banks." + bankName + ".members");
-                players.remove(player.getName());
-                cfg.set("Banks." + bankName + ".members", players);
-            }
-            try {
-                cfg.save(file);
-            } catch (IOException e) {
-                Main.getInstance().getLogger4J().error(e.getMessage(), e);
+            loadConfig();
+            if (cfg.contains(getBankMembersPath(bankName))) {
+                List<String> players = cfg.getStringList(getBankMembersPath(bankName));
+                players.remove(playerName);
+                cfg.set(getBankMembersPath(bankName), players);
+                saveConfig();
             }
         }
     }
@@ -170,12 +146,18 @@ public class VaultManager {
      */
     @SuppressWarnings("unchecked")
     public List<String> getBankMembers(String bankName) {
-        if (Main.getInstance().isMysql() || Main.getInstance().isSQL()) {
-            return new MySQLManager().getBankMembers(bankName);
-        } else if (Main.getInstance().isMongoDB()) {
-            return (List<String>) Main.getInstance().getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
+        if (bankName == null || bankName.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        if (plugin.isMysql() || plugin.isSQL()) {
+            return getMySQLManager().getBankMembers(bankName);
+        } else if (plugin.isMongoDB()) {
+            List<String> users = (List<String>) plugin.getDatabaseManager().getBackendManager().getObject("bankname", bankName, "bankmembers", "essentialsmini_data");
+            return users == null ? new ArrayList<>() : new ArrayList<>(users);
         } else {
-            return cfg.getStringList("Banks." + bankName + ".members");
+            loadConfig();
+            return new ArrayList<>(cfg.getStringList(getBankMembersPath(bankName)));
         }
     }
 
@@ -185,5 +167,79 @@ public class VaultManager {
 
     public Economy getEco() {
         return eco;
+    }
+
+    private void createStorageFile() {
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            plugin.getLogger4J().error("Could not create directory: " + parent.getAbsolutePath());
+            return;
+        }
+
+        if (!file.exists()) {
+            try {
+                if (!file.createNewFile()) {
+                    plugin.getLogger4J().error("Could not create file: " + file.getAbsolutePath());
+                }
+            } catch (IOException e) {
+                plugin.getLogger4J().error(e.getMessage(), e);
+            }
+        }
+    }
+
+    private void createDefaultAccounts() {
+        loadConfig();
+        if (cfg.contains(ACCOUNTS_PATH)) {
+            return;
+        }
+
+        List<String> accounts = new ArrayList<>();
+        accounts.add(Bukkit.getServer().getOnlineMode() ? DEFAULT_ONLINE_ACCOUNT : DEFAULT_OFFLINE_ACCOUNT);
+        cfg.set(ACCOUNTS_PATH, accounts);
+        saveConfig();
+        plugin.getLogger4J().info("Economy Accounts created!");
+    }
+
+    private void loadConfig() {
+        try {
+            cfg.load(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            plugin.getLogger4J().error(e.getMessage(), e);
+        }
+    }
+
+    private void saveConfig() {
+        try {
+            cfg.save(file);
+        } catch (IOException e) {
+            plugin.getLogger4J().error(e.getMessage(), e);
+        }
+    }
+
+    private boolean isInvalidBankRequest(String bankName, String playerName) {
+        if (bankName == null || bankName.isBlank()) {
+            plugin.getLogger4J().warn("Bank name cannot be empty.");
+            return true;
+        }
+        if (playerName == null || playerName.isBlank()) {
+            plugin.getLogger4J().warn("Player name cannot be empty.");
+            return true;
+        }
+        return false;
+    }
+
+    private String getPlayerName(OfflinePlayer player) {
+        return player == null ? null : player.getName();
+    }
+
+    private MySQLManager getMySQLManager() {
+        if (mySQLManager == null) {
+            mySQLManager = new MySQLManager();
+        }
+        return mySQLManager;
+    }
+
+    private String getBankMembersPath(String bankName) {
+        return BANKS_PATH + bankName + BANK_MEMBERS_PATH;
     }
 }

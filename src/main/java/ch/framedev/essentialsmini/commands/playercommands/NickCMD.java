@@ -2,9 +2,9 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-// import ch.framedev.essentialsmini.utils.SkinApplier;
 import ch.framedev.essentialsmini.utils.SkinChanger;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -14,8 +14,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 public class NickCMD extends CommandBase {
 
@@ -43,54 +45,125 @@ public class NickCMD extends CommandBase {
             return true;
         }
 
+        if (args.length == 1 && isResetArgument(args[0])) {
+            resetNick(player);
+            return true;
+        }
+
         if (args.length != 2) {
             player.sendMessage(getPrefix() + "Usage: /nick <nickname> <skin>");
+            player.sendMessage(getPrefix() + "Usage: /nick reset");
             return true;
         }
 
-        if(isPaperLike()) {
-            player.sendMessage(getPrefix() + "§cThis command is not supported on Paper-like servers due to API limitations.");
+        String displayName = ChatColor.translateAlternateColorCodes('&', args[0]);
+        String profileName = ChatColor.stripColor(displayName);
+        if (!profileName.matches("[A-Za-z0-9_]{1,16}")) {
+            player.sendMessage(getPrefix() + "§cNickname must be 1-16 characters and only contain letters, numbers, or underscores.");
             return true;
         }
 
-        String skinName = args[0];
-        boolean isNicked = nickList.contains(player.getName());
+        String skinName = args[1];
 
-        if(!isNicked) {
-            SkinChanger.fetchByUsername(getPlugin(), skinName).whenCompleteAsync((tex, err) -> {
-                if (err != null) {
-                    player.sendMessage("§cFailed: " + err.getMessage());
-                    return;
-                }
+        if (getPlugin().getSkinService() == null) {
+            markNicked(player);
+            applyDisplayNick(player, displayName);
+            saveNickConfiguration(player);
+            player.sendMessage(getPrefix() + "§aNickname applied.");
+            player.sendMessage(getPrefix() + "§cSkin change requires ProtocolLib.");
+            return true;
+        }
+
+        SkinChanger.fetchByUsername(getPlugin(), skinName).whenComplete((tex, err) ->
                 Bukkit.getScheduler().runTask(getPlugin(), () -> {
-                    try {
-                        getPlugin().getSkinService().apply(player, tex.value(), tex.signature());
-                        player.sendMessage("§aSkin applied! If you don’t see it, re-log or wait a few seconds.");
-                    } catch (Exception e) {
-                        player.sendMessage("§cApply failed: " + e.getMessage());
-                    }
-                });
-            });
-            nickList.add(player.getName());
-        } else {
-            getPlugin().getSkinService().clear(player);
-            player.sendMessage("§aYour skin has been reset to your original skin.");
-            nickList.remove(player.getName());
-        }
+                    if (!player.isOnline()) return;
 
+                    if (err != null) {
+                        player.sendMessage(getPrefix() + "§cFailed to fetch skin: " + getRootMessage(err));
+                        return;
+                    }
+
+                    try {
+                        getPlugin().getSkinService().apply(player, profileName, tex.value(), tex.signature());
+                        applyDisplayNick(player, displayName);
+                        markNicked(player);
+                        saveNickConfiguration(player);
+                        player.sendMessage(getPrefix() + "§aNickname and skin applied. Re-log if the skin does not refresh immediately.");
+                    } catch (Exception e) {
+                        player.sendMessage(getPrefix() + "§cApply failed: " + e.getMessage());
+                    }
+                }));
+        return true;
+    }
+
+    private void resetNick(Player player) {
+        resetDisplayNick(player);
+        if (getPlugin().getSkinService() != null) {
+            getPlugin().getSkinService().clear(player);
+        }
+        nickList.remove(player.getName());
+        saveNickConfiguration(player);
+        player.sendMessage(getPrefix() + "§aYour nickname and skin have been reset.");
+    }
+
+    private void applyDisplayNick(Player player, String displayName) {
+        player.setDisplayName(displayName);
+        player.setPlayerListName(displayName);
+        player.setCustomName(displayName);
+        player.setCustomNameVisible(true);
+    }
+
+    private void resetDisplayNick(Player player) {
+        player.setDisplayName(player.getName());
+        player.setPlayerListName(player.getName());
+        player.setCustomName(null);
+        player.setCustomNameVisible(false);
+    }
+
+    private void markNicked(Player player) {
+        if (!nickList.contains(player.getName())) {
+            nickList.add(player.getName());
+        }
+    }
+
+    private void saveNickConfiguration(Player player) {
         fileConfiguration.set("nicks", nickList);
         try {
             fileConfiguration.save(file);
         } catch (IOException e) {
             player.sendMessage(getPrefix() + "§cFailed to save nick configuration.");
-            return true;
         }
-
-        return true;
     }
 
-    public boolean isPaperLike() {
-        String serverType = Bukkit.getServer().getClass().getPackage().getName();
-        return serverType.contains("paper") || serverType.contains("purpur") || serverType.contains("folia");
+    private boolean isResetArgument(String argument) {
+        String normalized = argument.toLowerCase(Locale.ROOT);
+        return normalized.equals("reset") || normalized.equals("off") || normalized.equals("clear");
+    }
+
+    private String getRootMessage(Throwable throwable) {
+        Throwable root = throwable;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        return root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage();
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (args.length == 1) {
+            List<String> completions = new ArrayList<>();
+            completions.add("reset");
+            return completions;
+        }
+
+        if (args.length == 2) {
+            List<String> completions = new ArrayList<>();
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                completions.add(onlinePlayer.getName());
+            }
+            return completions;
+        }
+
+        return Collections.emptyList();
     }
 }

@@ -4,18 +4,20 @@
  */
 package ch.framedev.essentialsmini.commands.playercommands;
 
+import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
+import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.InventoryManager;
 import ch.framedev.essentialsmini.managers.ItemBuilder;
 import ch.framedev.essentialsmini.managers.LocationsManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
-import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -24,315 +26,343 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author DHZoc
  */
 public class HomeCMD extends CommandListenerBase {
 
+    private static final String HOME = "home";
+    private static final String SET_HOME = "sethome";
+    private static final String DEL_HOME = "delhome";
+    private static final String DEL_OTHER_HOME = "delotherhome";
+    private static final String HOME_GUI = "homegui";
+    private static final String DEFAULT_HOME = "home";
+    private static final String INVENTORY_TITLE = "§aHomes";
+    private static final String EMPTY_LOCATION = " ";
+
     private final Main plugin;
-    private final String inventoryTitle = "§aHomes";
+    private LocationsManager locationsManager;
+
+    final ArrayList<String> homes = new ArrayList<>();
 
     public HomeCMD(Main plugin) {
         super(plugin);
         this.plugin = plugin;
         if (plugin.isHomeTP()) {
-            setup("home", this);
-            setup("sethome", this);
-            setup("delhome", this);
-            setup("delotherhome", this);
-            setup("homegui", this);
-            plugin.getTabCompleters().put("home", this);
-            plugin.getTabCompleters().put("delhome", this);
+            setup(HOME, this);
+            setup(SET_HOME, this);
+            setup(DEL_HOME, this);
+            setup(DEL_OTHER_HOME, this);
+            setup(HOME_GUI, this);
+            plugin.getTabCompleters().put(HOME, this);
+            plugin.getTabCompleters().put(DEL_HOME, this);
             this.locationsManager = new LocationsManager();
         }
     }
 
-    private LocationsManager locationsManager;
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        String commandName = command.getName().toLowerCase(Locale.ROOT);
 
-    // cached homes list (kept for compatibility with existing calls to homes.clear())
-    final ArrayList<String> homes = new ArrayList<>();
+        if (args.length == 0) {
+            return switch (commandName) {
+                case HOME_GUI -> openHomeGui(sender);
+                case SET_HOME -> setHome(sender, DEFAULT_HOME, true);
+                case HOME -> teleportHome(sender, DEFAULT_HOME, true);
+                case DEL_HOME -> deleteOwnHome(sender, DEFAULT_HOME, true);
+                default -> sendUsage(sender);
+            };
+        }
 
-    // Helper: safely get language string for sender with a default and paragraph/color replacements
-    private String langOrDefault(CommandSender sender, String key, String defaultMsg) {
-        String s = plugin.getLanguageConfig(sender).getString(key);
-        if (s == null) return defaultMsg;
-        // replace & with § when present and apply paragraph replacement
-        if (s.contains("&")) s = s.replace('&', '§');
-        return ReplaceCharConfig.replaceParagraph(s);
+        if (args.length == 1) {
+            String homeName = normalizeHomeName(args[0]);
+            return switch (commandName) {
+                case SET_HOME -> setHome(sender, homeName, false);
+                case HOME -> teleportHome(sender, homeName, false);
+                case DEL_HOME -> deleteOwnHome(sender, homeName, false);
+                default -> sendUsage(sender);
+            };
+        }
+
+        if (args.length == 2 && commandName.equals(DEL_OTHER_HOME)) {
+            return deleteOtherHome(sender, normalizeHomeName(args[0]), args[1]);
+        }
+
+        return sendUsage(sender);
     }
 
-    // Helper: collect homes for a player name
+    private boolean openHomeGui(CommandSender sender) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        InventoryManager inventoryManager = new InventoryManager(INVENTORY_TITLE);
+        inventoryManager.setSize(3);
+        inventoryManager.create();
+
+        List<String> homesList = collectHomes(player.getName());
+        int maxHomes = Math.min(homesList.size(), inventoryManager.getSize());
+        for (int i = 0; i < maxHomes; i++) {
+            String homeName = homesList.get(i);
+            inventoryManager.setItem(i, new ItemBuilder(Material.BLACK_BED)
+                    .setDisplayName("§6" + homeName)
+                    .setLore("§aTeleport to Home §6" + homeName)
+                    .build());
+        }
+
+        inventoryManager.fillNull();
+        player.openInventory(inventoryManager.getInventory());
+        return true;
+    }
+
+    private boolean setHome(CommandSender sender, String homeName, boolean defaultHome) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (!hasPermission(sender, "essentialsmini.sethome")) return true;
+
+        String path = homePath(player.getName(), homeName);
+        if (!defaultHome && homeExists(path)) {
+            send(sender, langOrDefault(sender, "HomeExist", "§cHome already exists."));
+            return true;
+        }
+
+        new LocationsManager(path).setLocation(player.getLocation());
+        reloadLocations();
+
+        String message = defaultHome
+                ? langOrDefault(sender, "HomeSet", "§aHome set!")
+                : formatHomeName(langOrDefault(sender, "HomeSetOther", "§aHome %Name% set."), homeName);
+        send(sender, message);
+        return true;
+    }
+
+    private boolean teleportHome(CommandSender sender, String homeName, boolean defaultHome) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (!hasPermission(sender, plugin.getPermissionBase() + "home")) return true;
+
+        Location location = getHomeLocation(player.getName(), homeName);
+        if (location == null) {
+            sendHomeMissingMessage(player, homeName, defaultHome);
+            return true;
+        }
+
+        player.teleport(location);
+        String message = defaultHome
+                ? langOrDefault(sender, "HomeTeleport", "§aTeleported to home.")
+                : formatHomeName(langOrDefault(sender, "HomeTeleportOther", "§aTeleported to %Name%."), homeName);
+        send(sender, message);
+        return true;
+    }
+
+    private boolean deleteOwnHome(CommandSender sender, String homeName, boolean defaultHome) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (!deleteHome(player.getName(), homeName)) {
+            sendHomeNotExist(sender);
+            return true;
+        }
+
+        String message = defaultHome
+                ? langOrDefault(sender, "HomeDelete", "§aHome deleted.")
+                : formatHomeName(langOrDefault(sender, "HomeDeleteOther", "§aHome %Name% deleted."), homeName);
+        send(sender, message);
+        return true;
+    }
+
+    private boolean deleteOtherHome(CommandSender sender, String homeName, String targetNameArgument) {
+        if (!hasPermission(sender, "essentialsmini.deletehome.others")) return true;
+
+        OfflinePlayer target;
+        try {
+            target = PlayerUtils.getOfflinePlayerByName(targetNameArgument);
+        } catch (IllegalArgumentException ex) {
+            send(sender, "§cPlayer name cannot be empty!");
+            return true;
+        }
+
+        String targetName = target.getName() == null ? targetNameArgument : target.getName();
+        if (!deleteHome(targetName, homeName)) {
+            send(sender, "§cDieses Home wurde noch nicht gesetzt!");
+            send(sender, "§cOder wurde schon entfernt!");
+            return true;
+        }
+
+        send(sender, "§aDen Home von §6" + targetName + " §amit dem Namen §6" + homeName + " §awurde §centfernt!");
+        return true;
+    }
+
+    private boolean deleteHome(String playerName, String homeName) {
+        String path = homePath(playerName, homeName);
+        if (!homeExists(path)) return false;
+
+        LocationsManager manager = new LocationsManager(path);
+        manager.getCfg().set(path, EMPTY_LOCATION);
+        manager.saveCfg();
+        reloadLocations();
+        return true;
+    }
+
+    private Location getHomeLocation(String playerName, String homeName) {
+        String path = homePath(playerName, homeName);
+        if (!homeExists(path)) return null;
+        return new LocationsManager(path).getLocation();
+    }
+
+    private boolean homeExists(String path) {
+        Object value = locations().getCfg().get(path);
+        return value != null && !EMPTY_LOCATION.equals(String.valueOf(value));
+    }
+
     private List<String> collectHomes(String playerName) {
+        if (playerName == null || playerName.isBlank()) {
+            return Collections.emptyList();
+        }
+
         List<String> list = new ArrayList<>();
-        if (locationsManager == null) locationsManager = new LocationsManager();
-        ConfigurationSection cs = locationsManager.getCfg().getConfigurationSection(playerName + ".home");
-        if (cs != null) {
-            for (String s : cs.getKeys(false)) {
-                if (s == null) continue;
-                Object val = locationsManager.getCfg().get(playerName + ".home." + s);
-                if (val != null && !String.valueOf(val).equals(" ")) {
-                    if (!s.equalsIgnoreCase("home")) list.add(s);
+        ConfigurationSection section = locations().getCfg().getConfigurationSection(playerName + ".home");
+        if (section != null) {
+            for (String homeName : section.getKeys(false)) {
+                if (!DEFAULT_HOME.equalsIgnoreCase(homeName) && homeExists(homePath(playerName, homeName))) {
+                    list.add(homeName);
                 }
             }
         }
+
         Collections.sort(list);
-        // update cached homes to keep older code that calls homes.clear()
         homes.clear();
         homes.addAll(list);
         return list;
     }
 
-    @SuppressWarnings("DataFlowIssue")
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length == 0) {
-            if (command.getName().equalsIgnoreCase("homegui")) {
-                if (!(sender instanceof Player pSender)) return true;
-                InventoryManager inventoryManager = new InventoryManager(inventoryTitle);
-                inventoryManager.setSize(3);
-                inventoryManager.create();
+    private void sendHomeMissingMessage(Player player, String homeName, boolean defaultHome) {
+        sendHomeNotExist(player);
+        send(player, langOrDefault(player, "HomeButton", "§aSet a home?"));
 
-                List<String> homesList = collectHomes(pSender.getName());
+        String command = defaultHome ? "/sethome" : "/sethome " + homeName;
+        String hoverText = defaultHome
+                ? langOrDefault(player, "ShowTextHover", "§aSet Home!")
+                : formatHoverHomeName(langOrDefault(player, "ShowTextHoverOther", "§aSet Home!"), homeName);
+        sendSetHomeButton(player, command, hoverText);
+    }
 
-                for (int i = 0; i < homesList.size(); i++) {
-                    inventoryManager.setItem(i, new ItemBuilder(Material.BLACK_BED)
-                            .setDisplayName("§6" + homesList.get(i))
-                            .setLore("§aTeleport to Home §6" + homesList.get(i)).build());
-                }
-                inventoryManager.fillNull();
-                pSender.openInventory(inventoryManager.getInventory());
-            }
+    private void sendSetHomeButton(Player player, String command, String hoverText) {
+        BaseComponent baseComponent = new TextComponent();
+        baseComponent.addExtra("§6[Yes]");
+        baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command));
+        baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)));
+        player.spigot().sendMessage(baseComponent);
+    }
 
-            if (command.getName().equalsIgnoreCase("sethome")) {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                if (!sender.hasPermission("essentialsmini.sethome")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                // default home name 'home'
-                new LocationsManager(player.getName() + ".home.home").setLocation(player.getLocation());
-                String homeSet = langOrDefault(sender, "HomeSet", "§aHome set!");
-                sender.sendMessage(plugin.getPrefix() + homeSet);
-            }
-
-            if (command.getName().equalsIgnoreCase("home")) {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                if (!sender.hasPermission(plugin.getPermissionBase() + "home")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                try {
-                    if (locationsManager.getCfg().contains(player.getName() + ".home.home") && !String.valueOf(locationsManager.getCfg().get(player.getName() + ".home.home")).equals(" ")) {
-                        player.teleport(new LocationsManager(player.getName() + ".home.home").getLocation());
-                        String homeTeleport = langOrDefault(sender, "HomeTeleport", "§aTeleported to home.");
-                        sender.sendMessage(plugin.getPrefix() + homeTeleport);
-                    } else {
-                        String homeExist = langOrDefault(sender, "HomeNotExist", "§cHome does not exist!");
-                        sender.sendMessage(plugin.getPrefix() + homeExist);
-
-                        BaseComponent baseComponent = new TextComponent();
-                        baseComponent.addExtra("§6[Yes]");
-                        baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/sethome"));
-                        baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aSet Home!")));
-                        sender.spigot().sendMessage(baseComponent);
-                    }
-                } catch (IllegalArgumentException x) {
-                    String homeExist = langOrDefault(sender, "HomeNotExist", "§cHome does not exist!");
-                    sender.sendMessage(plugin.getPrefix() + homeExist);
-                    sender.sendMessage(plugin.getPrefix() + langOrDefault(sender, "HomeButton", "§aSet a home?"));
-                    BaseComponent baseComponent = new TextComponent();
-                    baseComponent.addExtra("§6[Yes]");
-                    baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/sethome"));
-                    String showText = langOrDefault(sender, "ShowTextHover", "§aSet Home!");
-                    baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(showText)));
-                    sender.spigot().sendMessage(baseComponent);
-                }
-            }
-
-            if (command.getName().equalsIgnoreCase("delhome")) {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                try {
-                    this.locationsManager = new LocationsManager(player.getName() + ".home.home");
-                    locationsManager.getCfg().set(player.getName() + ".home.home", " ");
-                    locationsManager.saveCfg();
-                    String homeDeleted = langOrDefault(sender, "HomeDelete", "§aHome deleted.");
-                    sender.sendMessage(plugin.getPrefix() + homeDeleted);
-                    homes.clear();
-                } catch (IllegalArgumentException ex) {
-                    String homeExist = langOrDefault(sender, "HomeNotExist", "§cHome does not exist!");
-                    sender.sendMessage(plugin.getPrefix() + homeExist);
-                }
-            }
-
-        } else if (args.length == 1) {
-            if (command.getName().equalsIgnoreCase("sethome")) {
-                if (!(sender instanceof Player p)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                String name = args[0].toLowerCase();
-                if (!sender.hasPermission("essentialsmini.sethome")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                LocationsManager lm = new LocationsManager(sender.getName() + ".home." + name);
-                if (!locationsManager.getCfg().contains(sender.getName() + ".home." + name) || locationsManager.getCfg().getString(sender.getName() + ".home." + name).equalsIgnoreCase(" ")) {
-                    lm.setLocation(p.getLocation());
-                    String homeSet = langOrDefault(sender, "HomeSetOther", "§aHome %Name% set.");
-                    homeSet = ReplaceCharConfig.replaceObjectWithData(homeSet, "%Name%", name);
-                    sender.sendMessage(plugin.getPrefix() + homeSet);
-                    homes.clear();
-                } else {
-                    String exist = langOrDefault(sender, "HomeExist", "§cHome already exists.");
-                    sender.sendMessage(plugin.getPrefix() + exist);
-                }
-                return true;
-            }
-
-            if (command.getName().equalsIgnoreCase("home")) {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                String name = args[0].toLowerCase();
-                try {
-                    if (!sender.hasPermission(plugin.getPermissionBase() + "home")) {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                        return true;
-                    }
-                    player.teleport(new LocationsManager(player.getName() + ".home." + name).getLocation());
-                    String homeTeleport = langOrDefault(sender, "HomeTeleportOther", "§aTeleported to %Name%.");
-                    homeTeleport = ReplaceCharConfig.replaceObjectWithData(homeTeleport, "%Name%", name);
-                    sender.sendMessage(plugin.getPrefix() + homeTeleport);
-                    homes.clear();
-                } catch (IllegalArgumentException ex) {
-                    String homeExist = langOrDefault(sender, "HomeNotExist", "§cHome does not exist!");
-                    sender.sendMessage(plugin.getPrefix() + homeExist);
-                    sender.sendMessage(plugin.getPrefix() + langOrDefault(sender, "HomeButton", "§aSet a home?"));
-                    BaseComponent baseComponent = new TextComponent();
-                    baseComponent.addExtra("§6[Yes]");
-                    baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/sethome " + name));
-                    String showText = langOrDefault(sender, "ShowTextHoverOther", "§aSet Home!");
-                    showText = ReplaceCharConfig.replaceObjectWithData(showText, "%Home%", name);
-                    baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(showText)));
-                    sender.spigot().sendMessage(baseComponent);
-                }
-            }
-
-            if (command.getName().equalsIgnoreCase("delhome")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    return true;
-                }
-                String name = args[0].toLowerCase();
-                try {
-                    this.locationsManager = new LocationsManager(sender.getName() + ".home." + name);
-                    locationsManager.getCfg().set(sender.getName() + ".home." + name, " ");
-                    locationsManager.saveCfg();
-                    String homeDelete = langOrDefault(sender, "HomeDeleteOther", "§aHome %Name% deleted.");
-                    homeDelete = ReplaceCharConfig.replaceObjectWithData(homeDelete, "%Name%", name);
-                    sender.sendMessage(plugin.getPrefix() + homeDelete);
-                    homes.clear();
-                } catch (IllegalArgumentException ex) {
-                    String homeExist = langOrDefault(sender, "HomeNotExist", "§cHome does not exist!");
-                    sender.sendMessage(plugin.getPrefix() + homeExist);
-                }
-            }
-
-        } else if (args.length == 2) {
-            if (command.getName().equalsIgnoreCase("delotherhome")) {
-                if (!sender.hasPermission(new Permission("essentialsmini.deletehome.others", PermissionDefault.OP))) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                OfflinePlayer target = PlayerUtils.getOfflinePlayerByName(args[1]);
-                String name = args[0];
-                try {
-                    String val = locationsManager.getCfg().getString(target.getName() + ".home." + name, " ");
-                    if (!val.equalsIgnoreCase(" ")) {
-                        this.locationsManager = new LocationsManager(target.getName() + ".home." + name);
-                        locationsManager.getCfg().set(target.getName() + ".home." + name, " ");
-                        locationsManager.saveCfg();
-                        sender.sendMessage(plugin.getPrefix() + "§aDen Home von §6" + target.getName() + " §amit dem Namen §6" + name + " §awurde §centfernt!");
-                        homes.clear();
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + "§cDieses Home wurde noch nicht gesetzt!");
-                        sender.sendMessage(plugin.getPrefix() + "§cOder wurde schon entfernt!");
-                    }
-                } catch (IllegalArgumentException ex) {
-                    sender.sendMessage(plugin.getPrefix() + "§cDieses Home wurde noch nicht gesetzt!");
-                    sender.sendMessage(plugin.getPrefix() + "§cOder wurde schon entfernt!");
-                }
-            }
-        } else {
-            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/sethome §coder §6/sethome <Name>"));
-            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/home §coder §6/home <Name>"));
-        }
+    private boolean hasPermission(CommandSender sender, String permission) {
+        if (sender.hasPermission(permission)) return true;
+        send(sender, plugin.getNoPerms(sender instanceof Player player ? player : null));
         return false;
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return player;
+        }
+        send(sender, plugin.getOnlyPlayer(null));
+        return null;
+    }
+
+    private String langOrDefault(CommandSender sender, String key, String defaultMessage) {
+        String message = plugin.getLanguageConfig(sender).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        return ReplaceCharConfig.replaceParagraph(message.replace('&', '§'));
+    }
+
+    private String formatHomeName(String message, String homeName) {
+        return ReplaceCharConfig.replaceObjectWithData(message, "%Name%", homeName);
+    }
+
+    private String formatHoverHomeName(String message, String homeName) {
+        return ReplaceCharConfig.replaceObjectWithData(message, "%Home%", homeName);
+    }
+
+    private void sendHomeNotExist(CommandSender sender) {
+        send(sender, langOrDefault(sender, "HomeNotExist", "§cHome does not exist!"));
+    }
+
+    private boolean sendUsage(CommandSender sender) {
+        send(sender, plugin.getWrongArgs("/sethome §coder §6/sethome <Name>"));
+        send(sender, plugin.getWrongArgs("/home §coder §6/home <Name>"));
+        return true;
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
+    }
+
+    private String homePath(String playerName, String homeName) {
+        return playerName + ".home." + homeName;
+    }
+
+    private String normalizeHomeName(String homeName) {
+        return homeName.toLowerCase(Locale.ROOT);
+    }
+
+    private LocationsManager locations() {
+        if (locationsManager == null) {
+            locationsManager = new LocationsManager();
+        }
+        return locationsManager;
+    }
+
+    private void reloadLocations() {
+        locationsManager = new LocationsManager();
+        homes.clear();
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("home")) {
-            ArrayList<String> homes = new ArrayList<>();
-            if (args.length == 1) {
-                List<String> list = collectHomes(sender.getName());
-                for (String s : list) {
-                    if (s.toLowerCase().startsWith(args[0].toLowerCase())) homes.add(s);
-                }
-                Collections.sort(homes);
-                return homes;
-            }
+        String commandName = command.getName().toLowerCase(Locale.ROOT);
+        if (args.length == 1 && (commandName.equals(HOME) || commandName.equals(DEL_HOME))) {
+            return matchingHomes(sender.getName(), args[0]);
         }
-        if (command.getName().equalsIgnoreCase("delhome")) {
-            if (args.length == 1) {
-                List<String> list = collectHomes(sender.getName());
-                ArrayList<String> homes = new ArrayList<>();
-                for (String s : list) {
-                    if (s.toLowerCase().startsWith(args[0].toLowerCase())) homes.add(s);
-                }
-                Collections.sort(homes);
-                return homes;
-            }
-        }
-        return null;
+        return Collections.emptyList();
+    }
+
+    private List<String> matchingHomes(String playerName, String prefix) {
+        return TabCompleteUtils.matchingStrings(collectHomes(playerName), prefix);
     }
 
     @EventHandler
     public void onClickInventory(InventoryClickEvent event) {
-        if (event.getView().getTitle().equalsIgnoreCase(inventoryTitle)) {
-            Player player = (Player) event.getWhoClicked();
-            List<String> homesList = collectHomes(player.getName());
-            event.setCancelled(true);
-            if (event.getCurrentItem() == null) return;
-            if (!event.getCurrentItem().hasItemMeta()) return;
-            if (event.getCurrentItem().getItemMeta() == null) return;
-            if (!event.getCurrentItem().getItemMeta().hasDisplayName()) return;
-            for (String s : homesList) {
-                if (event.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§6" + s)) {
-                    player.teleport(new LocationsManager(player.getName() + ".home." + s).getLocation());
-                    String homeTeleport = langOrDefault(player, "HomeTeleportOther", "§aTeleported to %Name%.");
-                    homeTeleport = ReplaceCharConfig.replaceObjectWithData(homeTeleport, "%Name%", s);
-                    player.sendMessage(plugin.getPrefix() + homeTeleport);
-                }
-            }
+        if (!event.getView().getTitle().equalsIgnoreCase(INVENTORY_TITLE)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        event.setCancelled(true);
+
+        ItemStack item = event.getCurrentItem();
+        if (item == null || !item.hasItemMeta()) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) return;
+
+        String homeName = meta.getDisplayName().replaceFirst("^§6", "");
+        if (!collectHomes(player.getName()).contains(homeName)) return;
+
+        Location location = getHomeLocation(player.getName(), homeName);
+        if (location == null) {
+            sendHomeNotExist(player);
+            return;
         }
+
+        player.teleport(location);
+        send(player, formatHomeName(langOrDefault(player, "HomeTeleportOther", "§aTeleported to %Name%."), homeName));
     }
 }

@@ -28,14 +28,24 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class BackpackCMD extends CommandListenerBase {
 
+    private static final String INVENTORY_SUFFIX = "'s Inventory";
+    private static final String INVENTORY_PATH = ".Inventory";
+    private static final int DEFAULT_BACKPACK_SIZE = 3 * 9;
+
     static File file;
     static FileConfiguration cfg;
-    public final static HashMap<String, String> itemsStringHashMap = new HashMap<>();
+    public static final Map<String, String> itemsStringHashMap = new HashMap<>();
     private final Main plugin;
+    private final TextUtils textUtils = new TextUtils();
 
     public BackpackCMD(Main plugin) {
         super(plugin);
@@ -45,18 +55,24 @@ public class BackpackCMD extends CommandListenerBase {
             setupTabCompleter("backpack", this);
             setupListener(this);
         }
-        file = new File(Main.getInstance().getDataFolder(), "backpack.yml");
-        cfg = YamlConfiguration.loadConfiguration(file);
+        initializeStorage();
     }
 
+    private static void initializeStorage() {
+        if (file == null) {
+            file = new File(Main.getInstance().getDataFolder(), "backpack.yml");
+        }
+        if (cfg == null) {
+            cfg = YamlConfiguration.loadConfiguration(file);
+        }
+    }
 
     @EventHandler
     public void onCloseGui(InventoryCloseEvent event) {
         // Try to parse owner name from the inventory title in the form "<name>'s Inventory"
         String title = event.getView().getTitle();
-        final String suffix = "'s Inventory";
-        if (title.toLowerCase(Locale.ROOT).endsWith(suffix.toLowerCase(Locale.ROOT))) {
-            String ownerName = title.substring(0, title.length() - suffix.length());
+        if (title.toLowerCase(Locale.ROOT).endsWith(INVENTORY_SUFFIX.toLowerCase(Locale.ROOT))) {
+            String ownerName = title.substring(0, title.length() - INVENTORY_SUFFIX.length());
             if (!ownerName.isEmpty()) {
                 OfflinePlayer offlinePlayer = PlayerUtils.getOfflinePlayerByName(ownerName);
                 // store the serialized inventory contents keyed by UUID string
@@ -67,140 +83,79 @@ public class BackpackCMD extends CommandListenerBase {
 
     // Restore BackPack into HashMap
     public static void restore(OfflinePlayer player) {
+        initializeStorage();
         if (player == null) return;
         String key = player.getUniqueId().toString();
-        if (cfg.contains(key + ".Inventory")) {
-            String content = cfg.getString(key + ".Inventory");
+        if (cfg.contains(key + INVENTORY_PATH)) {
+            String content = cfg.getString(key + INVENTORY_PATH);
             if (content != null) itemsStringHashMap.put(key, content);
         }
     }
 
     // Save Backpack
     public static void save(OfflinePlayer player) {
+        initializeStorage();
         if (player == null) return;
         String key = player.getUniqueId().toString();
-        if (!itemsStringHashMap.isEmpty()) {
-            if (itemsStringHashMap.containsKey(key)) {
-                for (Map.Entry<String, String> entry : itemsStringHashMap.entrySet()) {
-                    cfg.set(entry.getKey() + ".Inventory", entry.getValue());
-                }
-                try {
-                    cfg.save(file);
-                } catch (IOException e) {
-                    Main.getInstance().getLogger4J().error(e);
-                }
+        if (!itemsStringHashMap.isEmpty() && itemsStringHashMap.containsKey(key)) {
+            for (Map.Entry<String, String> entry : itemsStringHashMap.entrySet()) {
+                cfg.set(entry.getKey() + INVENTORY_PATH, entry.getValue());
+            }
+            try {
+                cfg.save(file);
+            } catch (IOException e) {
+                Main.getInstance().getLogger4J().error(e);
             }
         }
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof Player player) {
-            if (args.length == 0) {
-                if (plugin.getConfig().getBoolean("Backpack")) {
-                    Inventory inventory = Bukkit.createInventory(null, plugin.getConfig().getInt("BackPackSize", 3 * 9), player.getName() + "'s Inventory");
-                    String key = player.getUniqueId().toString();
-                    String stored = itemsStringHashMap.get(key);
-                    if (stored != null) {
-                        try {
-                            inventory.setContents(InventoryStringDeSerializer.itemStackArrayFromBase64(stored));
-                        } catch (IOException e) {
-                            Main.getInstance().getLogger4J().error(e);
-                        }
-                    }
-                    player.openInventory(inventory);
-                }
-            } else if (args.length == 1) {
-                String arg = args[0];
-                // If arg equals "delete" handle deletion
-                if (arg.equalsIgnoreCase("delete")) {
-                    if (player.hasPermission("essentialsmini.backpack.delete")) {
-                        itemsStringHashMap.clear();
-                        String locale = player.getLocale();
-                        final boolean b = locale.equalsIgnoreCase("en_us") || locale.equalsIgnoreCase("en_au") ||
-                                locale.equalsIgnoreCase("en_gb") || locale.equalsIgnoreCase("en_nz") ||
-                                locale.equalsIgnoreCase("en_za") || locale.equalsIgnoreCase("en_pt");
-                        if (file.exists()) {
-                            if (file.delete()) {
-                                if (b) {
-                                    player.sendMessage(plugin.getPrefix() + "§6Backpacks deleted!");
-                                } else {
-                                    player.sendMessage(plugin.getPrefix() + "§6BackPacks gelöscht!");
-                                }
-                            } else {
-                                if (b) {
-                                    player.sendMessage(plugin.getPrefix() + "§cError while Deleting BackPacks!");
-                                } else {
-                                    player.sendMessage(plugin.getPrefix() + "§cError beim Löschen der Backpacks");
-                                }
-                            }
-                        } else {
-                            if (b) {
-                                player.sendMessage(plugin.getPrefix() + "§cError while Deleting BackPacks!");
-                            } else {
-                                player.sendMessage(plugin.getPrefix() + "§cError beim Löschen der Backpacks");
-                            }
-                        }
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    }
-                    return true;
-                }
-
-                // Otherwise try to open another player's backpack
-                OfflinePlayer targetPlayer = PlayerUtils.getOfflinePlayerByName(arg);
-
-                if (!arg.equalsIgnoreCase(targetPlayer.getName())) {
-                    // name mismatch; treat as not found
-                    String message = plugin.getLanguageConfig(player).getString("NoBackPackFound");
-                    if (message != null) message = new TextUtils().replaceAndWithParagraph(message);
-                    else message = "";
-                    player.sendMessage(plugin.getPrefix() + message);
-                    return true;
-                }
-
-                if (!player.hasPermission("essentialsmini.backpack.see")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-
-                if (plugin.getConfig().getBoolean("Backpack")) {
-                    Inventory inventory = Bukkit.createInventory(null, 3 * 9, targetPlayer.getName() + "'s Inventory");
-                    String key = targetPlayer.getUniqueId().toString();
-                    String stored = itemsStringHashMap.get(key);
-                    if (stored != null) {
-                        try {
-                            inventory.setContents(InventoryStringDeSerializer.itemStackArrayFromBase64(stored));
-                        } catch (IOException e) {
-                            plugin.getLogger4J().error(e);
-                        }
-                        player.openInventory(inventory);
-                    } else {
-                        String message = plugin.getLanguageConfig(player).getString("NoBackPackFound");
-                        if (message != null) {
-                            message = new TextUtils().replaceAndWithParagraph(message);
-                        } else message = "";
-                        player.sendMessage(plugin.getPrefix() + message);
-                    }
-                }
-            }
-        } else {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+            return true;
         }
-        return false;
+
+        if (!isBackpackEnabled()) {
+            return true;
+        }
+
+        if (args.length == 0) {
+            openBackpack(player, player);
+            return true;
+        }
+
+        if (args.length == 1) {
+            String arg = args[0];
+            if (arg.equalsIgnoreCase("delete")) {
+                handleDelete(player);
+                return true;
+            }
+
+            if (!player.hasPermission("essentialsmini.backpack.see")) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                return true;
+            }
+
+            OfflinePlayer targetPlayer = PlayerUtils.getOfflinePlayerByName(arg);
+            String targetName = targetPlayer.getName();
+            if (!arg.equalsIgnoreCase(targetName)) {
+                sendNoBackpackFound(player);
+                return true;
+            }
+
+            openBackpack(player, targetPlayer);
+            return true;
+        }
+
+        sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/backpack [delete|player]"));
+        return true;
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        ArrayList<OfflinePlayer> players = new ArrayList<>(Arrays.asList(Bukkit.getOfflinePlayers()));
-        ArrayList<String> playerNames = new ArrayList<>();
-        for (OfflinePlayer player : players) {
-            if (player != null && player.getName() != null)
-                playerNames.add(player.getName());
-        }
-        ArrayList<String> commands = new ArrayList<>(playerNames);
-        commands.add("delete");
-        ArrayList<String> empty = new ArrayList<>();
+        List<String> commands = getTabCandidates();
+        List<String> empty = new ArrayList<>();
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
             for (String s : commands) {
@@ -211,6 +166,79 @@ public class BackpackCMD extends CommandListenerBase {
             Collections.sort(empty);
             return empty;
         }
-        return null;
+        return Collections.emptyList();
+    }
+
+    private void handleDelete(Player player) {
+        if (!player.hasPermission("essentialsmini.backpack.delete")) {
+            player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+            return;
+        }
+
+        itemsStringHashMap.clear();
+        boolean english = isEnglishLocale(player.getLocale());
+        if (file != null && file.exists() && file.delete()) {
+            player.sendMessage(plugin.getPrefix() + (english ? "§6Backpacks deleted!" : "§6BackPacks gelöscht!"));
+        } else {
+            player.sendMessage(plugin.getPrefix() + (english ? "§cError while Deleting BackPacks!" : "§cError beim Löschen der Backpacks"));
+        }
+        initializeStorage();
+    }
+
+    private void openBackpack(Player viewer, OfflinePlayer owner) {
+        if (owner == null) {
+            sendNoBackpackFound(viewer);
+            return;
+        }
+
+        String ownerName = owner.getName() == null ? "Unknown" : owner.getName();
+        int size = normalizeInventorySize(plugin.getConfig().getInt("BackPackSize", DEFAULT_BACKPACK_SIZE));
+        Inventory inventory = Bukkit.createInventory(null, size, ownerName + INVENTORY_SUFFIX);
+
+        String stored = itemsStringHashMap.get(owner.getUniqueId().toString());
+        if (stored != null) {
+            try {
+                inventory.setContents(InventoryStringDeSerializer.itemStackArrayFromBase64(stored));
+            } catch (IOException e) {
+                plugin.getLogger4J().error(e);
+            }
+        }
+        viewer.openInventory(inventory);
+    }
+
+    private int normalizeInventorySize(int configuredSize) {
+        int minSize = 9;
+        int maxSize = 54;
+        if (configuredSize < minSize) return DEFAULT_BACKPACK_SIZE;
+        if (configuredSize > maxSize) return maxSize;
+        return configuredSize - (configuredSize % 9);
+    }
+
+    private void sendNoBackpackFound(Player player) {
+        String message = plugin.getLanguageConfig(player).getString("NoBackPackFound");
+        message = textUtils.replaceAndWithParagraph(message == null ? "" : message);
+        player.sendMessage(plugin.getPrefix() + message);
+    }
+
+    private boolean isBackpackEnabled() {
+        return plugin.getConfig().getBoolean("Backpack");
+    }
+
+    private boolean isEnglishLocale(String locale) {
+        if (locale == null) return false;
+        String lower = locale.toLowerCase(Locale.ROOT);
+        return lower.equals("en_us") || lower.equals("en_au") || lower.equals("en_gb")
+                || lower.equals("en_nz") || lower.equals("en_za") || lower.equals("en_pt");
+    }
+
+    private List<String> getTabCandidates() {
+        List<String> candidates = new ArrayList<>();
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer != null && offlinePlayer.getName() != null) {
+                candidates.add(offlinePlayer.getName());
+            }
+        }
+        candidates.add("delete");
+        return candidates;
     }
 }

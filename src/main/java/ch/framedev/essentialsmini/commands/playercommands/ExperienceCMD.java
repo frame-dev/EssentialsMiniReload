@@ -2,8 +2,8 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.utils.Variables;
 import ch.framedev.essentialsmini.utils.TextUtils;
+import ch.framedev.essentialsmini.utils.Variables;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * / This Plugin was Created by FrameDev
@@ -22,8 +23,15 @@ import java.util.List;
  * / Project: EssentialsMini
  * / Copyrighted by FrameDev
  */
-
 public class ExperienceCMD extends CommandBase {
+
+    private static final String SUB_SET = "set";
+    private static final String SUB_ADD = "add";
+    private static final String SUB_REMOVE = "remove";
+    private static final String SUB_SEND = "send";
+
+    private static final String MODE_LEVEL = "level";
+    private static final String MODE_XP = "xp";
 
     private final TextUtils textUtils;
 
@@ -35,234 +43,239 @@ public class ExperienceCMD extends CommandBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length == 4) {
-            if (!sender.hasPermission(getPlugin().getPermissionBase() + "xp")) {
-                sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
-                return true;
-            }
-            String sub = args[0].toLowerCase();
-            String amountStr = args[1];
-            String targetName = args[2];
-            String mode = args[3].toLowerCase(); // "level" or "xp"
-
-            switch (sub) {
-                case "set" -> {
-                    Player player = Bukkit.getPlayer(targetName);
-                    if (player == null) {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
-                        return true;
-                    }
-
-                    if (mode.equals("level")) {
-                        int amount;
-                        try {
-                            amount = Integer.parseInt(amountStr);
-                        } catch (NumberFormatException ex) {
-                            sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + amountStr);
-                            return true;
-                        }
-                        player.setLevel(amount);
-                        String levelMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.Level");
-                        if (levelMessage == null) {
-                            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.Level' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        levelMessage = textUtils.replaceAndWithParagraph(levelMessage);
-                        levelMessage = textUtils.replaceObject(levelMessage, "%Level%", String.valueOf(amount));
-                        player.sendMessage(getPlugin().getPrefix() + levelMessage);
-                        return true;
-                    } else if (mode.equals("xp")) {
-                        float amount;
-                        try {
-                            amount = Float.parseFloat(amountStr);
-                        } catch (NumberFormatException ex) {
-                            sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + amountStr);
-                            return true;
-                        }
-                        // The Bukkit API setExp() expects a value between 0.0 and 1.0 representing progress to next level.
-                        // The original code divided by 10; preserve that behavior but clamp to [0,1].
-                        float progress = amount / 10.0f;
-                        if (progress < 0f) progress = 0f;
-                        if (progress > 1f) progress = 1f;
-                        player.setExp(progress);
-                        String xpMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.XP");
-                        if (xpMessage == null) {
-                            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.XP' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        xpMessage = textUtils.replaceAndWithParagraph(xpMessage);
-                        xpMessage = textUtils.replaceObject(xpMessage, "%XP%", String.valueOf(amount));
-                        player.sendMessage(getPlugin().getPrefix() + xpMessage);
-                        return true;
-                    } else {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp set <Amount> <Player> <level|xp>"));
-                        return true;
-                    }
-                }
-                case "add" -> {
-                    int amount;
-                    try {
-                        amount = Integer.parseInt(amountStr);
-                    } catch (NumberFormatException ex) {
-                        sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + amountStr);
-                        return true;
-                    }
-                    Player player = Bukkit.getPlayer(targetName);
-                    if (player == null) {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
-                        return true;
-                    }
-                    if (mode.equals("level")) {
-                        int newLevel = player.getLevel() + amount;
-                        player.setLevel(newLevel);
-                        String levelMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.Level");
-                        if (levelMessage == null) {
-                            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.Level' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        levelMessage = textUtils.replaceAndWithParagraph(levelMessage);
-                        levelMessage = textUtils.replaceObject(levelMessage, "%Level%", String.valueOf(newLevel));
-                        player.sendMessage(getPlugin().getPrefix() + levelMessage);
-                    } else if (mode.equals("xp")) {
-                        player.giveExp(amount);
-                        String xpMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.XP");
-                        if (xpMessage == null) {
-                            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.XP' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        xpMessage = textUtils.replaceAndWithParagraph(xpMessage);
-                        xpMessage = textUtils.replaceObject(xpMessage, "%XP%", String.valueOf(player.getTotalExperience()));
-                        player.sendMessage(getPlugin().getPrefix() + xpMessage);
-                    } else {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp add <Amount> <Player> <level|xp>"));
-                        return true;
-                    }
-                    return true;
-                }
-                case "remove" -> {
-                    int amount;
-                    try {
-                        amount = Integer.parseInt(amountStr);
-                    } catch (NumberFormatException ex) {
-                        sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + amountStr);
-                        return true;
-                    }
-                    Player player = Bukkit.getPlayer(targetName);
-                    if (player == null) {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
-                        return true;
-                    }
-                    if (mode.equals("level")) {
-                        int newLevel = Math.max(0, player.getLevel() - amount);
-                        player.setLevel(newLevel);
-                        String levelMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.Level");
-                        if (levelMessage == null) {
-                            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.Level' not found! Please contact the Admin!");
-                            return true;
-                        }
-                        levelMessage = textUtils.replaceAndWithParagraph(levelMessage);
-                        levelMessage = textUtils.replaceObject(levelMessage, "%Level%", String.valueOf(newLevel));
-                        player.sendMessage(getPlugin().getPrefix() + levelMessage);
-                    } else {
-                        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp remove <Amount> <Player> <level>"));
-                        return true;
-                    }
-                }
-                default -> {
-                    // unknown subcommand -- fall through to showing usage below
-                }
-            }
-        } else if (args.length == 5) {
-            // xp send <Amount> <Player> <xp/level>
-            if (args[0].equalsIgnoreCase("send")) {
-                int amount;
-                try {
-                    amount = Integer.parseInt(args[1]);
-                } catch (NumberFormatException ex) {
-                    sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + args[1]);
-                    return true;
-                }
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
-                    return true;
-                }
-                Player target = Bukkit.getPlayer(args[2]);
-                if (target == null) {
-                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(args[2]));
-                    return true;
-                }
-                String mode = args[3].toLowerCase();
-                if (mode.equals("level")) {
-                    int targetNewLevel = target.getLevel() + amount;
-                    target.setLevel(targetNewLevel);
-                    player.setLevel(Math.max(0, player.getLevel() - amount));
-                    String levelMessage = getPlugin().getLanguageConfig(target).getString(Variables.EXPERIENCE + ".Self.Level");
-                    if (levelMessage == null) {
-                        target.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.Level' not found! Please contact the Admin!");
-                        return true;
-                    }
-                    levelMessage = textUtils.replaceAndWithParagraph(levelMessage);
-                    levelMessage = textUtils.replaceObject(levelMessage, "%Level%", String.valueOf(targetNewLevel));
-                    target.sendMessage(getPlugin().getPrefix() + levelMessage);
-                } else if (mode.equals("xp")) {
-                    int targetNewXp = target.getTotalExperience() + amount;
-                    target.setTotalExperience(targetNewXp);
-                    player.setTotalExperience(Math.max(0, player.getTotalExperience() - amount));
-                    String xpMessage = getPlugin().getLanguageConfig(target).getString(Variables.EXPERIENCE + ".Self.XP");
-                    if (xpMessage == null) {
-                        target.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.XP' not found! Please contact the Admin!");
-                        return true;
-                    }
-                    xpMessage = textUtils.replaceAndWithParagraph(xpMessage);
-                    xpMessage = textUtils.replaceObject(xpMessage, "%XP%", String.valueOf(targetNewXp));
-                    target.sendMessage(getPlugin().getPrefix() + xpMessage);
-                } else {
-                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp send <Amount> <Player> <level|xp>"));
-                    return true;
-                }
-                return true;
-            }
-        } else {
-            sender.sendMessage(getPlugin().getPrefix() + "§cUsage: /xp <set/add/remove/send> <Amount> <Player> <xp/level>");
-            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp set 100 PlayerName level");
-            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp add 50 PlayerName xp");
-            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp remove 20 PlayerName level");
-            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp send 10 PlayerName xp");
-            sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp send 5 PlayerName level");
-            sender.sendMessage(getPlugin().getPrefix() + "§cYou can use 'level' or 'xp' as the last argument.");
+        if (!sender.hasPermission(getPlugin().getPermissionBase() + "xp")) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
             return true;
         }
-        return super.onCommand(sender, command, label, args);
+
+        if (args.length != 4) {
+            sendUsage(sender);
+            return true;
+        }
+
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        String amountStr = args[1];
+        String targetName = args[2];
+        String mode = args[3].toLowerCase(Locale.ROOT);
+
+        return switch (sub) {
+            case SUB_SET -> handleSet(sender, amountStr, targetName, mode);
+            case SUB_ADD -> handleAdd(sender, amountStr, targetName, mode);
+            case SUB_REMOVE -> handleRemove(sender, amountStr, targetName, mode);
+            case SUB_SEND -> handleSend(sender, amountStr, targetName, mode);
+            default -> {
+                sendUsage(sender);
+                yield true;
+            }
+        };
+    }
+
+    private boolean handleSet(CommandSender sender, String amountStr, String targetName, String mode) {
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
+            return true;
+        }
+
+        if (MODE_LEVEL.equals(mode)) {
+            Integer amount = parseInt(amountStr, sender);
+            if (amount == null) {
+                return true;
+            }
+            int level = Math.max(0, amount);
+            target.setLevel(level);
+            sendLevelMessage(target, level);
+            return true;
+        }
+
+        if (MODE_XP.equals(mode)) {
+            Float amount = parseFloat(amountStr, sender);
+            if (amount == null) {
+                return true;
+            }
+            // setExp expects progress to next level in [0,1]. Keep old division behavior and clamp.
+            float progress = Math.max(0.0f, Math.min(1.0f, amount / 10.0f));
+            target.setExp(progress);
+            sendXpMessage(target, String.valueOf(amount));
+            return true;
+        }
+
+        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp set <Amount> <Player> <level|xp>"));
+        return true;
+    }
+
+    private boolean handleAdd(CommandSender sender, String amountStr, String targetName, String mode) {
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
+            return true;
+        }
+
+        Integer amount = parseInt(amountStr, sender);
+        if (amount == null) {
+            return true;
+        }
+
+        if (MODE_LEVEL.equals(mode)) {
+            int newLevel = Math.max(0, target.getLevel() + amount);
+            target.setLevel(newLevel);
+            sendLevelMessage(target, newLevel);
+            return true;
+        }
+
+        if (MODE_XP.equals(mode)) {
+            target.giveExp(amount);
+            sendXpMessage(target, String.valueOf(target.getTotalExperience()));
+            return true;
+        }
+
+        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp add <Amount> <Player> <level|xp>"));
+        return true;
+    }
+
+    private boolean handleRemove(CommandSender sender, String amountStr, String targetName, String mode) {
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
+            return true;
+        }
+
+        Integer amount = parseInt(amountStr, sender);
+        if (amount == null) {
+            return true;
+        }
+
+        if (MODE_LEVEL.equals(mode)) {
+            int newLevel = Math.max(0, target.getLevel() - amount);
+            target.setLevel(newLevel);
+            sendLevelMessage(target, newLevel);
+            return true;
+        }
+
+        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp remove <Amount> <Player> <level>"));
+        return true;
+    }
+
+    private boolean handleSend(CommandSender sender, String amountStr, String targetName, String mode) {
+        if (!(sender instanceof Player source)) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(targetName));
+            return true;
+        }
+
+        Integer amount = parseInt(amountStr, sender);
+        if (amount == null) {
+            return true;
+        }
+
+        if (MODE_LEVEL.equals(mode)) {
+            int transferable = Math.max(0, Math.min(amount, source.getLevel()));
+            source.setLevel(source.getLevel() - transferable);
+            int targetNewLevel = target.getLevel() + transferable;
+            target.setLevel(targetNewLevel);
+            sendLevelMessage(target, targetNewLevel);
+            return true;
+        }
+
+        if (MODE_XP.equals(mode)) {
+            int sourceXp = source.getTotalExperience();
+            int transferable = Math.max(0, Math.min(amount, sourceXp));
+            source.setTotalExperience(sourceXp - transferable);
+            int targetNewXp = target.getTotalExperience() + transferable;
+            target.setTotalExperience(targetNewXp);
+            sendXpMessage(target, String.valueOf(targetNewXp));
+            return true;
+        }
+
+        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/xp send <Amount> <Player> <level|xp>"));
+        return true;
+    }
+
+    private Integer parseInt(String raw, CommandSender sender) {
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + raw);
+            return null;
+        }
+    }
+
+    private Float parseFloat(String raw, CommandSender sender) {
+        try {
+            return Float.parseFloat(raw);
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(getPlugin().getPrefix() + "§cInvalid number: " + raw);
+            return null;
+        }
+    }
+
+    private void sendLevelMessage(Player player, int level) {
+        String levelMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.Level");
+        if (levelMessage == null) {
+            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.Level' not found! Please contact the Admin!");
+            return;
+        }
+        levelMessage = textUtils.replaceAndWithParagraph(levelMessage);
+        levelMessage = textUtils.replaceObject(levelMessage, "%Level%", String.valueOf(level));
+        player.sendMessage(getPlugin().getPrefix() + levelMessage);
+    }
+
+    private void sendXpMessage(Player player, String xp) {
+        String xpMessage = getPlugin().getLanguageConfig(player).getString(Variables.EXPERIENCE + ".Self.XP");
+        if (xpMessage == null) {
+            player.sendMessage(getPlugin().getPrefix() + "§cConfig 'Experience.Self.XP' not found! Please contact the Admin!");
+            return;
+        }
+        xpMessage = textUtils.replaceAndWithParagraph(xpMessage);
+        xpMessage = textUtils.replaceObject(xpMessage, "%XP%", xp);
+        player.sendMessage(getPlugin().getPrefix() + xpMessage);
+    }
+
+    private void sendUsage(CommandSender sender) {
+        sender.sendMessage(getPlugin().getPrefix() + "§cUsage: /xp <set|add|remove|send> <Amount> <Player> <xp|level>");
+        sender.sendMessage(getPlugin().getPrefix() + "§cExample: /xp set 100 PlayerName level");
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        List<String> commands = new ArrayList<>();
-        commands.add("set");
-        commands.add("add");
-        commands.add("remove");
-        commands.add("send");
         if (args.length == 1) {
-            List<String> empty = new ArrayList<>();
-            for (String s : commands) {
-                if (s.toLowerCase().startsWith(args[0].toLowerCase()))
-                    empty.add(s);
-            }
-            Collections.sort(empty);
-            return empty;
-        } else if (args.length == 4) {
-            List<String> argFourCommands = new ArrayList<>();
-            argFourCommands.add("level");
-            if (!args[0].equalsIgnoreCase("remove"))
-                argFourCommands.add("xp");
-            List<String> empty = new ArrayList<>();
-            for (String s : argFourCommands) {
-                if (s.toLowerCase().startsWith(args[3].toLowerCase()))
-                    empty.add(s);
-            }
-            Collections.sort(empty);
-            return empty;
+            return filter(List.of(SUB_SET, SUB_ADD, SUB_REMOVE, SUB_SEND), args[0]);
         }
-        return super.onTabComplete(sender, command, label, args);
+
+        if (args.length == 3) {
+            List<String> names = new ArrayList<>();
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                names.add(online.getName());
+            }
+            return filter(names, args[2]);
+        }
+
+        if (args.length == 4) {
+            List<String> modes = new ArrayList<>();
+            modes.add(MODE_LEVEL);
+            if (!args[0].equalsIgnoreCase(SUB_REMOVE)) {
+                modes.add(MODE_XP);
+            }
+            return filter(modes, args[3]);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private List<String> filter(List<String> values, String startsWith) {
+        String prefix = startsWith.toLowerCase(Locale.ROOT);
+        List<String> out = new ArrayList<>();
+        for (String value : values) {
+            if (value.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                out.add(value);
+            }
+        }
+        Collections.sort(out);
+        return out;
     }
 }

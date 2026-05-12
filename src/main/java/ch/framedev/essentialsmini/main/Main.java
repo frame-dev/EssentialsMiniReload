@@ -33,6 +33,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.URL;
@@ -204,93 +205,42 @@ public class Main extends JavaPlugin {
         return skinService;
     }
 
+    private static final String[] SUPPORTED_LOCALES = {"de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"};
+
     /**
      * Moves example messages from the resources to the messages-examples directory.
      * The method checks if the destination file already exists before copying.
      */
     public void moveExampleMessages() {
-        String[] locales = {"de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"};
-
         File destinationDir = new File(getDataFolder(), "messages-examples");
         if (!destinationDir.exists() && !destinationDir.mkdirs()) {
             getLogger4J().error("Failed to create destination directory: " + destinationDir.getPath());
             return;
         }
 
-        // Copy each locale example file
-        for (String locale : locales) {
-            File sourceFile = getFromResourceFile("locale-examples/" + "messages_" + locale + "-examples.yml", Main.class);
-
+        for (String locale : SUPPORTED_LOCALES) {
+            String resourcePath = "locale-examples/messages_" + locale + "-examples.yml";
             File destinationFile = new File(destinationDir, "messages_" + locale + "-examples.yml");
             if (destinationFile.exists()) continue;
 
-            // Copy the file
-            try (InputStream in = new FileInputStream(sourceFile);
-                 OutputStream out = new FileOutputStream(destinationFile)) {
-
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, length);
+            try (InputStream in = getResource(resourcePath)) {
+                if (in == null) {
+                    getLogger4J().error("Missing bundled resource: " + resourcePath);
+                    continue;
                 }
 
-                getLogger4J().info("Successfully copied: " + sourceFile.getName());
+                try (OutputStream out = new FileOutputStream(destinationFile)) {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, length);
+                    }
+                }
+
+                getLogger4J().info("Successfully copied: " + destinationFile.getName());
             } catch (IOException e) {
-                getLogger4J().error("Failed to copy example messages file: " + sourceFile.getName(), e);
+                getLogger4J().error("Failed to copy example messages file: " + resourcePath, e);
             }
-        }
-    }
-
-    /**
-     * @param in InputStream
-     * @return the File from the InputStream
-     */
-    protected File streamToFile(InputStream in) {
-        if (in == null) {
-            return null;
-        }
-        FileOutputStream out = null;
-        try {
-            // Create a Temp File
-            File f = File.createTempFile(String.valueOf(in.hashCode()), ".tmp");
-            f.deleteOnExit();
-
-            out = new FileOutputStream(f);
-            byte[] buffer = new byte[1024];
-
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
-            // Return the Temp File
-            return f;
-        } catch (IOException e) {
-            logger.log(Level.ERROR, "Error while creating Temp File", e);
-            return null;
-        } finally {
-            if (out != null) try {
-                out.close();
-            } catch (IOException e) {
-                logger.log(Level.ERROR, "Error while closing FileOutputStream", e);
-            }
-        }
-    }
-
-    /**
-     * Retrieves a file from the resources folder and converts it to a File object.
-     *
-     * @param file   The name of the file in the resources' folder.
-     * @param class_ The class whose classloader will be used to load the resource.
-     * @return The File object representing the resource file.
-     * @throws IllegalArgumentException if the file is not found in the resources.
-     * @see #streamToFile(InputStream) for converting InputStream to File.
-     */
-    public File getFromResourceFile(String file, Class<?> class_) {
-        InputStream resource = class_.getClassLoader().getResourceAsStream(file);
-        if (resource == null) {
-            throw new IllegalArgumentException("File not found!");
-        } else {
-            return streamToFile(resource);
         }
     }
 
@@ -299,37 +249,32 @@ public class Main extends JavaPlugin {
      * The method checks for multiple language configurations and copies them if they do not exist.
      */
     public void checkAndMoveMessagesConfigs() {
-        List<String> exampleConfigFiles = Arrays.asList(
-                "plugins/EssentialsMini/messages-examples/messages_de-DE-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_en-EN-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_fr-FR-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_it-IT-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_pt-PT-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_es-ES-examples.yml",
-                "plugins/EssentialsMini/messages-examples/messages_ru-RU-examples.yml"
-        );
-        List<String> configFiles = Arrays.asList(
-                "plugins/EssentialsMini/messages_de-DE.yml",
-                "plugins/EssentialsMini/messages_en-EN.yml",
-                "plugins/EssentialsMini/messages_fr-FR.yml",
-                "plugins/EssentialsMini/messages_it-IT.yml",
-                "plugins/EssentialsMini/messages_pt-PT.yml",
-                "plugins/EssentialsMini/messages_es-ES.yml",
-                "plugins/EssentialsMini/messages_ru-RU.yml"
-        );
+        File dataFolder = getDataFolder();
+        File exampleFolder = new File(dataFolder, "messages-examples");
+        boolean copiedAny = false;
 
-        boolean configsExist = configFiles.stream().allMatch(path -> new File(path).exists());
-
-        if (!configsExist) {
-            getLogger4J().info("No configuration files found. Downloading default configuration...");
-            for (int i = 0; i < configFiles.size(); i++) {
-                try {
-                    Files.copy(new File(exampleConfigFiles.get(i)).toPath(),
-                            new File(configFiles.get(i)).toPath());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+        for (String locale : SUPPORTED_LOCALES) {
+            File configFile = new File(dataFolder, "messages_" + locale + ".yml");
+            if (configFile.exists()) {
+                continue;
             }
+
+            File exampleFile = new File(exampleFolder, "messages_" + locale + "-examples.yml");
+            if (!exampleFile.exists()) {
+                getLogger4J().warn("Example language file not found: " + exampleFile.getPath());
+                continue;
+            }
+
+            try {
+                Files.copy(exampleFile.toPath(), configFile.toPath());
+                copiedAny = true;
+            } catch (IOException e) {
+                getLogger4J().error("Failed to copy language file: " + configFile.getPath(), e);
+            }
+        }
+
+        if (copiedAny) {
+            getLogger4J().info("Missing language configuration files were created.");
         } else {
             getLogger4J().info("Configuration files already exist. Skipping download.");
         }
@@ -431,17 +376,7 @@ public class Main extends JavaPlugin {
         }
 
         if (player instanceof Player) {
-            Language language = getLanguage(player);
-            switch (language) {
-                case DE -> locale = "de-DE";
-                case FR -> locale = "fr-FR";
-                case IT -> locale = "it-IT";
-                case ES -> locale = "es-ES";
-                case PT -> locale = "pt-PT";
-                case PL -> locale = "pl-PL";
-                case RU -> locale = "ru-RU";
-                default -> locale = "en-EN";
-            }
+            locale = getLanguageCode(player);
         } else {
             getLogger4J().info("CommandSender is not a Player. Using default locale (en-EN).");
         }
@@ -454,6 +389,23 @@ public class Main extends JavaPlugin {
         }
 
         return YamlConfiguration.loadConfiguration(configFile);
+    }
+
+    @NotNull
+    private String getLanguageCode(CommandSender player) {
+        String locale;
+        Language language = getLanguage(player);
+        switch (language) {
+            case DE -> locale = "de-DE";
+            case FR -> locale = "fr-FR";
+            case IT -> locale = "it-IT";
+            case ES -> locale = "es-ES";
+            case PT -> locale = "pt-PT";
+            case PL -> locale = "pl-PL";
+            case RU -> locale = "ru-RU";
+            default -> locale = "en-EN";
+        }
+        return locale;
     }
 
     /**
@@ -473,17 +425,7 @@ public class Main extends JavaPlugin {
             return YamlConfiguration.loadConfiguration(configFile);
         }
 
-        Language language = getLanguage(player);
-        switch (language) {
-            case DE -> locale = "de-DE";
-            case FR -> locale = "fr-FR";
-            case IT -> locale = "it-IT";
-            case ES -> locale = "es-ES";
-            case PT -> locale = "pt-PT";
-            case PL -> locale = "pl-PL";
-            case RU -> locale = "ru-RU";
-            default -> locale = "en-EN";
-        }
+        locale = getLanguageCode(player);
 
         // Load the appropriate file
         configFile = new File(getDataFolder(), "messages_" + locale + ".yml");

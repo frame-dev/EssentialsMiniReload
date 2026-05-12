@@ -18,8 +18,7 @@ public final class SkinService {
 
     private final Plugin plugin;
     private final ProtocolManager pm;
-    // store the skin override (value+signature) for each player uuid
-    private final Map<UUID, WrappedSignedProperty> overrides = new ConcurrentHashMap<>();
+    private final Map<UUID, ProfileOverride> overrides = new ConcurrentHashMap<>();
 
     public SkinService(Plugin plugin) {
         this.plugin = plugin;
@@ -30,17 +29,8 @@ public final class SkinService {
         pm.addPacketListener(new PacketAdapter(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.PLAYER_INFO) {
             @Override public void onPacketSending(PacketEvent event) {
                 PacketContainer p = event.getPacket();
-                EnumWrappers.PlayerInfoAction action;
-                try { action = p.getPlayerInfoAction().read(0); } catch (Throwable t) { return; }
-
-                switch (action) {
-                    case ADD_PLAYER:
-                    case UPDATE_DISPLAY_NAME:
-                    case UPDATE_GAME_MODE:
-                    case UPDATE_LATENCY:
-                        break;
-                    default:
-                        return; // e.g., REMOVE_PLAYER -> may be UUID list; don’t touch
+                if (!containsProfileData(p)) {
+                    return;
                 }
 
                 List<PlayerInfoData> list;
@@ -50,17 +40,31 @@ public final class SkinService {
                 boolean changed = false;
                 for (int i = 0; i < list.size(); i++) {
                     PlayerInfoData d = list.get(i);
-                    WrappedSignedProperty ov = overrides.get(d.getProfile().getUUID());
+                    UUID profileId = getProfileId(d);
+                    if (profileId == null || d.getProfile() == null) continue;
+
+                    ProfileOverride ov = overrides.get(profileId);
                     if (ov == null) continue;
 
                     WrappedGameProfile old = d.getProfile();
-                    WrappedGameProfile repl = new WrappedGameProfile(old.getUUID(), old.getName());
-                    for (WrappedSignedProperty prop : old.getProperties().values())
-                        if (!"textures".equalsIgnoreCase(Objects.requireNonNull(prop).getName()))
+                    WrappedGameProfile repl = new WrappedGameProfile(profileId, ov.profileName());
+                    for (WrappedSignedProperty prop : old.getProperties().values()) {
+                        if (!"textures".equalsIgnoreCase(Objects.requireNonNull(prop).getName())) {
                             repl.getProperties().put(prop.getName(), prop);
-                    repl.getProperties().put("textures", ov);
+                        }
+                    }
+                    if (ov.textures() != null) {
+                        repl.getProperties().put("textures", ov.textures());
+                    }
 
-                    list.set(i, new PlayerInfoData(repl, d.getLatency(), d.getGameMode(), d.getDisplayName()));
+                    list.set(i, createPlayerInfoData(
+                            profileId,
+                            repl,
+                            d.getLatency(),
+                            d.isListed(),
+                            d.getGameMode(),
+                            d.getDisplayName()
+                    ));
                     changed = true;
                 }
                 if (changed) p.getPlayerInfoDataLists().write(0, list);
@@ -69,51 +73,47 @@ public final class SkinService {
     }
 
     public void apply(Player player, String value, String signature) {
-        overrides.put(player.getUniqueId(), new WrappedSignedProperty("textures", value, signature));
-        pushTabRefreshLegacy(player, value, signature);
+        apply(player, player.getName(), value, signature);
+    }
+
+    public void apply(Player player, String profileName, String value, String signature) {
+        WrappedSignedProperty textures = value == null || signature == null
+                ? null
+                : new WrappedSignedProperty("textures", value, signature);
+        overrides.put(player.getUniqueId(), new ProfileOverride(profileName, textures));
+        pushTabRefreshLegacy(player, profileName, textures);
     }
 
     public void clear(Player player) {
         overrides.remove(player.getUniqueId());
-        pushTabRefreshLegacy(player, null, null);
+        pushTabRefreshLegacy(player, player.getName(), null);
     }
 
-    private void pushTabRefreshLegacy(Player target, String maybeValue, String maybeSig) {
+    private void pushTabRefreshLegacy(Player target, String profileName, WrappedSignedProperty textures) {
         try {
             // ----- REMOVE -----
-            PacketContainer remove = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
-            remove.getPlayerInfoAction().write(0, EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
-
-            // On newer mappings REMOVE uses UUID list; older used PlayerInfoData list.
-            if (remove.getUUIDLists().size() > 0) {
-                remove.getUUIDLists().write(0, Collections.singletonList(target.getUniqueId()));
-            } else if (remove.getPlayerInfoDataLists().size() > 0) {
-                remove.getPlayerInfoDataLists().write(0, Collections.singletonList(new PlayerInfoData(
-                        new WrappedGameProfile(target.getUniqueId(), target.getName()),
-                        0,
-                        EnumWrappers.NativeGameMode.fromBukkit(target.getGameMode()),
-                        null
-                )));
-            } // else: nothing to write (very rare), but avoid crashing.
+            PacketContainer remove = createRemovePacket(target);
 
             // ----- ADD (must be PlayerInfoData list) -----
             PacketContainer add = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
-            add.getPlayerInfoAction().write(0, EnumWrappers.PlayerInfoAction.ADD_PLAYER);
+            writeAddActions(add);
 
-            WrappedGameProfile profile = new WrappedGameProfile(target.getUniqueId(), target.getName());
-            if (maybeValue != null && maybeSig != null) {
-                profile.getProperties().put("textures", new WrappedSignedProperty("textures", maybeValue, maybeSig));
+            WrappedGameProfile profile = new WrappedGameProfile(target.getUniqueId(), profileName);
+            if (textures != null) {
+                profile.getProperties().put("textures", textures);
             }
 
             if (add.getPlayerInfoDataLists().size() > 0) {
-                add.getPlayerInfoDataLists().write(0, Collections.singletonList(new PlayerInfoData(
+                add.getPlayerInfoDataLists().write(0, Collections.singletonList(createPlayerInfoData(
+                        target.getUniqueId(),
                         profile,
                         0,
+                        true,
                         EnumWrappers.NativeGameMode.fromBukkit(target.getGameMode()),
-                        null
+                        WrappedChatComponent.fromText(profileName)
                 )));
             } else {
-                // Fallback: extremely old mappings — send nothing rather than crashing
+                // Fallback: extremely old mappings - send nothing rather than crashing.
                 plugin.getLogger().warning("[SkinRefresh] ADD_PLAYER has no PlayerInfoData list on this mapping.");
             }
 
@@ -130,5 +130,103 @@ public final class SkinService {
         } catch (Exception e) {
             plugin.getLogger().warning("[SkinRefresh] " + e.getMessage());
         }
+    }
+
+    private PacketContainer createRemovePacket(Player target) {
+        try {
+            PacketContainer remove = pm.createPacket(PacketType.Play.Server.PLAYER_INFO_REMOVE);
+            if (remove.getUUIDLists().size() > 0) {
+                remove.getUUIDLists().write(0, Collections.singletonList(target.getUniqueId()));
+                return remove;
+            }
+        } catch (Throwable ignored) {
+            // Older ProtocolLib/Minecraft mappings use PLAYER_INFO with REMOVE_PLAYER.
+        }
+
+        PacketContainer remove = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
+        remove.getPlayerInfoAction().write(0, EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
+
+        if (remove.getUUIDLists().size() > 0) {
+            remove.getUUIDLists().write(0, Collections.singletonList(target.getUniqueId()));
+        } else if (remove.getPlayerInfoDataLists().size() > 0) {
+            remove.getPlayerInfoDataLists().write(0, Collections.singletonList(createPlayerInfoData(
+                    target.getUniqueId(),
+                    new WrappedGameProfile(target.getUniqueId(), target.getName()),
+                    0,
+                    true,
+                    EnumWrappers.NativeGameMode.fromBukkit(target.getGameMode()),
+                    null
+            )));
+        }
+        return remove;
+    }
+
+    private boolean containsProfileData(PacketContainer packet) {
+        try {
+            if (packet.getPlayerInfoActions().size() > 0) {
+                Set<EnumWrappers.PlayerInfoAction> actions = packet.getPlayerInfoActions().read(0);
+                return actions == null || actions.contains(EnumWrappers.PlayerInfoAction.ADD_PLAYER)
+                        || actions.contains(EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME)
+                        || actions.contains(EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE)
+                        || actions.contains(EnumWrappers.PlayerInfoAction.UPDATE_LATENCY)
+                        || actions.contains(EnumWrappers.PlayerInfoAction.UPDATE_LISTED);
+            }
+        } catch (Throwable ignored) {
+            // Fall back to the legacy single-action field below.
+        }
+
+        try {
+            EnumWrappers.PlayerInfoAction action = packet.getPlayerInfoAction().read(0);
+            return action == EnumWrappers.PlayerInfoAction.ADD_PLAYER
+                    || action == EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME
+                    || action == EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE
+                    || action == EnumWrappers.PlayerInfoAction.UPDATE_LATENCY;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private void writeAddActions(PacketContainer packet) {
+        try {
+            if (packet.getPlayerInfoActions().size() > 0) {
+                packet.getPlayerInfoActions().write(0, EnumSet.of(
+                        EnumWrappers.PlayerInfoAction.ADD_PLAYER,
+                        EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME,
+                        EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE,
+                        EnumWrappers.PlayerInfoAction.UPDATE_LATENCY,
+                        EnumWrappers.PlayerInfoAction.UPDATE_LISTED
+                ));
+                return;
+            }
+        } catch (Throwable ignored) {
+            // Fall back to legacy single-action packets.
+        }
+
+        packet.getPlayerInfoAction().write(0, EnumWrappers.PlayerInfoAction.ADD_PLAYER);
+    }
+
+    private PlayerInfoData createPlayerInfoData(UUID profileId, WrappedGameProfile profile, int latency,
+                                                boolean listed, EnumWrappers.NativeGameMode gameMode,
+                                                WrappedChatComponent displayName) {
+        try {
+            return new PlayerInfoData(profileId, latency, listed, gameMode, profile, displayName);
+        } catch (Throwable ignored) {
+            return new PlayerInfoData(profile, latency, gameMode, displayName);
+        }
+    }
+
+    private UUID getProfileId(PlayerInfoData data) {
+        try {
+            UUID profileId = data.getProfileId();
+            if (profileId != null) {
+                return profileId;
+            }
+        } catch (Throwable ignored) {
+            // Older ProtocolLib versions only expose the profile UUID.
+        }
+        return data.getProfile() == null ? null : data.getProfile().getUUID();
+    }
+
+    private record ProfileOverride(String profileName, WrappedSignedProperty textures) {
     }
 }

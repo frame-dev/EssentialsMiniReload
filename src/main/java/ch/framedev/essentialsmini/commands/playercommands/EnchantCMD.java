@@ -14,18 +14,28 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TextUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
-import static org.bukkit.Material.AIR;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class EnchantCMD extends CommandBase {
+
+    private static final String PERM_ENCHANT = "enchant";
+    private static final String PERM_ENCHANT_OTHERS = "enchant.others";
+    private static final String ENCHANT_UNBREAKABLE = "unbreakable";
 
     private final Main plugin;
 
@@ -37,110 +47,129 @@ public class EnchantCMD extends CommandBase {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 2) {
-            if (sender instanceof Player player) {
-                if (player.hasPermission(plugin.getPermissionBase() + "enchant")) {
-                    if (player.getInventory().getItemInMainHand().getType() != AIR) {
-                        ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
-                        if(meta == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cThis Item can't be enchanted!");
-                            return true;
-                        }
-                        if (args[0].equalsIgnoreCase("unbreakable")) {
-                            if (args[1].equalsIgnoreCase("true")) {
-                                meta.setUnbreakable(true);
-                            } else if (args[1].equalsIgnoreCase("false")) {
-                                meta.setUnbreakable(false);
-                            }
-                            player.getInventory().getItemInMainHand().setItemMeta(meta);
-                        } else if (Enchantments.getByName(args[0]) != null) {
-                            meta.addEnchant(Enchantments.getByName(args[0]), Integer.parseInt(args[1]), true);
-                            player.getInventory().getItemInMainHand().setItemMeta(meta);
-                        } else {
-                            String message = plugin.getLanguageConfig(player).getString("EnchantNotExist");
-                            if (message != null) {
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            }
-                            sender.sendMessage(plugin.getPrefix() + message);
-                        }
-                    } else {
-                        String noItemInHand = plugin.getLanguageConfig(player).getString("NoItemFoundInHand");
-                        noItemInHand = ReplaceCharConfig.replaceParagraph(noItemInHand);
-                        player.sendMessage(plugin.getPrefix() + noItemInHand);
-                    }
-                } else {
-                    player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                }
-            } else {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                return true;
             }
-        } else if (args.length == 3) {
-            if (sender.hasPermission(plugin.getPermissionBase() + "enchant.others")) {
-                Player target = Bukkit.getPlayer(args[2]);
-                if (target != null) {
-                    if (target.getInventory().getItemInMainHand().getType() != AIR) {
-                        ItemMeta meta = target.getInventory().getItemInMainHand().getItemMeta();
-                        if(meta == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cThis Item can't be enchanted!");
-                            return true;
-                        }
-                        if (args[0].equalsIgnoreCase("unbreakable")) {
-                            if (args[1].equalsIgnoreCase("true")) {
-                                meta.setUnbreakable(true);
-                            } else if (args[1].equalsIgnoreCase("false")) {
-                                meta.setUnbreakable(false);
-                            }
-                            target.getInventory().getItemInMainHand().setItemMeta(meta);
-                        } else if (Enchantments.getByName(args[0]) != null) {
-                            meta.addEnchant(Enchantments.getByName(args[0]), Integer.parseInt(args[1]), true);
-                            target.getInventory().getItemInMainHand().setItemMeta(meta);
-                        } else {
-                            String message = plugin.getLanguageConfig(sender).getString("EnchantNotExist");
-                            if (message != null) {
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            }
-                            sender.sendMessage(plugin.getPrefix() + message);
-                        }
-                    } else {
-                        String message = plugin.getLanguageConfig(sender).getString("NoItemFoundInHand");
-                        if (message != null) {
-                            message = new TextUtils().replaceAndWithParagraph(message);
-                        }
-                        sender.sendMessage(plugin.getPrefix() + message);
-                    }
-                } else {
-                    String message = plugin.getVariables().getPlayerNameNotOnline(args[2]);
-                    sender.sendMessage(plugin.getPrefix() + message);
-                }
-            } else {
+            if (!player.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT)) {
+                player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                return true;
+            }
+            return applyEnchant(sender, player, args[0], args[1]);
+        }
+
+        if (args.length == 3) {
+            if (!sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT_OTHERS)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-            }
-        } else {
-            if (sender.hasPermission(plugin.getPermissionBase() + "enchant")) {
-                sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant <Enchantment Name> <Level>"));
-            }
-            if (sender.hasPermission(plugin.getPermissionBase() + "enchant.others")) {
-                sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant <Enchantment Name> <Level> <Player Name>"));
+                return true;
             }
 
+            Player target = Bukkit.getPlayer(args[2]);
+            if (target == null) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[2]));
+                return true;
+            }
+
+            return applyEnchant(sender, target, args[0], args[1]);
         }
-        return false;
+
+        if (sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT)) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant <Enchantment Name> <Level|true|false>"));
+        }
+        if (sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT_OTHERS)) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant <Enchantment Name> <Level|true|false> <Player Name>"));
+        }
+        return true;
+    }
+
+    private boolean applyEnchant(CommandSender sender, Player target, String enchantName, String value) {
+        ItemStack item = target.getInventory().getItemInMainHand();
+        if (item.getType() == Material.AIR) {
+            String noItemInHand = plugin.getLanguageConfig(target).getString("NoItemFoundInHand");
+            noItemInHand = noItemInHand == null ? "§cNo item found in hand." : ReplaceCharConfig.replaceParagraph(noItemInHand);
+            sender.sendMessage(plugin.getPrefix() + noItemInHand);
+            return true;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            sender.sendMessage(plugin.getPrefix() + "§cThis item can't be enchanted!");
+            return true;
+        }
+
+        if (ENCHANT_UNBREAKABLE.equalsIgnoreCase(enchantName)) {
+            if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant unbreakable <true|false> [Player]"));
+                return true;
+            }
+            meta.setUnbreakable(Boolean.parseBoolean(value));
+            item.setItemMeta(meta);
+            return true;
+        }
+
+        Enchantment enchantment = Enchantments.getByName(enchantName);
+        if (enchantment == null) {
+            String message = plugin.getLanguageConfig(sender).getString("EnchantNotExist");
+            message = message == null ? "§cThis enchantment does not exist." : new TextUtils().replaceAndWithParagraph(message);
+            sender.sendMessage(plugin.getPrefix() + message);
+            return true;
+        }
+
+        int level;
+        try {
+            level = Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/enchant <Enchantment Name> <Level> [Player Name]"));
+            return true;
+        }
+
+        meta.addEnchant(enchantment, level, true);
+        item.setItemMeta(meta);
+        return true;
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
-            if (sender.hasPermission(plugin.getPermissionBase() + "enchant") || sender.hasPermission(plugin.getPermissionBase() + "enchant.others")) {
-                ArrayList<String> empty = new ArrayList<>();
-                for (Map.Entry<String, Enchantment> s : Enchantments.entrySet()) {
-                    if (s.getKey().toLowerCase().startsWith(args[0])) {
-                        empty.add(s.getKey());
+            if (sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT) || sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT_OTHERS)) {
+                ArrayList<String> suggestions = new ArrayList<>();
+                suggestions.add(ENCHANT_UNBREAKABLE);
+                String prefix = args[0].toLowerCase(Locale.ROOT);
+                for (Map.Entry<String, Enchantment> entry : Enchantments.entrySet()) {
+                    if (entry.getKey().toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                        suggestions.add(entry.getKey());
                     }
                 }
-                Collections.sort(empty);
-                return empty;
+                for (String alias : Enchantments.aliases()) {
+                    if (alias.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                        suggestions.add(alias);
+                    }
+                }
+                Collections.sort(suggestions);
+                return suggestions;
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase(ENCHANT_UNBREAKABLE)) {
+            return filter(List.of("true", "false"), args[1]);
+        } else if (args.length == 3 && sender.hasPermission(plugin.getPermissionBase() + PERM_ENCHANT_OTHERS)) {
+            ArrayList<String> players = new ArrayList<>();
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                players.add(online.getName());
+            }
+            return filter(players, args[2]);
+        }
+        return List.of();
+    }
+
+    private List<String> filter(List<String> source, String startsWith) {
+        String lower = startsWith.toLowerCase(Locale.ROOT);
+        List<String> out = new ArrayList<>();
+        for (String value : source) {
+            if (value.toLowerCase(Locale.ROOT).startsWith(lower)) {
+                out.add(value);
             }
         }
-        return null;
+        Collections.sort(out);
+        return out;
     }
 
     public static class Enchantments {
@@ -330,6 +359,10 @@ public class EnchantCMD extends CommandBase {
 
         public static Set<Map.Entry<String, Enchantment>> entrySet() {
             return ENCHANTMENTS.entrySet();
+        }
+
+        public static Set<String> aliases() {
+            return ALIAS_ENCHANTMENTS.keySet();
         }
     }
 }

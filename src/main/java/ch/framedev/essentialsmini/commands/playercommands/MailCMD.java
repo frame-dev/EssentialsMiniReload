@@ -1,7 +1,5 @@
 package ch.framedev.essentialsmini.commands.playercommands;
 
-
-
 /*
  * ch.framedev.essentialsmini.commands.playercommands
  * =============================================
@@ -13,6 +11,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -25,184 +24,218 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
-// TODO: Require Testing
 public class MailCMD extends CommandBase {
 
+    private static final String SEND = "send";
+    private static final String READ = "read";
+    private static final String CLEAR = "clear";
+    private static final List<String> SUB_COMMANDS = Arrays.asList(SEND, READ, CLEAR);
+    private static final String USAGE = "Usage: /mail <send|read|clear> [args]";
+    private static final String SEND_USAGE = "Usage: /mail send <player> <message>";
+    private static final SimpleDateFormat MAIL_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+    private final Main plugin;
     private final File mailFile;
 
     public MailCMD(Main plugin) {
         super(plugin, "mail");
+        this.plugin = plugin;
         this.mailFile = new File(plugin.getDataFolder(), "mail.yml");
-        if (!this.mailFile.getParentFile().exists()) {
-            boolean ok = this.mailFile.getParentFile().mkdirs();
-            if (!ok) plugin.getLogger4J().warn("Could not create data folder for mail.yml");
+        ensureMailFile();
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (!hasPermission(sender, "mail")) return true;
+
+        if (args.length == 0) {
+            send(sender, USAGE);
+            return true;
         }
+
+        return switch (args[0].toLowerCase(Locale.ROOT)) {
+            case SEND -> handleSend(sender, args);
+            case READ -> handleRead(sender, args);
+            case CLEAR -> handleClear(sender, args);
+            default -> {
+                send(sender, "Unknown sub-command. Use /mail <send|read|clear> [args]");
+                yield true;
+            }
+        };
+    }
+
+    private boolean handleSend(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            send(sender, SEND_USAGE);
+            return true;
+        }
+
+        String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+        if (message.isEmpty()) {
+            send(sender, SEND_USAGE);
+            return true;
+        }
+
+        MailTarget target = resolveTarget(args[1]);
+        FileConfiguration config = loadConfig();
+        List<String> messages = new ArrayList<>(config.getStringList(target.storageKey()));
+        messages.add(formatStoredMessage(sender, message));
+        config.set(target.storageKey(), messages);
+
+        if (!saveConfig(config, sender)) return true;
+
+        send(sender, "Mail sent to " + target.displayName() + ": " + message);
+        notifyRecipient(target, senderName(sender));
+        return true;
+    }
+
+    private boolean handleRead(CommandSender sender, String[] args) {
+        String targetName = args.length >= 2 ? args[1] : senderName(sender);
+        if (!canAccessTarget(sender, targetName, "mail.read.others")) return true;
+
+        MailTarget target = resolveTarget(targetName);
+        List<String> messages = getMessages(loadConfig(), target);
+        if (messages.isEmpty()) {
+            send(sender, "No mail found for " + targetName);
+            return true;
+        }
+
+        send(sender, "Mail for " + target.displayName() + ":");
+        for (String message : messages) {
+            sender.sendMessage(" - " + message);
+        }
+        return true;
+    }
+
+    private boolean handleClear(CommandSender sender, String[] args) {
+        String targetName = args.length >= 2 ? args[1] : senderName(sender);
+        if (!canAccessTarget(sender, targetName, "mail.clear.others")) return true;
+
+        MailTarget target = resolveTarget(targetName);
+        FileConfiguration config = loadConfig();
+        if (getMessages(config, target).isEmpty()) {
+            send(sender, "No mail found for " + targetName);
+            return true;
+        }
+
+        config.set(target.storageKey(), new ArrayList<>());
+        config.set(target.legacyKey(), new ArrayList<>());
+
+        if (saveConfig(config, sender)) {
+            send(sender, "Mail cleared for " + target.displayName());
+        }
+        return true;
+    }
+
+    private List<String> getMessages(FileConfiguration config, MailTarget target) {
+        List<String> messages = new ArrayList<>(config.getStringList(target.storageKey()));
+        if (messages.isEmpty() && !target.storageKey().equalsIgnoreCase(target.legacyKey())) {
+            messages.addAll(config.getStringList(target.legacyKey()));
+        }
+        return messages;
+    }
+
+    private boolean canAccessTarget(CommandSender sender, String targetName, String othersPermission) {
+        if (targetName.equalsIgnoreCase(senderName(sender))) return true;
+        return hasPermission(sender, othersPermission);
+    }
+
+    private boolean hasPermission(CommandSender sender, String permissionSuffix) {
+        if (sender.hasPermission(plugin.getPermissionBase() + permissionSuffix)) return true;
+
+        send(sender, plugin.getNoPerms(sender instanceof Player player ? player : null));
+        return false;
+    }
+
+    private MailTarget resolveTarget(String playerName) {
+        String safeName = playerName == null || playerName.isBlank() ? "unknown" : playerName;
+        String legacyKey = safeName.toLowerCase(Locale.ROOT);
+
+        Player online = Bukkit.getPlayerExact(safeName);
+        if (online != null) {
+            return new MailTarget(online.getUniqueId().toString(), legacyKey, online.getName(), online);
+        }
+
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            String offlineName = offlinePlayer.getName();
+            if (offlineName != null && offlineName.equalsIgnoreCase(safeName)) {
+                Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
+                return new MailTarget(offlinePlayer.getUniqueId().toString(), legacyKey, offlineName, onlinePlayer);
+            }
+        }
+
+        return new MailTarget(legacyKey, legacyKey, safeName, Bukkit.getPlayer(safeName));
+    }
+
+    private void notifyRecipient(MailTarget target, String senderName) {
+        Player onlineRecipient = target.onlinePlayer();
+        if (onlineRecipient != null) {
+            send(onlineRecipient, "You have new mail from " + senderName);
+        }
+    }
+
+    private String formatStoredMessage(CommandSender sender, String message) {
+        return String.format("[%s] %s: %s", MAIL_TIME_FORMAT.format(new Date()), senderName(sender), message);
+    }
+
+    private String senderName(CommandSender sender) {
+        String name = sender.getName();
+        return name.isBlank() ? "Console" : name;
+    }
+
+    private FileConfiguration loadConfig() {
+        return YamlConfiguration.loadConfiguration(mailFile);
+    }
+
+    private boolean saveConfig(FileConfiguration config, CommandSender sender) {
         try {
-            if (!this.mailFile.exists()) {
-                boolean created = this.mailFile.createNewFile();
-                if (!created) plugin.getLogger4J().warn("Could not create mail.yml");
+            config.save(mailFile);
+            return true;
+        } catch (IOException e) {
+            send(sender, "Error saving mail: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void ensureMailFile() {
+        File parent = mailFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            plugin.getLogger4J().warn("Could not create data folder for mail.yml");
+        }
+
+        try {
+            if (!mailFile.exists() && !mailFile.createNewFile()) {
+                plugin.getLogger4J().warn("Could not create mail.yml");
             }
         } catch (IOException e) {
             plugin.getLogger4J().error("Failed to ensure mail.yml exists", e);
         }
     }
 
-    private FileConfiguration loadCfg() {
-        return YamlConfiguration.loadConfiguration(mailFile);
-    }
-
-    private void saveCfg(FileConfiguration cfg, CommandSender sender) {
-        try {
-            cfg.save(mailFile);
-        } catch (IOException e) {
-            sender.sendMessage(getPlugin().getPrefix() + "Error saving mail: " + e.getMessage());
-        }
-    }
-
-    // Resolve storage key: prefer online player's UUID, else try offline players (name match), else fallback to lowercase name
-    private String resolveKey(String playerName) {
-        if (playerName == null) return "unknown";
-        Player online = Bukkit.getPlayerExact(playerName);
-        if (online != null) return online.getUniqueId().toString();
-
-        // try offline players (case-insensitive match)
-        for (OfflinePlayer op : Bukkit.getOfflinePlayers()) {
-            if (op.getName() != null && op.getName().equalsIgnoreCase(playerName)) {
-                return op.getUniqueId().toString();
-            }
-        }
-
-        // fallback to legacy lowercase name key
-        return playerName.toLowerCase(Locale.ROOT);
-    }
-
-    private String displayNameForKey(String key) {
-        try {
-            UUID id = UUID.fromString(key);
-            OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-            String n = op.getName();
-            if (n != null) return n;
-        } catch (Exception ignored) {
-        }
-        return key;
-    }
-
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!sender.hasPermission(getPlugin().getPermissionBase() + "mail")) {
-            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
-            return true;
-        }
-        if (args.length == 0) {
-            sender.sendMessage(getPlugin().getPrefix() + "Usage: /mail <send|read|clear> [args]");
-            return true;
-        }
-        String sub = args[0].toLowerCase(Locale.ROOT);
-        switch (sub) {
-            case "send":
-                if (args.length < 3) {
-                    sender.sendMessage(getPlugin().getPrefix() + "Usage: /mail send <player> <message>");
-                    return true;
-                }
-                String recip = args[1];
-                String msg = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-                sendMail(sender, recip, msg);
-                return true;
-            case "read":
-                String readTarget = args.length >= 2 ? args[1] : sender.getName();
-                if (!readTarget.equalsIgnoreCase(sender.getName()) && !sender.hasPermission(getPlugin().getPermissionBase() + "mail.read.others")) {
-                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
-                    return true;
-                }
-                readMail(sender, readTarget);
-                return true;
-            case "clear":
-                String clearTarget = args.length >= 2 ? args[1] : sender.getName();
-                if (!clearTarget.equalsIgnoreCase(sender.getName()) && !sender.hasPermission(getPlugin().getPermissionBase() + "mail.clear.others")) {
-                    sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
-                    return true;
-                }
-                clearMail(sender, clearTarget);
-                return true;
-            default:
-                sender.sendMessage(getPlugin().getPrefix() + "Unknown sub-command. Use /mail <send|read|clear> [args]");
-                return true;
-        }
-    }
-
-    private void sendMail(CommandSender sender, String recipientStr, String message) {
-        FileConfiguration cfg = loadCfg();
-        String key = resolveKey(recipientStr);
-        String time = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date());
-        String stored = String.format("[%s] %s: %s", time, sender.getName(), message);
-
-        List<String> list = cfg.getStringList(key);
-        list.add(stored);
-        cfg.set(key, list);
-        saveCfg(cfg, sender);
-
-        sender.sendMessage(getPlugin().getPrefix() + "Mail sent to " + displayNameForKey(key) + ": " + message);
-
-        // Notify online recipient
-        try {
-            UUID id = UUID.fromString(key);
-            OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-            if (op.isOnline()) {
-                ((Player) op).sendMessage(getPlugin().getPrefix() + "You have new mail from " + sender.getName());
-            }
-        } catch (Exception ignored) {
-            Player online = Bukkit.getPlayer(recipientStr);
-            if (online != null) online.sendMessage(getPlugin().getPrefix() + "You have new mail from " + sender.getName());
-        }
-    }
-
-    private void readMail(CommandSender sender, String recipientStr) {
-        FileConfiguration cfg = loadCfg();
-        String key = resolveKey(recipientStr);
-        List<String> messages = cfg.getStringList(key);
-        if (messages.isEmpty() && !key.equalsIgnoreCase(recipientStr.toLowerCase(Locale.ROOT))) {
-            messages = cfg.getStringList(recipientStr.toLowerCase(Locale.ROOT));
-        }
-        if (messages.isEmpty()) {
-            sender.sendMessage(getPlugin().getPrefix() + "No mail found for " + recipientStr);
-            return;
-        }
-        sender.sendMessage(getPlugin().getPrefix() + "Mail for " + displayNameForKey(key) + ":");
-        for (String m : messages) sender.sendMessage(" - " + m);
-    }
-
-    private void clearMail(CommandSender sender, String recipientStr) {
-        FileConfiguration cfg = loadCfg();
-        String key = resolveKey(recipientStr);
-        if (!cfg.contains(key) && cfg.getStringList(recipientStr.toLowerCase(Locale.ROOT)).isEmpty()) {
-            sender.sendMessage(getPlugin().getPrefix() + "No mail found for " + recipientStr);
-            return;
-        }
-        cfg.set(key, new ArrayList<>());
-        cfg.set(recipientStr.toLowerCase(Locale.ROOT), new ArrayList<>());
-        saveCfg(cfg, sender);
-        sender.sendMessage(getPlugin().getPrefix() + "Mail cleared for " + displayNameForKey(key));
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 1) {
-            List<String> subs = Arrays.asList("send", "read", "clear");
-            List<String> out = new ArrayList<>();
-            String pref = args[0].toLowerCase(Locale.ROOT);
-            for (String s : subs) if (s.startsWith(pref)) out.add(s);
-            Collections.sort(out);
-            return out;
+            return TabCompleteUtils.matchingStrings(SUB_COMMANDS, args[0]);
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("read") || args[0].equalsIgnoreCase("clear"))) {
-            String pref = args[1].toLowerCase(Locale.ROOT);
-            List<String> out = new ArrayList<>();
-            for (Player p : Bukkit.getOnlinePlayers()) if (p.getName().toLowerCase(Locale.ROOT).startsWith(pref)) out.add(p.getName());
-            Collections.sort(out);
-            return out;
+
+        if (args.length == 2 && SUB_COMMANDS.contains(args[0].toLowerCase(Locale.ROOT))) {
+            return TabCompleteUtils.matchingOnlinePlayers(args[1]);
         }
-        return null;
+
+        return Collections.emptyList();
+    }
+
+    private record MailTarget(String storageKey, String legacyKey, String displayName, Player onlinePlayer) {
     }
 }

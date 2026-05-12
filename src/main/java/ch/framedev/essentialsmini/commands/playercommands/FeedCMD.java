@@ -20,8 +20,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class FeedCMD extends CommandBase {
+
+    private static final String PERM_FEED = "feed";
+    private static final String PERM_FEED_OTHERS = "feed.others";
 
     private final Main plugin;
 
@@ -33,84 +37,94 @@ public class FeedCMD extends CommandBase {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player player) {
-                if (sender.hasPermission("essentialsmini.feed")) {
-                    feedPlayerAndNotify(player, sender, false);
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                }
-            } else {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+                return true;
             }
-            return true;
-        } else if (args.length == 1) {
-            if (sender.hasPermission("essentialsmini.feed.others")) {
-                if (args[0].equalsIgnoreCase("**")) {
-                    Bukkit.getOnlinePlayers().forEach(player -> feedPlayerAndNotify(player, sender, true));
-                } else {
-                    Player player = Bukkit.getPlayer(args[0]);
-                    if (player != null) {
-                        feedPlayerAndNotify(player, sender, true);
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                    }
-                }
-            } else {
+            if (!sender.hasPermission(plugin.getPermissionBase() + PERM_FEED)) {
                 sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                return true;
             }
-            return true;
-        } else {
-            sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/feed §cor §6/feed <PlayerName>"));
+            feedPlayerAndNotify(player, sender, false);
             return true;
         }
+
+        if (args.length == 1) {
+            if (!sender.hasPermission(plugin.getPermissionBase() + PERM_FEED_OTHERS)) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("**")) {
+                for (Player online : Bukkit.getOnlinePlayers()) {
+                    feedPlayerAndNotify(online, sender, true);
+                }
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
+                return true;
+            }
+
+            feedPlayerAndNotify(target, sender, true);
+            return true;
+        }
+
+        sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/feed §cor §6/feed <PlayerName>"));
+        return true;
     }
 
-    // Helper to feed a player and notify both the target and the command sender (if requested).
     private void feedPlayerAndNotify(Player target, CommandSender sender, boolean notifySender) {
-        // Refill food level
         target.setFoodLevel(20);
 
-        // Notify target unless sender is silent
         if (!Main.getSilent().contains(sender.getName())) {
-            String feedSet = plugin.getLanguageConfig(target).getString("FeedSet");
+            String feedSet = colorize(plugin.getLanguageConfig(target).getString("FeedSet"));
             if (feedSet == null) {
                 target.sendMessage(plugin.getPrefix() + "§aYour saturation has been filled!");
             } else {
-                if (feedSet.contains("&")) feedSet = feedSet.replace('&', '§');
                 target.sendMessage(plugin.getPrefix() + feedSet);
             }
         }
 
-        // Optionally notify command sender about the action
         if (notifySender) {
-            String feedOther = plugin.getLanguageConfig(sender).getString("FeedOtherSet");
+            String feedOther = colorize(plugin.getLanguageConfig(sender).getString("FeedOtherSet"));
             if (feedOther != null) {
-                if (feedOther.contains("&")) feedOther = feedOther.replace('&', '§');
-                if (feedOther.contains("%Player%")) feedOther = feedOther.replace("%Player%", target.getName());
-                sender.sendMessage(plugin.getPrefix() + feedOther);
+                sender.sendMessage(plugin.getPrefix() + feedOther.replace("%Player%", target.getName()));
             }
         }
     }
 
+    private String colorize(String message) {
+        if (message == null) {
+            return null;
+        }
+        return message.replace('&', '§');
+    }
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length == 1) {
-            if (sender.hasPermission(plugin.getPermissionBase() + "feed.others")) {
-                ArrayList<String> players = new ArrayList<>();
-                ArrayList<String> empty = new ArrayList<>();
-                players.add("**");
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    players.add(player.getName());
-                }
-                for (String s : players) {
-                    if (s.toLowerCase().startsWith(args[0].toLowerCase())) {
-                        empty.add(s);
-                    }
-                }
-                Collections.sort(empty);
-                return empty;
+        if (args.length == 1 && sender.hasPermission(plugin.getPermissionBase() + PERM_FEED_OTHERS)) {
+            List<String> candidates = new ArrayList<>();
+            candidates.add("**");
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                candidates.add(player.getName());
+            }
+            return filterAndSort(candidates, args[0]);
+        }
+        return Collections.emptyList();
+    }
+
+    private List<String> filterAndSort(List<String> values, String prefix) {
+        String lowerPrefix = prefix.toLowerCase(Locale.ROOT);
+        List<String> out = new ArrayList<>();
+        for (String value : values) {
+            if (value.toLowerCase(Locale.ROOT).startsWith(lowerPrefix)) {
+                out.add(value);
             }
         }
-        return super.onTabComplete(sender, command, label, args);
+        Collections.sort(out);
+        return out;
     }
 }
