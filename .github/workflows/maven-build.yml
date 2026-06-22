@@ -24,11 +24,31 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode clean package
 
+      - name: Resolve plugin jar
+        shell: bash
+        run: |
+          mkdir -p build-artifact
+
+          JAR_PATH="$(find target -maxdepth 1 -type f -name '*-shaded.jar' | sort | tail -n 1)"
+          if [ -z "$JAR_PATH" ]; then
+            JAR_PATH="$(find target -maxdepth 1 -type f -name '*.jar' \
+              ! -name 'original-*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              | sort | tail -n 1)"
+          fi
+
+          if [ -z "$JAR_PATH" ]; then
+            echo "No plugin jar found in target/." >&2
+            exit 1
+          fi
+
+          cp "$JAR_PATH" "build-artifact/$(basename "$JAR_PATH")"
+          echo "Resolved plugin jar: $JAR_PATH"
+
       - name: Upload jar artifact
         uses: actions/upload-artifact@v4
         with:
           name: EssentialsMini-jar
-          path: |
-            target/*.jar
-            !target/original-*.jar
+          path: build-artifact/*.jar
           if-no-files-found: error

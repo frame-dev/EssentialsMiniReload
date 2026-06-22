@@ -78,28 +78,50 @@ jobs:
             BRANCH="$DEFAULT_BRANCH"
           fi
 
-          RUN_ID="$(gh run list \
+          RUNS="$(gh run list \
             --workflow maven-build.yml \
             --branch "$BRANCH" \
             --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')"
+            --limit 25 \
+            --json databaseId,headSha,createdAt \
+            --jq '.[] | [.databaseId, .headSha, .createdAt] | @tsv')"
+
+          RUN_ID=""
+          HEAD_SHA=""
+          CREATED_AT=""
+
+          while IFS=$'\t' read -r candidate_run_id candidate_head_sha candidate_created_at; do
+            if [ -z "$candidate_run_id" ]; then
+              continue
+            fi
+
+            ARTIFACT_COUNT="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${candidate_run_id}/artifacts" \
+              --jq '[.artifacts[] | select(.name == "EssentialsMini-jar" and .expired == false)] | length')"
+
+            if [ "$ARTIFACT_COUNT" != "0" ]; then
+              RUN_ID="$candidate_run_id"
+              HEAD_SHA="$candidate_head_sha"
+              CREATED_AT="$candidate_created_at"
+              break
+            fi
+          done <<< "$RUNS"
 
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
-            echo "No successful Maven Build run found on branch '$BRANCH'." >&2
+            echo "No successful Maven Build run with a non-expired EssentialsMini-jar artifact found on branch '$BRANCH'." >&2
             exit 1
           fi
 
-          HEAD_SHA="$(gh run view "$RUN_ID" --json headSha --jq '.headSha')"
-
           echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
           echo "head_sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
+          echo "created_at=${CREATED_AT}" >> "$GITHUB_OUTPUT"
+
+          echo "Selected Maven Build run ${RUN_ID} from ${CREATED_AT} (${HEAD_SHA})."
 
       - name: Download latest jar artifact
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          rm -rf release-artifact
           mkdir -p release-artifact
           gh run download "${{ steps.build-run.outputs.run_id }}" \
             --name EssentialsMini-jar \
@@ -109,13 +131,22 @@ jobs:
         id: jar
         shell: bash
         run: |
-          JAR_PATH="$(find release-artifact -type f -name '*.jar' ! -name 'original-*.jar' | head -n 1)"
+          JAR_PATH="$(find release-artifact -type f -name '*-shaded.jar' | sort | tail -n 1)"
+          if [ -z "$JAR_PATH" ]; then
+            JAR_PATH="$(find release-artifact -type f -name '*.jar' \
+              ! -name 'original-*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              | sort | tail -n 1)"
+          fi
+
           if [ -z "$JAR_PATH" ]; then
             echo "No jar file found in downloaded artifact." >&2
             exit 1
           fi
 
           echo "path=${JAR_PATH}" >> "$GITHUB_OUTPUT"
+          echo "Resolved release jar: ${JAR_PATH}"
 
       - name: Create or update release
         env:
