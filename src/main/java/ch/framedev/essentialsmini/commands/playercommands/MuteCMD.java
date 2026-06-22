@@ -6,6 +6,7 @@ import ch.framedev.essentialsmini.managers.BanMuteManager;
 import ch.framedev.essentialsmini.utils.DateUnit;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -22,7 +23,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -33,11 +41,18 @@ import java.util.concurrent.CompletableFuture;
  * Project: EssentialsMini
  * Copyrighted by FrameDev
  */
-
 public class MuteCMD extends CommandBase implements Listener {
 
-    private final Main plugin;
+    private static final String MUTE = "mute";
+    private static final String TEMP_MUTE = "tempmute";
+    private static final String MUTE_INFO = "muteinfo";
+    private static final String REMOVE_TEMP_MUTE = "removetempmute";
+    private static final String DATE_FORMAT = "dd.MM.yyyy | HH:mm:ss";
+    private static final String TEMP_MUTE_USAGE = "/tempmute <type|own> <Player> <Reason> <Time> <Unit>";
+    private static final String MUTE_USAGE = "/mute <Player>";
+    private static final String REMOVE_TEMP_MUTE_USAGE = "/removetempmute <Player>";
 
+    private final Main plugin;
     private final List<OfflinePlayer> muted;
 
     public static File file;
@@ -45,450 +60,451 @@ public class MuteCMD extends CommandBase implements Listener {
 
     public MuteCMD(Main plugin) {
         super(plugin);
-        setup("mute", this);
-        setup("tempmute", this);
-        setup("muteinfo", this);
-        setup("removetempmute", this);
-        setupTabCompleter("tempmute", this);
+        setup(MUTE, this);
+        setup(TEMP_MUTE, this);
+        setup(MUTE_INFO, this);
+        setup(REMOVE_TEMP_MUTE, this);
+        setupTabCompleter(TEMP_MUTE, this);
         this.plugin = plugin;
         plugin.getListeners().add(this);
-        this.muted = plugin.getVariables().getMutedPlayers();
+        this.muted = plugin.getVariables() == null ? new ArrayList<>() : plugin.getVariables().getMutedPlayers();
         file = new File(plugin.getDataFolder(), "tempMutes.yml");
+        ensureMuteFile();
         cfg = YamlConfiguration.loadConfiguration(file);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("mute")) {
-            if (args.length == 1) {
-                if (!sender.hasPermission(plugin.getPermissionBase() + "mute")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
+        return switch (command.getName().toLowerCase(Locale.ROOT)) {
+            case MUTE -> handleMute(sender, args);
+            case TEMP_MUTE -> handleTempMute(sender, args);
+            case REMOVE_TEMP_MUTE -> handleRemoveTempMute(sender, args);
+            case MUTE_INFO -> handleMuteInfo(sender);
+            default -> false;
+        };
+    }
 
-                OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[0]);
-                if (muted.contains(player)) {
-                    muted.remove(player);
-                    if (player.isOnline()) {
-                        String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
-                        if(selfUnMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
-                            return true;
-                        }
-                        selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
-                        ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
-                    }
-                    String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
-                    if(otherUnMute == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
-                        return true;
-                    }
-                    otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
-                    otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
-                    sender.sendMessage(plugin.getPrefix() + otherUnMute);
-                } else {
-                    muted.add(player);
-                    if (player.isOnline()) {
-                        String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
-                        if(selfMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
-                            return true;
-                        }
-                        selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
-                        ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
-                    }
-                    String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
-                    if(otherMute == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
-                        return true;
-                    }
-                    otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
-                    otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
-                    sender.sendMessage(plugin.getPrefix() + otherMute);
-                }
-                return true;
-            }
+    private boolean handleMute(CommandSender sender, String[] args) {
+        if (!hasPermission(sender, "mute")) return true;
+        if (args.length != 1) {
+            sendWrongArgs(sender, MUTE_USAGE);
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tempmute")) {
-            if (args.length == 5) {
-                if (!sender.hasPermission(plugin.getPermissionBase() + "tempmute")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
-                if (args[0].equalsIgnoreCase("type")) {
-                    MuteReason muteReason = MuteReason.valueOf(args[2].toUpperCase());
-                    DateUnit unit = DateUnit.valueOf(args[4].toUpperCase());
-                    long value = Long.parseLong(args[3]);
-                    long current = System.currentTimeMillis();
-                    long millis = value * unit.getToSec() * 1000;
-                    long newValue = current + millis;
-                    Date date = new Date(newValue);
-                    OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                    if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                        new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
-                        if (player.isOnline()) {
-                            String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
-                            if(selfMute == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
-                                return true;
-                            }
-                            selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
-                            ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
-                        }
-                        String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
-                        if(otherMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
-                            return true;
-                        }
-                        otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
-                        otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + otherMute);
-                    } else {
-                        cfg.set(player.getName() + ".reason", muteReason.getReason());
-                        cfg.set(player.getName() + ".expire", date);
-                        try {
-                            cfg.save(file);
-                        } catch (IOException e) {
-                            plugin.getLogger4J().error(e);
-                        }
-                        if (player.isOnline()) {
-                            String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
-                            if(selfMute == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
-                                return true;
-                            }
-                            selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
-                            ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
-                        }
-                        String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
-                        if(otherMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
-                            return true;
-                        }
-                        otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
-                        otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + otherMute);
-                    }
-                }
 
-                if (args[0].equalsIgnoreCase("own")) {
-                    String muteReason = args[2];
-                    DateUnit unit = DateUnit.valueOf(args[4].toUpperCase());
-                    long value = Long.parseLong(args[3]);
-                    long current = System.currentTimeMillis();
-                    long millis = value * unit.getToSec() * 1000;
-                    long newValue = current + millis;
-                    Date date = new Date(newValue);
-                    OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[1]);
-                    if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                        new BanMuteManager().setTempMute(player, muteReason, new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").format(date));
-                        if (player.isOnline()) {
-                            String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
-                            if(selfMute == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
-                                return true;
-                            }
-                            selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
-                            ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
-                        }
-                        String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
-                        if(otherMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
-                            return true;
-                        }
-                        otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
-                        otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + otherMute);
-                    } else {
-                        cfg.set(player.getName() + ".reason", muteReason);
-                        cfg.set(player.getName() + ".expire", date);
-                        try {
-                            cfg.save(file);
-                        } catch (IOException e) {
-                            plugin.getLogger4J().error(e);
-                        }
-                        if (player.isOnline()) {
-                            String selfMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Activate");
-                            if(selfMute == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Activate' is missing in the language file.");
-                                return true;
-                            }
-                            selfMute = ReplaceCharConfig.replaceParagraph(selfMute);
-                            ((Player) player).sendMessage(plugin.getPrefix() + selfMute);
-                        }
-                        String otherMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Activate");
-                        if(otherMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Activate' is missing in the language file.");
-                            return true;
-                        }
-                        otherMute = ReplaceCharConfig.replaceParagraph(otherMute);
-                        otherMute = ReplaceCharConfig.replaceObjectWithData(otherMute, "%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + otherMute);
-                    }
-                }
+        OfflinePlayer target = resolvePlayer(sender, args[0]);
+        if (target == null) return true;
 
-                return true;
-            }
+        boolean mutedNow;
+        if (isPermanentlyMuted(target)) {
+            muted.removeIf(mutedPlayer -> samePlayer(mutedPlayer, target));
+            mutedNow = false;
+        } else {
+            muted.add(target);
+            mutedNow = true;
         }
-        if (command.getName().equalsIgnoreCase("removetempmute")) {
-            if (args.length == 1) {
-                if (!sender.hasPermission(plugin.getPermissionBase() + "tempmute")) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    return true;
-                }
 
-                OfflinePlayer player = PlayerUtils.getOfflinePlayerByName(args[0]);
-                if (player.getName() == null) {
-                    System.out.println("Player Name is Null; MuteCMD.java:189");
-                    return true;
-                }
-                if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                    new BanMuteManager().removeTempMute(player);
-                    if (player.isOnline()) {
-                        String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
-                        if(selfUnMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
-                            return true;
-                        }
-                        selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
-                        ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
-                    }
-                    String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
-                    if(otherUnMute == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
-                        return true;
-                    }
-                    otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
-                    otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
-                    sender.sendMessage(plugin.getPrefix() + otherUnMute);
-                } else {
-                    if (cfg.contains(player.getName())) {
-                        cfg.set(player.getName(), null);
-                        try {
-                            cfg.save(file);
-                        } catch (IOException e) {
-                            plugin.getLogger4J().error(e);
-                        }
-                        if (player.isOnline()) {
-                            String selfUnMute = plugin.getLanguageConfig((Player) player).getString("Mute.Self.Deactivate");
-                            if(selfUnMute == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Self.Deactivate' is missing in the language file.");
-                                return true;
-                            }
-                            selfUnMute = ReplaceCharConfig.replaceParagraph(selfUnMute);
-                            ((Player) player).sendMessage(plugin.getPrefix() + selfUnMute);
-                        }
-                        String otherUnMute = plugin.getLanguageConfig(sender).getString("Mute.Other.Deactivate");
-                        if(otherUnMute == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cMessage configuration for 'Mute.Other.Deactivate' is missing in the language file.");
-                            return true;
-                        }
-                        otherUnMute = ReplaceCharConfig.replaceParagraph(otherUnMute);
-                        otherUnMute = ReplaceCharConfig.replaceObjectWithData(otherUnMute, "%Player%", player.getName());
-                        sender.sendMessage(plugin.getPrefix() + otherUnMute);
-                    }
-                }
-                return true;
-            }
+        notifyMuteState(sender, target, mutedNow);
+        return true;
+    }
+
+    private boolean handleTempMute(CommandSender sender, String[] args) {
+        if (!hasPermission(sender, "tempmute")) return true;
+        if (args.length != 5) {
+            sendWrongArgs(sender, TEMP_MUTE_USAGE);
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("muteinfo")) {
-            if (!sender.hasPermission(plugin.getPermissionBase() + "muteinfo")) {
-                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                return true;
-            }
 
-            ArrayList<OfflinePlayer> players = new ArrayList<>();
-            if (!getPlugin().isMysql() || !getPlugin().isSQL() || !getPlugin().isMongoDB()) {
-                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                    if(offlinePlayer == null) {
-                        System.out.println("OfflinePlayer is Null; MuteCMD.java:238");
-                        return true;
-                    }
-                    if (offlinePlayer.getName() == null) {
-                        System.out.println("OfflinePlayer Name is Null; MuteCMD.java:240");
-                        return true;
-                    }
-                    if (cfg.contains(offlinePlayer.getName())) {
-                        players.add(offlinePlayer);
-                    }
-                }
+        TempMuteRequest request = parseTempMuteRequest(sender, args);
+        if (request == null) return true;
 
-                players.forEach(player -> {
-                    sender.sendMessage("§6" + player.getName() + " §ais Muted while : §6" + cfg.getString(player.getName() + ".reason"));
-                    sender.sendMessage("§aExpired at §6: " + cfg.getString(player.getName() + ".expire"));
-                });
-            } else {
-                for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                    if (new BanMuteManager().isTempMute(player))
-                        players.add(player);
-                }
-                players.forEach(player -> new BanMuteManager().getTempMute(player).thenAccept(stringStringMap -> {
-                    if(stringStringMap != null) {
-                        sender.sendMessage("§6" + player.getName() + " §ais Muted while : §6" + stringStringMap.get(stringStringMap.keySet().iterator().next()));
-                        try {
-                            sender.sendMessage("§aExpired at §6: " + new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(stringStringMap.values().iterator().next()));
-                        } catch (ParseException e) {
-                            plugin.getLogger4J().error(e);
-                        }
-                    }
-                }));
-            }
+        setTempMute(request.target(), request.reason(), request.expiresAt());
+        notifyMuteState(sender, request.target(), true);
+        return true;
+    }
+
+    private boolean handleRemoveTempMute(CommandSender sender, String[] args) {
+        if (!hasPermission(sender, "tempmute")) return true;
+        if (args.length != 1) {
+            sendWrongArgs(sender, REMOVE_TEMP_MUTE_USAGE);
+            return true;
         }
-        return super.onCommand(sender, command, label, args);
+
+        OfflinePlayer target = resolvePlayer(sender, args[0]);
+        if (target == null) return true;
+
+        removeTempMute(target);
+        notifyMuteState(sender, target, false);
+        return true;
+    }
+
+    private boolean handleMuteInfo(CommandSender sender) {
+        if (!hasPermission(sender, "muteinfo")) return true;
+
+        if (usesDatabaseStorage()) {
+            sendDatabaseMuteInfo(sender);
+        } else {
+            sendFileMuteInfo(sender);
+        }
+        return true;
+    }
+
+    private TempMuteRequest parseTempMuteRequest(CommandSender sender, String[] args) {
+        String mode = args[0].toLowerCase(Locale.ROOT);
+        if (!mode.equals("type") && !mode.equals("own")) {
+            sendWrongArgs(sender, TEMP_MUTE_USAGE);
+            return null;
+        }
+
+        OfflinePlayer target = resolvePlayer(sender, args[1]);
+        if (target == null) return null;
+
+        String reason;
+        if (mode.equals("type")) {
+            MuteReason muteReason = parseMuteReason(sender, args[2]);
+            if (muteReason == null) return null;
+            reason = muteReason.getReason();
+        } else {
+            reason = args[2];
+        }
+
+        Long amount = parsePositiveLong(sender, args[3]);
+        DateUnit unit = parseDateUnit(sender, args[4]);
+        if (amount == null || unit == null) return null;
+
+        long durationMillis;
+        try {
+            durationMillis = Math.multiplyExact(Math.multiplyExact(amount, unit.getToSec()), 1000L);
+        } catch (ArithmeticException ex) {
+            send(sender, "§cMute duration is too large.");
+            return null;
+        }
+
+        return new TempMuteRequest(target, reason, new Date(System.currentTimeMillis() + durationMillis));
+    }
+
+    private void setTempMute(OfflinePlayer target, String reason, Date expiresAt) {
+        if (usesDatabaseStorage()) {
+            new BanMuteManager().setTempMute(target, reason, formatDate(expiresAt));
+            return;
+        }
+
+        String targetName = safePlayerName(target);
+        cfg.set(targetName + ".reason", reason);
+        cfg.set(targetName + ".expire", expiresAt);
+        saveConfig();
+    }
+
+    private void removeTempMute(OfflinePlayer target) {
+        if (usesDatabaseStorage()) {
+            new BanMuteManager().removeTempMute(target);
+            return;
+        }
+
+        cfg.set(safePlayerName(target), null);
+        saveConfig();
     }
 
     public CompletableFuture<Boolean> isExpiredAsync(OfflinePlayer player) {
-        if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-            BanMuteManager banMuteManager = new BanMuteManager();
+        if (player == null) return CompletableFuture.completedFuture(true);
 
-            // Check if the player is temp-muted
-            if (banMuteManager.isTempMute(player)) {
-                return banMuteManager.getTempMute(player).thenApply(stringStringMap -> {
-                    if (stringStringMap != null) {
-                        String tempMute = stringStringMap.get("TempMute");
-                        try {
-                            Date muteDate = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(tempMute);
-                            return muteDate.getTime() < System.currentTimeMillis();
-                        } catch (ParseException e) {
-                            plugin.getLogger4J().error("Error parsing TempMute date for player: " + player.getName(), e);
-                            return true; // Treat as expired if date parsing fails
-                        }
-                    }
-                    return true; // Treat as expired if no TempMute data is found
-                }).exceptionally(t -> {
-                    plugin.getLogger4J().error("Error while checking TempMute expiration for player: " + player.getName(), t);
-                    return true; // Treat as expired in case of an error
-                });
-            } else {
-                return CompletableFuture.completedFuture(true); // Not temp-muted, treat as expired
+        if (usesDatabaseStorage()) {
+            BanMuteManager banMuteManager = new BanMuteManager();
+            if (!banMuteManager.isTempMute(player)) {
+                return CompletableFuture.completedFuture(true);
             }
-        } else {
-            // Handle file-based configuration synchronously
-            if (cfg.contains(player.getName() + ".reason")) {
-                Date expireDate = (Date) cfg.get(player.getName() + ".expire");
-                if (expireDate != null) {
-                    return CompletableFuture.completedFuture(expireDate.getTime() < System.currentTimeMillis());
-                }
-            }
-            return CompletableFuture.completedFuture(true); // Treat as expired if no data is found
+
+            return banMuteManager.getTempMute(player)
+                    .thenApply(data -> parseTempMuteData(data).map(TempMuteData::isExpired).orElse(true))
+                    .exceptionally(t -> {
+                        plugin.getLogger4J().error("Error while checking TempMute expiration for player: " + safePlayerName(player), t);
+                        return true;
+                    });
         }
+
+        return CompletableFuture.completedFuture(getFileTempMuteData(player).map(TempMuteData::isExpired).orElse(true));
     }
 
     public boolean isExpired(OfflinePlayer player) {
         try {
             return isExpiredAsync(player).join();
         } catch (Exception e) {
-            plugin.getLogger4J().error("Error while checking TempMute expiration for player: " + player.getName(), e);
-            return true; // Treat as expired in case of an error
+            plugin.getLogger4J().error("Error while checking TempMute expiration for player: " + safePlayerName(player), e);
+            return true;
         }
     }
 
-
     @EventHandler
     public void onChatWrite(AsyncPlayerChatEvent event) {
-        if (!isExpired(event.getPlayer())) {
-            if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                if (new BanMuteManager().isTempMute(event.getPlayer())) {
-                    final Date[] date = {new Date()};
-                    final String[] reason = {""};
-                    new BanMuteManager().getTempMute(event.getPlayer()).thenAccept(stringStringMap -> {
-                        if(stringStringMap != null) {
-                            reason[0] = stringStringMap.get(stringStringMap.keySet().iterator().next());
-                            try {
-                                date[0] = new SimpleDateFormat("dd.MM.yyyy | HH:mm:ss").parse(stringStringMap.values().iterator().next());
-                            } catch (ParseException e) {
-                                plugin.getLogger4J().error(e);
-                            }
-                            event.getPlayer().sendMessage(plugin.getPrefix() + "§cYou are Muted! While §6" + reason[0] + " | §aExpired at : §6" + date[0].toString());
-                        }
-                    });
-                }
-            } else {
-                Date date = (Date) cfg.get(event.getPlayer().getName() + ".expire");
-                event.getPlayer().sendMessage(plugin.getPrefix() + "§cYou are Muted! While §6" + cfg.getString(event.getPlayer().getName() + ".reason") + " | §aExpired at : §6" + Objects.requireNonNull(date));
-            }
+        if (event == null || event.getPlayer() == null) return;
+
+        Player player = event.getPlayer();
+        if (isPermanentlyMuted(player)) {
+            send(player, "§cYou are Muted!");
             event.setCancelled(true);
-        } else {
-            Player player = event.getPlayer();
-            if (getPlugin().isMysql() || getPlugin().isSQL() || getPlugin().isMongoDB()) {
-                new BanMuteManager().removeTempMute(player);
-            } else {
-                if (cfg.contains(player.getName() + ".reason")) {
-                    cfg.set(player.getName(), null);
-                    try {
-                        cfg.save(file);
-                    } catch (IOException e) {
-                        plugin.getLogger4J().error(e);
-                    }
-                }
+            return;
+        }
+
+        TempMuteData muteData = getActiveTempMuteData(player);
+        if (muteData == null) return;
+
+        if (muteData.isExpired()) {
+            removeTempMute(player);
+            return;
+        }
+
+        send(player, "§cYou are Muted! While §6" + muteData.reason() + " | §aExpired at : §6" + formatDate(muteData.expiresAt()));
+        event.setCancelled(true);
+    }
+
+    private TempMuteData getActiveTempMuteData(OfflinePlayer player) {
+        if (usesDatabaseStorage()) {
+            try {
+                return parseTempMuteData(new BanMuteManager().getTempMute(player).join()).orElse(null);
+            } catch (Exception e) {
+                plugin.getLogger4J().error("Error while loading TempMute for player: " + safePlayerName(player), e);
+                return null;
             }
         }
-        if (muted.contains(event.getPlayer())) {
-            event.getPlayer().sendMessage(plugin.getPrefix() + "§cYou are Muted!");
-            event.setCancelled(true);
+        return getFileTempMuteData(player).orElse(null);
+    }
+
+    private Optional<TempMuteData> getFileTempMuteData(OfflinePlayer player) {
+        String targetName = safePlayerName(player);
+        if (!cfg.contains(targetName + ".reason")) return Optional.empty();
+
+        String reason = cfg.getString(targetName + ".reason", "");
+        Date expiresAt = getDateFromConfig(targetName + ".expire");
+        return expiresAt == null ? Optional.empty() : Optional.of(new TempMuteData(reason, expiresAt));
+    }
+
+    private Optional<TempMuteData> parseTempMuteData(Map<String, String> data) {
+        if (data == null) return Optional.empty();
+
+        String expiresAtRaw = data.get("TempMute");
+        String reason = data.getOrDefault("TempMuteReason", "");
+        if (expiresAtRaw == null || expiresAtRaw.isBlank() || expiresAtRaw.equals(" ")) {
+            return Optional.empty();
+        }
+
+        Date expiresAt = parseDate(expiresAtRaw);
+        return expiresAt == null ? Optional.empty() : Optional.of(new TempMuteData(reason, expiresAt));
+    }
+
+    private void sendFileMuteInfo(CommandSender sender) {
+        for (String targetName : cfg.getKeys(false)) {
+            TempMuteData data = getFileTempMuteData(Bukkit.getOfflinePlayer(targetName)).orElse(null);
+            if (data != null && !data.isExpired()) {
+                sendMuteInfo(sender, targetName, data);
+            }
+        }
+    }
+
+    private void sendDatabaseMuteInfo(CommandSender sender) {
+        BanMuteManager manager = new BanMuteManager();
+        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            if (player == null || !manager.isTempMute(player)) continue;
+
+            manager.getTempMute(player).thenAccept(data ->
+                    parseTempMuteData(data).ifPresent(tempMuteData ->
+                            sendMuteInfo(sender, safePlayerName(player), tempMuteData)
+                    )
+            ).exceptionally(t -> {
+                plugin.getLogger4J().error("Error while loading temp mute info for " + safePlayerName(player), t);
+                return null;
+            });
+        }
+    }
+
+    private void sendMuteInfo(CommandSender sender, String playerName, TempMuteData data) {
+        send(sender, "§6" + playerName + " §ais Muted while : §6" + data.reason());
+        send(sender, "§aExpired at §6: " + formatDate(data.expiresAt()));
+    }
+
+    private void notifyMuteState(CommandSender sender, OfflinePlayer target, boolean mutedNow) {
+        Player onlineTarget = target.getPlayer();
+        if (onlineTarget != null) {
+            sendFormatted(onlineTarget,
+                    mutedNow ? "Mute.Self.Activate" : "Mute.Self.Deactivate",
+                    mutedNow ? "§cYou have been muted!" : "§aYou have been unmuted!",
+                    target);
+        }
+
+        sendFormatted(sender,
+                mutedNow ? "Mute.Other.Activate" : "Mute.Other.Deactivate",
+                mutedNow ? "§6%Player% §chas been muted!" : "§6%Player% §ahas been unmuted!",
+                target);
+    }
+
+    private void sendFormatted(CommandSender sender, String key, String defaultMessage, OfflinePlayer target) {
+        String message = plugin.getLanguageConfig(sender).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        message = ReplaceCharConfig.replaceParagraph(message);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", safePlayerName(target));
+        send(sender, message);
+    }
+
+    private boolean isPermanentlyMuted(OfflinePlayer player) {
+        return muted.stream().anyMatch(mutedPlayer -> samePlayer(mutedPlayer, player));
+    }
+
+    private boolean samePlayer(OfflinePlayer first, OfflinePlayer second) {
+        return first != null && second != null && first.getUniqueId().equals(second.getUniqueId());
+    }
+
+    private boolean usesDatabaseStorage() {
+        return plugin.isMysql() || plugin.isSQL() || plugin.isMongoDB();
+    }
+
+    private OfflinePlayer resolvePlayer(CommandSender sender, String playerName) {
+        try {
+            return PlayerUtils.getOfflinePlayerByName(playerName);
+        } catch (IllegalArgumentException ex) {
+            send(sender, "§cPlayer name cannot be empty!");
+            return null;
+        }
+    }
+
+    private MuteReason parseMuteReason(CommandSender sender, String value) {
+        try {
+            return MuteReason.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            send(sender, "§cUnknown mute reason: §6" + value);
+            return null;
+        }
+    }
+
+    private DateUnit parseDateUnit(CommandSender sender, String value) {
+        try {
+            return DateUnit.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            send(sender, "§cUnknown time unit: §6" + value);
+            return null;
+        }
+    }
+
+    private Long parsePositiveLong(CommandSender sender, String value) {
+        try {
+            long parsed = Long.parseLong(value);
+            if (parsed <= 0) {
+                send(sender, "§cTime must be greater than 0.");
+                return null;
+            }
+            return parsed;
+        } catch (NumberFormatException ex) {
+            send(sender, "§cInvalid time: §6" + value);
+            return null;
+        }
+    }
+
+    private Date getDateFromConfig(String path) {
+        Object value = cfg.get(path);
+        if (value instanceof Date date) return date;
+        if (value instanceof String string) return parseDate(string);
+        return null;
+    }
+
+    private Date parseDate(String value) {
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(value);
+        } catch (ParseException e) {
+            plugin.getLogger4J().error("Failed to parse temp mute date: " + value, e);
+            return null;
+        }
+    }
+
+    private String formatDate(Date date) {
+        return new SimpleDateFormat(DATE_FORMAT).format(date);
+    }
+
+    private String safePlayerName(OfflinePlayer player) {
+        if (player == null) return "unknown";
+        String name = player.getName();
+        return name == null || name.isBlank() ? player.getUniqueId().toString() : name;
+    }
+
+    private boolean hasPermission(CommandSender sender, String permissionSuffix) {
+        if (sender.hasPermission(plugin.getPermissionBase() + permissionSuffix)) return true;
+        send(sender, plugin.getNoPerms(sender instanceof Player player ? player : null));
+        return false;
+    }
+
+    private void sendWrongArgs(CommandSender sender, String usage) {
+        send(sender, plugin.getWrongArgs(sender instanceof Player player ? player : null, usage));
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
+    }
+
+    private void ensureMuteFile() {
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            plugin.getLogger4J().warn("Could not create data folder for tempMutes.yml");
+        }
+        try {
+            if (!file.exists() && !file.createNewFile()) {
+                plugin.getLogger4J().warn("Could not create tempMutes.yml");
+            }
+        } catch (IOException e) {
+            plugin.getLogger4J().error("Failed to create tempMutes.yml", e);
+        }
+    }
+
+    private void saveConfig() {
+        try {
+            cfg.save(file);
+        } catch (IOException e) {
+            plugin.getLogger4J().error(e);
         }
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (!command.getName().equalsIgnoreCase(TEMP_MUTE)) {
+            return Collections.emptyList();
+        }
+
         if (args.length == 1) {
-            ArrayList<String> reason = new ArrayList<>();
-            reason.add("own");
-            reason.add("type");
-            ArrayList<String> empty = new ArrayList<>();
-            for (String s : reason) {
-                if (s.toLowerCase().startsWith(args[0].toLowerCase()))
-                    empty.add(s);
-            }
-            Collections.sort(empty);
-            return empty;
+            return TabCompleteUtils.matchingStrings(List.of("own", "type"), args[0]);
         }
 
         if (args.length == 2) {
-            ArrayList<String> reason = new ArrayList<>();
+            List<String> playerNames = new ArrayList<>();
             for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                reason.add(offlinePlayer.getName());
+                if (offlinePlayer != null && offlinePlayer.getName() != null) {
+                    playerNames.add(offlinePlayer.getName());
+                }
             }
-            ArrayList<String> empty = new ArrayList<>();
-            for (String s : reason) {
-                if (s.toLowerCase().startsWith(args[1].toLowerCase()))
-                    empty.add(s);
-            }
-            Collections.sort(empty);
-            return empty;
+            return TabCompleteUtils.matchingStrings(playerNames, args[1]);
         }
+
         if (args.length == 3) {
             if (args[0].equalsIgnoreCase("type")) {
-                ArrayList<String> reason = new ArrayList<>();
-                Arrays.asList(MuteReason.values()).forEach(reasons -> reason.add(reasons.name()));
-                ArrayList<String> empty = new ArrayList<>();
-                for (String s : reason) {
-                    if (s.toLowerCase().startsWith(args[2].toLowerCase()))
-                        empty.add(s);
-                }
-                Collections.sort(empty);
-                return empty;
+                return TabCompleteUtils.matchingStrings(Arrays.stream(MuteReason.values()).map(Enum::name).toList(), args[2]);
             }
             if (args[0].equalsIgnoreCase("own")) {
-                return new ArrayList<>(Collections.singleton("your_Message"));
+                return TabCompleteUtils.matchingStrings(List.of("your_Message"), args[2]);
             }
         }
+
         if (args.length == 4) {
-            return new ArrayList<>(Collections.singletonList("Time"));
+            return TabCompleteUtils.matchingStrings(List.of("Time"), args[3]);
         }
+
         if (args.length == 5) {
-            ArrayList<String> dateFormat = new ArrayList<>();
-            Arrays.asList(DateUnit.values()).forEach(dateUnit -> dateFormat.add(dateUnit.name()));
-            ArrayList<String> empty = new ArrayList<>();
-            for (String s : dateFormat) {
-                if (s.toLowerCase().startsWith(args[4].toLowerCase())) {
-                    empty.add(s);
-                }
-            }
-            Collections.sort(empty);
-            return empty;
+            return TabCompleteUtils.matchingStrings(Arrays.stream(DateUnit.values()).map(Enum::name).toList(), args[4]);
         }
-        return super.onTabComplete(sender, command, label, args);
+
+        return Collections.emptyList();
+    }
+
+    private record TempMuteRequest(OfflinePlayer target, String reason, Date expiresAt) {
+    }
+
+    private record TempMuteData(String reason, Date expiresAt) {
+        private boolean isExpired() {
+            return expiresAt.getTime() < System.currentTimeMillis();
+        }
     }
 
     public enum MuteReason {
@@ -511,7 +527,7 @@ public class MuteCMD extends CommandBase implements Listener {
 
         @SuppressWarnings("unused")
         public static MuteReason getMuteReason(String reason) {
-            return valueOf(reason.toUpperCase());
+            return valueOf(reason.toUpperCase(Locale.ROOT));
         }
 
         public String getReason() {

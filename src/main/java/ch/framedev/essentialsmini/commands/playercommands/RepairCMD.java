@@ -1,6 +1,5 @@
 package ch.framedev.essentialsmini.commands.playercommands;
 
-
 /*
  * ===================================================
  * This File was Created by FrameDev
@@ -12,153 +11,161 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
-import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import static org.bukkit.Material.AIR;
+import java.util.List;
 
 public class RepairCMD extends CommandBase {
+
+    private static final String COMMAND_NAME = "repair";
+    private static final String USAGE = "/repair §cor §6/repair <PlayerName>";
+    private static final String PERMISSION_SELF = "repair";
+    private static final String PERMISSION_OTHERS = "repair.others";
 
     private final Main plugin;
 
     public RepairCMD(Main plugin) {
-        super(plugin, "repair");
+        super(plugin, COMMAND_NAME);
         this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("repair")) {
-            if (args.length == 0) {
-                if (sender instanceof Player player) {
-                    if (player.hasPermission(new Permission("essentialsmini.repair", PermissionDefault.OP))) {
-                        if (player.getInventory().getItemInMainHand().getType() != AIR) {
-                            ItemStack item = player.getInventory().getItemInMainHand();
-                            if (item.hasItemMeta()) {
-                                if (item.getItemMeta() instanceof Damageable damageable) {
-                                    if (damageable.hasDamage()) {
-                                        damageable.setDamage(0);
-                                        item.setItemMeta(damageable);
-                                        String repair = plugin.getLanguageConfig(player).getString("Repair.Success");
-                                        if (repair == null) {
-                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Success' is not set!");
-                                            return true;
-                                        }
-                                        repair = ReplaceCharConfig.replaceParagraph(repair);
-                                        repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
-                                        player.sendMessage(plugin.getPrefix() + repair);
-                                    } else {
-                                        String repair = plugin.getLanguageConfig(player).getString("Repair.Failed");
-                                        if(repair == null) {
-                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Failed' is not set!");
-                                            return true;
-                                        }
-                                        repair = ReplaceCharConfig.replaceParagraph(repair);
-                                        repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
-                                        player.sendMessage(plugin.getPrefix() + repair);
-                                    }
-                                }
-                            }
-                        } else {
-                            String repair = plugin.getLanguageConfig(player).getString("Repair.AirRepair");
-                            if(repair == null) {
-                                player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.AirRepair' is not set!");
-                                return true;
-                            }
-                            repair = ReplaceCharConfig.replaceParagraph(repair);
-                            sender.sendMessage(plugin.getPrefix() + repair);
-                        }
-                    } else {
-                        player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                    }
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                }
-            } else if (args.length == 1) {
-                Player player = Bukkit.getPlayer(args[0]);
-                if (player == null) {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                    return true;
-                }
-                if (sender.hasPermission(new Permission("essentialsmini.repair.others", PermissionDefault.OP))) {
-                    if (player.getInventory().getItemInMainHand().getType() != AIR) {
-                        ItemStack item = player.getInventory().getItemInMainHand();
-                        if (item.hasItemMeta()) {
-                            if (item.getItemMeta() instanceof Damageable damageable) {
-                                if (damageable.hasDamage()) {
-                                    damageable.setDamage(0);
-                                    item.setItemMeta(damageable);
-                                    if (!Main.getSilent().contains(sender.getName())) {
-                                        String repair = plugin.getLanguageConfig(player).getString("Repair.Success");
-                                        if (repair == null) {
-                                            player.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Success' is not set!");
-                                            return true;
-                                        }
-                                        repair = ReplaceCharConfig.replaceParagraph(repair);
-                                        repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
-                                        player.sendMessage(plugin.getPrefix() + repair);
-                                    }
-                                    String repairOther = plugin.getLanguageConfig(player).getString("Repair.OtherSuccess");
-                                    if (repairOther == null) {
-                                        sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.OtherSuccess' is not set!");
-                                        return true;
-                                    }
-                                    repairOther = ReplaceCharConfig.replaceParagraph(repairOther);
-                                    repairOther = ReplaceCharConfig.replaceObjectWithData(repairOther, "%Item%", item.getType().name());
-                                    repairOther = ReplaceCharConfig.replaceObjectWithData(repairOther, "%Player%", player.getName());
-                                    sender.sendMessage(plugin.getPrefix() + repairOther);
-                                } else {
-                                    String repair = plugin.getLanguageConfig(player).getString("Repair.OtherFailed");
-                                    if (repair == null) {
-                                        sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.OtherFailed' is not set!");
-                                        return true;
-                                    }
-                                    repair = ReplaceCharConfig.replaceParagraph(repair);
-                                    repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Item%", item.getType().name());
-                                    repair = ReplaceCharConfig.replaceObjectWithData(repair, "%Player%", player.getName());
-                                    sender.sendMessage(plugin.getPrefix() + repair);
-                                }
-                            } else {
-                                String notAble = plugin.getLanguageConfig(player).getString("Repair.Irreparable");
-                                if (notAble == null) {
-                                    sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Irreparable' is not set!");
-                                    return true;
-                                }
-                                notAble = ReplaceCharConfig.replaceParagraph(notAble);
-                                notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Item%", item.getType().name());
-                                notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Player%", player.getName());
-                                sender.sendMessage(plugin.getPrefix() + notAble);
-                            }
-                        } else {
-                            String notAble = plugin.getLanguageConfig(player).getString("Repair.Irreparable");
-                            if (notAble == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cMessage config 'Repair.Irreparable' is not set!");
-                                return true;
-                            }
-                            notAble = ReplaceCharConfig.replaceParagraph(notAble);
-                            notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Item%", item.getType().name());
-                            notAble = ReplaceCharConfig.replaceObjectWithData(notAble, "%Player%", player.getName());
-                            sender.sendMessage(plugin.getPrefix() + notAble);
-                        }
-                    } else {
-                        String repair = plugin.getLanguageConfig(player).getString("Repair.AirRepair");
-                        repair = ReplaceCharConfig.replaceParagraph(repair);
-                        sender.sendMessage(plugin.getPrefix() + repair);
-                    }
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/repair §cor §6/repair <PlayerName>"));
-            }
+        if (!command.getName().equalsIgnoreCase(COMMAND_NAME)) return false;
+
+        if (args.length == 0) {
+            return repairSelf(sender);
         }
+
+        if (args.length == 1) {
+            return repairOther(sender, args[0]);
+        }
+
+        sendWrongArgs(sender);
+        return true;
+    }
+
+    private boolean repairSelf(CommandSender sender) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (!hasPermission(player, PERMISSION_SELF)) return true;
+
+        RepairResult result = repairHeldItem(player);
+        sendRepairMessage(player, player, result, false);
+        return true;
+    }
+
+    private boolean repairOther(CommandSender sender, String targetName) {
+        if (!hasPermission(sender, PERMISSION_OTHERS)) return true;
+
+        Player target = plugin.getServer().getPlayer(targetName);
+        if (target == null) {
+            sendPlayerNotOnline(sender, targetName);
+            return true;
+        }
+
+        RepairResult result = repairHeldItem(target);
+        if (result == RepairResult.REPAIRED && shouldNotifyTarget(sender)) {
+            sendRepairMessage(target, target, result, false);
+        }
+        sendRepairMessage(sender, target, result, true);
+        return true;
+    }
+
+    private RepairResult repairHeldItem(Player player) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.getType() == Material.AIR) {
+            return RepairResult.AIR;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (!(meta instanceof Damageable damageable)) {
+            return RepairResult.IRREPARABLE;
+        }
+
+        if (!damageable.hasDamage()) {
+            return RepairResult.NOT_DAMAGED;
+        }
+
+        damageable.setDamage(0);
+        item.setItemMeta(damageable);
+        return RepairResult.REPAIRED;
+    }
+
+    private void sendRepairMessage(CommandSender receiver, Player target, RepairResult result, boolean otherMessage) {
+        ItemStack item = target.getInventory().getItemInMainHand();
+        MessageSpec spec = messageSpec(result, otherMessage);
+        String message = plugin.getLanguageConfig(receiver).getString(spec.key(), spec.defaultMessage());
+        if (message == null) message = spec.defaultMessage();
+
+        message = ReplaceCharConfig.replaceParagraph(message);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Item%", item.getType().name());
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", target.getName());
+        send(receiver, message);
+    }
+
+    private MessageSpec messageSpec(RepairResult result, boolean otherMessage) {
+        return switch (result) {
+            case REPAIRED -> otherMessage
+                    ? new MessageSpec("Repair.OtherSuccess", "§aThe item §6: %Item% §afrom §6: %Player% §ahas been repaired!")
+                    : new MessageSpec("Repair.Success", "§aThe item §6: %Item% §ahas been repaired!");
+            case NOT_DAMAGED -> otherMessage
+                    ? new MessageSpec("Repair.OtherFailed", "§cThe item §6: %Item% §cfrom §6: %Player% §cdoesn't have to be repaired!")
+                    : new MessageSpec("Repair.Failed", "§cThe item §6: %Item% §cdoesn't need to be repaired!");
+            case IRREPARABLE -> new MessageSpec("Repair.Irreparable", "§cThe Item §6: %Item% §cfrom §6: %Player% §ccan't be repaired");
+            case AIR -> new MessageSpec("Repair.AirRepair", "§cAir can't be repaired!");
+        };
+    }
+
+    private boolean shouldNotifyTarget(CommandSender sender) {
+        List<String> silent = Main.getSilent();
+        return silent == null || !silent.contains(sender.getName());
+    }
+
+    private boolean hasPermission(CommandSender sender, String permissionSuffix) {
+        if (sender.hasPermission(plugin.getPermissionBase() + permissionSuffix)) return true;
+
+        send(sender, plugin.getNoPerms(sender instanceof Player player ? player : null));
         return false;
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) return player;
+
+        send(sender, plugin.getOnlyPlayer(null));
+        return null;
+    }
+
+    private void sendPlayerNotOnline(CommandSender sender, String playerName) {
+        String message = plugin.getVariables() == null
+                ? "§cPlayer §6" + playerName + " §cis not online!"
+                : plugin.getVariables().getPlayerNameNotOnline(playerName);
+        send(sender, message);
+    }
+
+    private void sendWrongArgs(CommandSender sender) {
+        send(sender, plugin.getWrongArgs(sender instanceof Player player ? player : null, USAGE));
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
+    }
+
+    private enum RepairResult {
+        REPAIRED,
+        NOT_DAMAGED,
+        IRREPARABLE,
+        AIR
+    }
+
+    private record MessageSpec(String key, String defaultMessage) {
     }
 }

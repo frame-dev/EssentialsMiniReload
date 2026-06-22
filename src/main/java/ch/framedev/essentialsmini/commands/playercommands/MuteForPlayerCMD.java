@@ -13,6 +13,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -22,70 +23,112 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class MuteForPlayerCMD extends CommandListenerBase {
 
-    private final Map<String, Set<Player>> mutedPlayers = new HashMap<>();
+    private static final String COMMAND_NAME = "muteforplayer";
+    private static final String USAGE = "/muteforplayer <mode> <player>";
+
+    private final Map<UUID, Set<UUID>> mutedPlayers = new HashMap<>();
 
     public MuteForPlayerCMD(Main plugin) {
-        super(plugin, "muteforplayer");
+        super(plugin, COMMAND_NAME);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if(!(sender instanceof Player player)) {
-            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getOnlyPlayer());
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (args.length != 2) {
+            sendWrongArgs(player);
             return true;
         }
-        if(args.length != 2) {
-            player.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getWrongArgs(getCmdNames()[0]));
-            return true;
-        }
+
         Player targetPlayer = Bukkit.getPlayer(args[1]);
-        if(targetPlayer == null) {
-            player.sendMessage(getPrefix() + getPlugin().getVariables().getPlayerNameNotOnline(args[1]));
+        if (targetPlayer == null) {
+            sendPlayerNotOnline(player, args[1]);
             return true;
         }
-        mutedPlayers.putIfAbsent(player.getName(), new HashSet<>());
-        Set<Player> mutedSet = mutedPlayers.get(player.getName());
-        if(!mutedSet.contains(targetPlayer)) {
-            mutedSet.add(targetPlayer);
-            player.sendMessage(getPrefix() + "§aPlayer §6" + targetPlayer.getName() + " §ahas been muted for you!");
-        } else {
-            mutedSet.remove(targetPlayer);
-            player.sendMessage(getPrefix() + "§aPlayer §6" + targetPlayer.getName() + " §ahas been unmuted for you!");
+
+        if (player.getUniqueId().equals(targetPlayer.getUniqueId())) {
+            send(player, "§cYou cannot mute yourself for yourself.");
+            return true;
         }
+
+        boolean muted = toggleMutedPlayer(player, targetPlayer);
+        send(player, "§aPlayer §6" + targetPlayer.getName() + (muted
+                ? " §ahas been muted for you!"
+                : " §ahas been unmuted for you!"));
+        return true;
+    }
+
+    private boolean toggleMutedPlayer(Player receiver, Player mutedPlayer) {
+        Set<UUID> mutedSet = mutedPlayers.computeIfAbsent(receiver.getUniqueId(), ignored -> new HashSet<>());
+        if (mutedSet.remove(mutedPlayer.getUniqueId())) {
+            if (mutedSet.isEmpty()) {
+                mutedPlayers.remove(receiver.getUniqueId());
+            }
+            return false;
+        }
+        mutedSet.add(mutedPlayer.getUniqueId());
         return true;
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        // Ensure the command matches and the sender is a player
-        if (!command.getName().equalsIgnoreCase("muteforplayer") || !(sender instanceof Player)) {
+        if (!command.getName().equalsIgnoreCase(COMMAND_NAME) || !(sender instanceof Player)) {
             return Collections.emptyList();
         }
 
-        // Tab complete for the second argument (player names)
         if (args.length == 2) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName) // Get all player names
-                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase())) // Filter by prefix
-                    .toList(); // Collect into a list
+            return TabCompleteUtils.matchingOnlinePlayers(args[1]);
         }
 
-        // Default behavior
         return Collections.emptyList();
     }
 
-    @EventHandler (priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player sender = event.getPlayer(); // The player sending the message
+        if (event == null) return;
 
-        // Iterate through all recipients of the message
-        event.getRecipients().removeIf(recipient -> {
-            Set<Player> mutedForRecipient = mutedPlayers.get(recipient.getName());
-            return mutedForRecipient != null && mutedForRecipient.contains(sender);
-        });
+        UUID senderId = event.getPlayer().getUniqueId();
+        event.getRecipients().removeIf(recipient -> isMutedFor(recipient, senderId));
+    }
+
+    private boolean isMutedFor(Player recipient, UUID senderId) {
+        if (recipient == null || senderId == null) return false;
+
+        Set<UUID> mutedForRecipient = mutedPlayers.get(recipient.getUniqueId());
+        return mutedForRecipient != null && mutedForRecipient.contains(senderId);
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) return player;
+
+        send(sender, getPlugin().getOnlyPlayer(null));
+        return null;
+    }
+
+    private void sendWrongArgs(CommandSender sender) {
+        send(sender, getPlugin().getWrongArgs(sender instanceof Player player ? player : null, USAGE));
+    }
+
+    private void sendPlayerNotOnline(CommandSender sender, String playerName) {
+        String message = getPlugin().getVariables() == null
+                ? "§cPlayer §6" + playerName + " §cis not online!"
+                : getPlugin().getVariables().getPlayerNameNotOnline(playerName);
+        send(sender, message);
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(getPrefix() + message);
     }
 }

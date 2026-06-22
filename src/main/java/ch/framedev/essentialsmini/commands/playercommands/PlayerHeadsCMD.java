@@ -11,10 +11,9 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.utils.SkullBuilder;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -24,6 +23,9 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
 public class PlayerHeadsCMD extends CommandBase {
+
+    private static final String USAGE = "/playerheads <SpielerName> [TargetPlayer]";
+    private static final String NO_HEAD_IN_HAND = "§cKein Player Head in der Hand gefunden!";
 
     private final Main plugin;
 
@@ -37,54 +39,107 @@ public class PlayerHeadsCMD extends CommandBase {
         ItemStack skull = new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) SkullType.PLAYER.ordinal());
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
         if (meta != null) {
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
+            meta.setOwningPlayer(resolveOfflinePlayer(name));
             meta.setDisplayName("§a" + name);
+            skull.setItemMeta(meta);
         }
-        skull.setItemMeta(meta);
         return skull;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof Player) {
-            if (sender.hasPermission(plugin.getPermissionBase() + "playerhead")) {
-                if (args.length == 1) {
-                    if (((Player) sender).getInventory().getItemInMainHand().getType() == Material.PLAYER_HEAD) {
-                        ItemStack skull = ((Player) sender).getInventory().getItemInMainHand();
-                        SkullMeta meta = (SkullMeta) skull.getItemMeta();
-                        if(meta == null) {
-                            sender.sendMessage(plugin.getPrefix() + "§cKein Player Head in der Hand gefunden!");
-                            return true;
-                        }
-                        meta.setOwningPlayer(PlayerUtils.getOfflinePlayerByName(args[0]));
-                        meta.setDisplayName("§a" + args[0]);
-                        skull.setItemMeta(meta);
-                        sender.sendMessage(plugin.getPrefix() + "§aDu hast den Player Head von §6" + args[0] + " §abekommen!");
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + "§cKein Player Head in der Hand gefunden!");
-                    }
-                } else if (args.length == 2) {
-                    Player player = Bukkit.getPlayer(args[1]);
-                    if (player != null) {
-                        player.getInventory().addItem(new SkullBuilder(args[0]).setDisplayName(args[0]).create());
-                        Player target = Bukkit.getPlayer(args[1]);
-                        if (target == null) {
-                            sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
-                            return true;
-                        }
-                        sender.sendMessage(plugin.getPrefix() + "§6" + target.getName() + " §ahat den Player Head von §6" + args[0] + " §abekommen!");
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[1]));
-                    }
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/playerheads <SpielerName>"));
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-            }
-        } else {
-            sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+
+        if (!hasPermission(player)) return true;
+
+        if (args.length == 1) {
+            updateHeldHead(player, args[0]);
+            return true;
         }
+
+        if (args.length == 2) {
+            giveHeadToTarget(player, args[0], args[1]);
+            return true;
+        }
+
+        sendWrongArgs(player);
+        return true;
+    }
+
+    private void updateHeldHead(Player player, String ownerName) {
+        ItemStack skull = player.getInventory().getItemInMainHand();
+        if (skull.getType() != Material.PLAYER_HEAD || !(skull.getItemMeta() instanceof SkullMeta meta)) {
+            send(player, NO_HEAD_IN_HAND);
+            return;
+        }
+
+        meta.setOwningPlayer(resolveOfflinePlayer(ownerName));
+        meta.setDisplayName("§a" + ownerName);
+        skull.setItemMeta(meta);
+        sendReceivedMessage(player, player.getName(), ownerName);
+    }
+
+    private void giveHeadToTarget(CommandSender sender, String ownerName, String targetName) {
+        Player target = plugin.getServer().getPlayer(targetName);
+        if (target == null) {
+            sendPlayerNotOnline(sender, targetName);
+            return;
+        }
+
+        target.getInventory().addItem(createPlayerHead(ownerName));
+        sendReceivedMessage(sender, target.getName(), ownerName);
+    }
+
+    private ItemStack createPlayerHead(String ownerName) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        if (meta != null) {
+            meta.setOwningPlayer(resolveOfflinePlayer(ownerName));
+            meta.setDisplayName(ownerName);
+            skull.setItemMeta(meta);
+        }
+        return skull;
+    }
+
+    private OfflinePlayer resolveOfflinePlayer(String playerName) {
+        try {
+            return PlayerUtils.getOfflinePlayerByName(playerName);
+        } catch (IllegalArgumentException ex) {
+            return plugin.getServer().getOfflinePlayer(playerName == null ? "unknown" : playerName);
+        }
+    }
+
+    private boolean hasPermission(Player player) {
+        if (player.hasPermission(plugin.getPermissionBase() + "playerhead")) return true;
+
+        send(player, plugin.getNoPerms(player));
         return false;
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) return player;
+
+        send(sender, plugin.getOnlyPlayer(null));
+        return null;
+    }
+
+    private void sendReceivedMessage(CommandSender sender, String targetName, String ownerName) {
+        send(sender, "§6" + targetName + " §ahat den Player Head von §6" + ownerName + " §abekommen!");
+    }
+
+    private void sendPlayerNotOnline(CommandSender sender, String playerName) {
+        String message = plugin.getVariables() == null
+                ? "§cPlayer §6" + playerName + " §cis not online!"
+                : plugin.getVariables().getPlayerNameNotOnline(playerName);
+        send(sender, message);
+    }
+
+    private void sendWrongArgs(CommandSender sender) {
+        send(sender, plugin.getWrongArgs(sender instanceof Player player ? player : null, USAGE));
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
     }
 }

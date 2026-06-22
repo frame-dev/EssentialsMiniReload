@@ -1,142 +1,170 @@
-[![Java CI with Maven](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven.yml)
-[![Release on Push](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release.yml)
-
 # EssentialsMiniReload
 
-A powerful, modular Essentials plugin for Minecraft 1.20+ servers. EssentialsMiniReload provides all the critical features you need — homes, warps, economy, kits, chat moderation, and more — without the bloat.
+[![Maven Build](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven-build.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven-build.yml)
+[![Release Latest Jar](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release-latest-jar.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release-latest-jar.yml)
 
----
+EssentialsMiniReload is a modular essentials plugin for modern Minecraft servers. It bundles everyday server tools such as homes, warps, spawn, economy, kits, moderation, private messages, mail, nicknames, backpacks, player utilities, and world controls without needing a large plugin stack.
 
-# ***Require Paper or Purpur Server***
+## Requirements
 
----
+- Minecraft server with Bukkit/Spigot-compatible API `1.20+`
+- Java `17`
+- Maven `3.8+` for local builds
+- Paper or Purpur is recommended for production servers
 
-## 🚀 Features
+Optional integrations:
 
-- ✨ Over 100 modular, toggleable commands
-- 🗃️ Local **file**, **SQLite**, **MySQL**, and **MongoDB** support
-- ⚡ Fully asynchronous storage operations
-- 💰 Vault-based economy (balance, pay, bank, etc.)
-- 🔨 Moderation: mute, tempmute, ban, tempban, globalmute
-- 🏠 Homes, warps, spawn, back, home GUI
-- 🎒 Kits system with creation & selection
-- 🎯 Inventory tools: invsee, backpack, trash, saveinventory
-- 🛡️ Utility commands: fly, gamemode, god, heal, feed, repair, enchant
-- 🌦️ Weather/time control: day, night, sun, rain, thunder, player-specific time/weather
-- 👀 Player info: online, offline, afk, nicknames, timeplayed
-- ✅ Clean permission system and YAML config
+| Plugin | Purpose |
+| --- | --- |
+| Vault | Economy support |
+| LuckPerms | Permission management |
+| ProtocolLib | Extended packet-based features such as skin refreshes |
 
----
+## Installation
 
-## 🗃️ Storage Backends
+1. Download the latest jar from GitHub Releases or build it locally.
+2. Put the jar into your server `plugins` folder.
+3. Start the server once so the config files are generated.
+4. Configure `plugins/EssentialsMini/config.yml`.
+5. Restart the server.
 
-Set your preferred storage type in `config.yml`:
+## Build From Source
 
-- `file` *(default)* — lightweight local storage
-- `sqlite` — flat-file SQL backend
-- `mysql` — remote SQL database
-- `mongodb` - MongoDB support
+```bash
+mvn clean package
+```
 
----
+The plugin jar is written to `target/`. The shaded plugin jar is the normal `EssentialsMini-*.jar`; ignore `original-*.jar`.
 
-## 💬 Commands Overview
+## GitHub Actions
 
-> EssentialsMiniReload registers 100+ commands. Here's a categorized overview.
+- `Maven Build` runs on every push and pull request, builds the Maven project, and uploads the jar as an artifact.
+- `Release Latest Jar` can be started manually from the Actions tab. It downloads the latest successful `Maven Build` jar and publishes it to a GitHub Release.
 
-### 🔀 Teleportation
+For manual releases, you can provide a tag, release name, branch, draft flag, and prerelease flag. If no tag is provided, the workflow uses the Maven project version.
+
+## Storage
+
+EssentialsMiniReload supports multiple storage modes depending on the feature and configuration:
+
+- YAML files for lightweight local data
+- SQLite
+- MySQL
+- MongoDB
+
+Economy features require Vault and an economy provider.
+
+## Command Overview
+
+### Teleportation
+
+- `/spawn`, `/setspawn`
 - `/home`, `/sethome`, `/delhome`, `/homegui`
 - `/warp`, `/setwarp`, `/delwarp`, `/warps`
-- `/back`, `/spawn`, `/setspawn`
+- `/back`, `/top`
 - `/tpa`, `/tpahere`, `/tpaaccept`, `/tpadeny`, `/tphereall`
-- `/position`, `/showlocation`
-- `/top`
 
-### 🛡️ Moderation
-- `/mute`, `/tempmute`, `/removetempmute`, `/muteinfo`, `/muteforplayer`
-- `/ban`, `/tempban`, `/eban`, `/eunban`, `/removetempban`
-- `/globalmute`, `/silent`, `/clearchat`, `/maintenance`
-- `/srestart`, `/staffchat`
+### Economy
 
-### 💰 Economy (Vault)
-- `/balance`, `/balancetop`, `/eco`, `/pay`
-- `/bank` (create, deposit, withdraw, add/remove member, balance)
+- `/balance`, `/balancetop`
+- `/eco`
+- `/pay`
+- `/bank`
 
-### ⚔️ Kits
-- `/kits`, `/createkit`
+### Kits And Items
 
-### 🛠️ Utilities
-- `/fly`, `/walkspeed`, `/flyspeed`, `/godmode`, `/gamemode`
-- `/heal`, `/feed`, `/workbench`, `/repair`, `/enchant`, `/item`
-- `/invsee`, `/enderchest`, `/backpack`, `/trash`
-- `/sleep`, `/signitem`, `/renameitem`, `/playerheads`
+- `/kits`
+- `/createkit`
+- `/item`
+- `/repair`
+- `/enchant`
+- `/renameitem`
+- `/signitem`
+- `/playerheads`
 
-### 💬 Chat & Messaging
-- `/msg`, `/r`, `/spy`, `/afk`
-- `/msgtoggle`, `/tptoggle`
-- `/nick`, `/nicklist`
-- `/mail` (send, read, delete, clear)
+### Moderation
 
-### 🌤️ World Control
-- `/day`, `/night`, `/sun`, `/rain`, `/thunder`
-- `/plweather`, `/resetplweather`, `/pltime`, `/resetpltime`
-- `/lightningstrike`, `/firework`
+- `/mute`, `/tempmute`, `/removetempmute`, `/muteinfo`
+- `/muteforplayer`
+- `/ban`, `/tempban`, `/eban`, `/eunban`
+- `/globalmute`
+- `/maintenance`
+- `/clearchat`
+- `/silent`
+- `/srestart`
 
-### 📊 Player Info
-- `/online`, `/offline`, `/xp`, `/timeplayed`, `/mysql`
+### Chat And Player Tools
 
----
+- `/msg`, `/r`, `/spy`, `/msgtoggle`
+- `/mail`
+- `/afk`
+- `/nick`
+- `/nicklist`
+- `/timeplayed`
+- `/online`, `/offline`
 
-## 🔐 Permissions
+### Inventory And Utility
 
-- All commands are permission-based and configurable
-- Use `essentialsmini.*` for full access
-- Examples:
-    - `essentialsmini.fly`
-    - `essentialsmini.kits`
-    - `essentialsmini.invsee`
-    - `essentialsmini.balance`
-    - `essentialsmini.ban`
+- `/fly`, `/flyspeed`, `/walkspeed`
+- `/gamemode`, `/godmode`
+- `/heal`, `/feed`
+- `/invsee`, `/enderchest`
+- `/backpack`, `/trash`
+- `/workbench`
+- `/sleep`
 
-Use with LuckPerms or any standard permission manager.
+### World Control
 
----
+- `/day`, `/night`
+- `/sun`, `/rain`, `/thunder`
+- `/plweather`, `/resetplweather`
+- `/pltime`, `/resetpltime`
+- `/lightningstrike`
+- `/firework`
 
-## 🔌 Soft Dependencies
+## Permissions
 
-| Plugin              | Purpose                     |
-|---------------------|-----------------------------|
-| Vault               | Economy system              |
-| LuckPerms           | Permissions (recommended)   |
-| ProtocolLib         | Optional extended features  |
+Permissions use the `essentialsmini.` prefix.
 
----
+Examples:
 
----
+- `essentialsmini.fly`
+- `essentialsmini.home`
+- `essentialsmini.kits.<kitname>`
+- `essentialsmini.item`
+- `essentialsmini.mute`
+- `essentialsmini.tempmute`
+- `essentialsmini.ban`
 
-## In Progress
+Use `essentialsmini.*` for broad administrator access where supported by your permission plugin.
 
-- [ ] **SkinChanger**: Add option to change Skin and Playername
-- [ ] **NameChanger**: Add option to change Playername
+## Configuration Files
 
-## 🛠️ Development Info
+The plugin creates and uses several files in its data folder, including:
 
-- Language: Java
-- Build: Maven (`pom.xml`)
+- `config.yml`
+- language files such as `messages_en-EN.yml`
+- `locations.yml`
+- `kits.yml`
+- `mail.yml`
+- `tempMutes.yml`
+- `nicks.yml`
+
+Back up these files before upgrading on a production server.
+
+## Project Info
+
 - Main class: `ch.framedev.essentialsmini.main.Main`
+- Maven artifact: `EssentialsMini`
+- Current project version: `1.0.6.5-1.20.6-HIGHER-RELEASE`
+- Website: [framedev.ch](https://framedev.ch)
 
----
+## License
 
-## 👤 Author
+This project is licensed under the MIT License. See [LICENSE](./LICENSE).
 
-Developed by [FrameDev](https://github.com/frame-dev)  
-Website: [framedev.ch](https://framedev.ch)
+## Author
 
----
+Developed by [FrameDev](https://github.com/frame-dev).
 
-## 📄 License
-
-MIT License. See [LICENSE](./LICENSE).
-
----
-
-> For issues or suggestions, feel free to open a [GitHub Issue](https://github.com/frame-dev/EssentialsMiniReload/issues).
+Issues and suggestions are welcome in [GitHub Issues](https://github.com/frame-dev/EssentialsMiniReload/issues).

@@ -7,12 +7,12 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.Variables;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,393 +24,377 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author DHZoc
  */
 public class TeleportCMD implements CommandExecutor, Listener {
 
+    private static final String TPA = "tpa";
+    private static final String TPA_ACCEPT = "tpaaccept";
+    private static final String TPA_DENY = "tpadeny";
+    private static final String TPA_HERE = "tpahere";
+    private static final String TPA_HERE_ACCEPT = "tpahereaccept";
+    private static final String TPA_HERE_DENY = "tpaheredeny";
+    private static final String TP_HERE_ALL = "tphereall";
+    private static final String TP_TOGGLE = "tptoggle";
+
     private final Main plugin;
+    private final Map<UUID, UUID> tpRequests = new HashMap<>();
+    private final Map<UUID, UUID> tpHereRequests = new HashMap<>();
+    private final Set<UUID> tpToggle = new HashSet<>();
+    private final Set<UUID> teleportQueue = new HashSet<>();
 
     public TeleportCMD(Main plugin) {
         this.plugin = plugin;
-        plugin.getCommands().put("tpa", this);
-        plugin.getCommands().put("tpaaccept", this);
-        plugin.getCommands().put("tpadeny", this);
-        plugin.getCommands().put("tphereall", this);
-        plugin.getCommands().put("tpahere", this);
-        plugin.getCommands().put("tpahereaccept", this);
-        plugin.getCommands().put("tpaheredeny", this);
-        plugin.getCommands().put("tptoggle", this);
+        registerCommands(TPA, TPA_ACCEPT, TPA_DENY, TP_HERE_ALL, TPA_HERE, TPA_HERE_ACCEPT, TPA_HERE_DENY, TP_TOGGLE);
         plugin.getListeners().add(this);
     }
 
-    private final HashMap<Player, Player> tpRequest = new HashMap<>();
-    private final HashMap<Player, Player> tpHereRequest = new HashMap<>();
-    private final ArrayList<Player> tpToggle = new ArrayList<>();
-    private final ArrayList<Player> queue = new ArrayList<>();
+    private void registerCommands(String... commands) {
+        for (String command : commands) {
+            plugin.getCommands().put(command, this);
+        }
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("tptoggle")) {
-            if (sender instanceof Player player) {
-                if (player.hasPermission(plugin.getPermissionBase() + "tptoggle")) {
-                    if (tpToggle.contains(player)) {
-                        tpToggle.remove(player);
-                        player.sendMessage(plugin.getPrefix() + "§aPlayers can now Teleport to you or send you a Tpa Request!");
-                    } else {
-                        tpToggle.add(player);
-                        player.sendMessage(plugin.getPrefix() + "§6Players §ccan no more Teleporting to you or Send a Tpa Request");
-                    }
-                    return true;
-                } else {
-                    player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-            }
+        return switch (command.getName().toLowerCase(Locale.ROOT)) {
+            case TP_TOGGLE -> handleTeleportToggle(sender);
+            case TPA -> handleRequest(sender, args, RequestType.TPA);
+            case TPA_ACCEPT -> handleAccept(sender, RequestType.TPA);
+            case TPA_DENY -> handleDeny(sender, RequestType.TPA);
+            case TPA_HERE -> handleRequest(sender, args, RequestType.TPA_HERE);
+            case TPA_HERE_ACCEPT -> handleAccept(sender, RequestType.TPA_HERE);
+            case TPA_HERE_DENY -> handleDeny(sender, RequestType.TPA_HERE);
+            case TP_HERE_ALL -> handleTeleportHereAll(sender);
+            default -> false;
+        };
+    }
+
+    private boolean handleTeleportToggle(CommandSender sender) {
+        Player player = requirePlayer(sender);
+        if (player == null) {
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tpa")) {
-            if (args.length == 1) {
-                if (sender instanceof Player) {
-                    Player target = Bukkit.getPlayer(args[0]);
-                    if (target != sender) {
-                        if (target != null) {
-                            if (!tpToggle.contains(target)) {
-                                tpRequest.put(target, (Player) sender);
-                                String send = plugin.getLanguageConfig(sender).getString("TpaMessages.TeleportSend");
-                                if (send == null) {
-                                    sender.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TeleportSend' not found!");
-                                    return true;
-                                }
-                                send = send.replace('&', '§');
-                                if (send.contains("%Target%")) {
-                                    send = send.replace("%Target%", target.getName());
-                                }
-                                sender.sendMessage(plugin.getPrefix() + send);
-                                String got = plugin.getLanguageConfig(target).getString("TpaMessages.TeleportGot");
-                                if (got == null) {
-                                    sender.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TeleportGot' not found!");
-                                    return true;
-                                }
-                                got = got.replace('&', '§');
-                                if (got.contains("%Player%")) {
-                                    got = got.replace("%Player%", sender.getName());
-                                }
-                                target.sendMessage(plugin.getPrefix() + got);
-                                BaseComponent baseComponent = new TextComponent();
-                                baseComponent.addExtra("§6[Accept]");
-                                baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaaccept " + sender.getName()));
-                                baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aAccept Tpa Request!")));
-                                BaseComponent deny = new TextComponent();
-                                deny.addExtra("§c[Deny]");
-                                deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpadeny " + sender.getName()));
-                                deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cDeny Tpa Request!")));
-                                target.spigot().sendMessage(baseComponent);
-                                target.spigot().sendMessage(deny);
-                            } else if (sender.hasPermission(plugin.getPermissionBase() + "tptoggle.bypass")) {
-                                tpRequest.put(target, (Player) sender);
-                                String send = plugin.getLanguageConfig(sender).getString("TpaMessages.TeleportSend");
-                                if (send == null) {
-                                    sender.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TeleportSend' not found!");
-                                    return true;
-                                }
-                                send = send.replace('&', '§');
-                                if (send.contains("%Target%")) {
-                                    send = send.replace("%Target%", target.getName());
-                                }
-                                sender.sendMessage(plugin.getPrefix() + send);
-                                String got = plugin.getLanguageConfig(target).getString("TpaMessages.TeleportGot");
-                                if (got == null) {
-                                    sender.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TeleportGot' not found!");
-                                    return true;
-                                }
-                                got = got.replace('&', '§');
-                                if (got.contains("%Player%")) {
-                                    got = got.replace("%Player%", sender.getName());
-                                }
-                                target.sendMessage(plugin.getPrefix() + got);
-                                BaseComponent baseComponent = new TextComponent();
-                                baseComponent.addExtra("§6[Accept]");
-                                baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaaccept " + sender.getName()));
-                                baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aAccept Tpa Request!")));
-                                BaseComponent deny = new TextComponent();
-                                deny.addExtra("§c[Deny]");
-                                deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpadeny " + sender.getName()));
-                                deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cDeny Tpa Request!")));
-                                target.spigot().sendMessage(baseComponent);
-                                target.spigot().sendMessage(deny);
-                            } else {
-                                sender.sendMessage(plugin.getPrefix() + "§cThis Player doesn't accept Teleport!");
-                            }
-                        } else {
-                            sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                        }
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + "§cYou cannot send to your self a Tpa Request!");
-                    }
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/tpa <PlayerName>"));
-            }
+
+        if (!hasPermission(player, "tptoggle")) {
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tpaaccept")) {
-            if (sender instanceof Player player) {
-                if (tpRequest.containsKey(player)) {
-                    if (plugin.getConfig().getBoolean("TeleportInOtherWorld")) {
-                        queue.add(tpRequest.get(player));
-                        int delay = plugin.getConfig().getInt("TeleportDelay");
-                        String tpDelay = plugin.getLanguageConfig(player).getString("TpaMessages.Delay");
-                        if (tpDelay == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.Delay' not found!");
-                            return true;
-                        }
-                        tpDelay = ReplaceCharConfig.replaceParagraph(tpDelay);
-                        tpDelay = ReplaceCharConfig.replaceObjectWithData(tpDelay, "%Time%", delay + "");
-                        tpRequest.get(player).sendMessage(plugin.getPrefix() + tpDelay);
-                        Player target = tpRequest.get(player);
-                        runnable(target, player, delay);
-                        tpRequest.remove(player);
-                    } else {
-                        if (player.getWorld().getName().equalsIgnoreCase(tpRequest.get(player).getWorld().getName())) {
-                            tpRequest.get(player).teleport(player);
-                            tpRequest.remove(player);
-                        } else {
-                            player.sendMessage(plugin.getPrefix() + "§aThe Player §6" + tpRequest.get(player).getName() + " §cis not in the same World!");
-                            tpRequest.remove(player);
-                            return true;
-                        }
-                    }
-                    if (queue.contains(player)) {
-                        String targetMessage = plugin.getLanguageConfig(player).getString("TpaMessages.TargetMessage");
-                        if (targetMessage == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TargetMessage' not found!");
-                            return true;
-                        }
-                        targetMessage = targetMessage.replace('&', '§');
-                        if (targetMessage.contains("%Target%"))
-                            targetMessage = targetMessage.replace("%Target%", tpRequest.get(sender).getName());
-                        sender.sendMessage(plugin.getPrefix() + targetMessage);
-                        String teleportTo = plugin.getLanguageConfig(player).getString("TpaMessages.TeleportToPlayer");
-                        if (teleportTo == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TeleportToPlayer' not found!");
-                            return true;
-                        }
-                        teleportTo = teleportTo.replace('&', '§');
-                        if (teleportTo.contains("%Player%")) {
-                            teleportTo = teleportTo.replace("%Player%", sender.getName());
-                        }
-                        tpRequest.get(sender).sendMessage(plugin.getPrefix() + teleportTo);
-                        tpRequest.remove(sender);
-                    }
-                } else {
-                    String message = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".NoRequest");
-                    message = ReplaceCharConfig.replaceParagraph(message);
-                    sender.sendMessage(plugin.getPrefix() + message);
-                }
-            }
+
+        if (tpToggle.remove(player.getUniqueId())) {
+            send(player, "§aPlayers can now Teleport to you or send you a Tpa Request!");
+        } else {
+            tpToggle.add(player.getUniqueId());
+            send(player, "§6Players §ccan no more Teleporting to you or Send a Tpa Request");
         }
-        if (command.getName().equalsIgnoreCase("tpadeny")) {
-            if (sender instanceof Player) {
-                if (tpRequest.containsKey(sender)) {
-                    String deny = plugin.getLanguageConfig(sender).getString(Variables.TP_MESSAGES + ".TpaDeny");
-                    deny = ReplaceCharConfig.replaceParagraph(deny);
-                    sender.sendMessage(plugin.getPrefix() + deny);
-                    String other = plugin.getLanguageConfig(sender).getString(Variables.TP_MESSAGES + ".TpaDenyTarget");
-                    if(other == null) {
-                        sender.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaDenyTarget' not found!");
-                        return true;
-                    }
-                    other = ReplaceCharConfig.replaceParagraph(other);
-                    other = ReplaceCharConfig.replaceObjectWithData(other, "%Player%", sender.getName());
-                    tpRequest.get(sender)
-                            .sendMessage(other);
-                    tpRequest.remove(sender);
-                }
-            }
+        return true;
+    }
+
+    private boolean handleRequest(CommandSender sender, String[] args, RequestType type) {
+        Player requester = requirePlayer(sender);
+        if (requester == null) {
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tpahere")) {
-            if (sender instanceof Player player) {
-                Player target = Bukkit.getPlayer(args[0]);
-                if (target != null) {
-                    if (!tpToggle.contains(target)) {
-                        tpHereRequest.put(target, player);
-                        String other = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".TpaHereTarget");
-                        if(other == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaHereTarget' not found!");
-                            return true;
-                        }
-                        other = ReplaceCharConfig.replaceParagraph(other);
-                        other = ReplaceCharConfig.replaceObjectWithData(other, "%Player%", player.getName());
-                        target.sendMessage(plugin.getPrefix() + other);
-                        String self = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".TpaHere");
-                        if(self == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaHere' not found!");
-                            return true;
-                        }
-                        self = ReplaceCharConfig.replaceParagraph(self);
-                        self = ReplaceCharConfig.replaceObjectWithData(self, "%Player%", target.getName());
-                        player.sendMessage(plugin.getPrefix() + self);
-                        BaseComponent baseComponent = new TextComponent();
-                        baseComponent.addExtra("§6[Accept]");
-                        baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpahereaccept " + sender.getName()));
-                        baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aAccept Tpa Request!")));
-                        BaseComponent deny = new TextComponent();
-                        deny.addExtra("§c[Deny]");
-                        deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaheredeny " + sender.getName()));
-                        deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cDeny TpaHere Request!")));
-                        target.spigot().sendMessage(baseComponent);
-                        target.spigot().sendMessage(deny);
-                    } else if (player.hasPermission(plugin.getPermissionBase() + "tptoggle.bypass")) {
-                        tpHereRequest.put(target, player);
-                        String other = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".TpaHereTarget");
-                        if(other == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaHereTarget' not found!");
-                            return true;
-                        }
-                        other = ReplaceCharConfig.replaceParagraph(other);
-                        other = ReplaceCharConfig.replaceObjectWithData(other, "%Player%", player.getName());
-                        target.sendMessage(plugin.getPrefix() + other);
-                        String self = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".TpaHere");
-                        if(self == null) {
-                            player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaHere' not found!");
-                            return true;
-                        }
-                        self = ReplaceCharConfig.replaceParagraph(self);
-                        self = ReplaceCharConfig.replaceObjectWithData(self, "%Player%", target.getName());
-                        player.sendMessage(plugin.getPrefix() + self);
-                        BaseComponent baseComponent = new TextComponent();
-                        baseComponent.addExtra("§6[Accept]");
-                        baseComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpahereaccept " + sender.getName()));
-                        baseComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aAccept TpaHere Request!")));
-                        BaseComponent deny = new TextComponent();
-                        deny.addExtra("§c[Deny]");
-                        deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaheredeny " + sender.getName()));
-                        deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cDeny TpaHere Request!")));
-                        target.spigot().sendMessage(baseComponent);
-                        target.spigot().sendMessage(deny);
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + "§cThis Player doesn't accept Teleport!");
-                    }
-                } else {
-                    player.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                }
-            }
+
+        if (args.length != 1) {
+            send(sender, plugin.getWrongArgs(type.usage));
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tpaheredeny")) {
-            if (sender instanceof Player player) {
-                if (!tpHereRequest.isEmpty() && tpHereRequest.containsKey(player)) {
-                    String deny = plugin.getLanguageConfig(player).getString("TpaMessages.TpaHereDeny");
-                    deny = ReplaceCharConfig.replaceParagraph(deny);
-                    player.sendMessage(plugin.getPrefix() + deny);
-                    String other = plugin.getLanguageConfig(player).getString("TpaMessages.TpaHereDenyTarget");
-                    if(other == null) {
-                        player.sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.TpaHereDenyTarget' not found!");
-                        return true;
-                    }
-                    other = ReplaceCharConfig.replaceParagraph(other);
-                    other = ReplaceCharConfig.replaceObjectWithData(other, "%Player%", player.getName());
-                    tpHereRequest.get(player).sendMessage(plugin.getPrefix() + other);
-                    tpHereRequest.remove(player);
-                } else {
-                    String message = plugin.getLanguageConfig(player).getString(Variables.TP_MESSAGES + ".NoRequest");
-                    message = ReplaceCharConfig.replaceParagraph(message);
-                    sender.sendMessage(plugin.getPrefix() + message);
-                }
-            }
+
+        Player target = Bukkit.getPlayer(args[0]);
+        if (target == null) {
+            send(sender, plugin.getVariables().getPlayerNameNotOnline(args[0]));
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tpahereaccept")) {
-            if (sender instanceof Player) {
-                final Player[] player = {(Player) sender};
-                if (!tpHereRequest.isEmpty() && tpHereRequest.containsKey(player[0])) {
-                    if (plugin.getConfig().getBoolean("TeleportInOtherWorld")) {
-                        queue.add(player[0]);
-                        int delay = plugin.getConfig().getInt("TeleportDelay");
-                        String tpDelay = plugin.getLanguageConfig(player[0]).getString("TpaMessages.Delay");
-                        if (tpDelay == null) {
-                            player[0].sendMessage(plugin.getPrefix() + "§cMessage Config 'TpaMessages.Delay' not found!");
-                            return true;
-                        }
-                        tpDelay = ReplaceCharConfig.replaceParagraph(tpDelay);
-                        tpDelay = ReplaceCharConfig.replaceObjectWithData(tpDelay, "%Time%", delay + "");
-                        player[0].sendMessage(plugin.getPrefix() + tpDelay);
-                        Player target = tpHereRequest.get(player[0]);
-                        runnable(player[0], target, delay);
-                        tpHereRequest.remove(target);
-                    } else {
-                        if (tpHereRequest.get(player[0]).getWorld().getName().equalsIgnoreCase(player[0].getWorld().getName())) {
-                            player[0].teleport(tpHereRequest.get(player[0]).getLocation());
-                        } else {
-                            player[0].sendMessage(plugin.getPrefix() + "§aThe Player §6" + tpHereRequest.get(player[0]).getName() + " §cis not in the same World!");
-                            tpHereRequest.remove(player[0]);
-                            return true;
-                        }
-                    }
-                    tpHereRequest.remove(player[0]);
-                } else {
-                    String message = plugin.getLanguageConfig(player[0]).getString(Variables.TP_MESSAGES + ".NoRequest");
-                    message = ReplaceCharConfig.replaceParagraph(message);
-                    sender.sendMessage(plugin.getPrefix() + message);
-                }
-            }
+
+        if (requester.getUniqueId().equals(target.getUniqueId())) {
+            send(sender, "§cYou cannot send a teleport request to yourself!");
+            return true;
         }
-        if (command.getName().equalsIgnoreCase("tphereall")) {
-            if (sender instanceof Player player) {
-                if (player.hasPermission("essentialsmini.tphereall")) {
-                    Bukkit.getOnlinePlayers().forEach(players -> players.teleport(player.getLocation()));
-                } else {
-                    player.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-            }
+
+        if (tpToggle.contains(target.getUniqueId()) && !requester.hasPermission(plugin.getPermissionBase() + "tptoggle.bypass")) {
+            send(sender, "§cThis Player doesn't accept Teleport!");
+            return true;
         }
+
+        requestsFor(type).put(target.getUniqueId(), requester.getUniqueId());
+        notifyRequestSent(requester, target, type);
+        return true;
+    }
+
+    private void notifyRequestSent(Player requester, Player target, RequestType type) {
+        if (type == RequestType.TPA) {
+            send(requester, lang(requester, "TpaMessages.TeleportSend", "&aYou sent &6%Target% &aa teleport request!",
+                    Map.of("%Target%", target.getName())));
+            send(target, lang(target, "TpaMessages.TeleportGot", "&aYou got a teleport request from &6%Player%!",
+                    Map.of("%Player%", requester.getName())));
+        } else {
+            send(target, lang(target, "TpaMessages.TpaHereTarget", "&6%Player% &awants you to teleport to him!",
+                    Map.of("%Player%", requester.getName())));
+            send(requester, lang(requester, "TpaMessages.TpaHere", "&aDo you want to teleport &6%Player% to you?",
+                    Map.of("%Player%", target.getName())));
+        }
+
+        sendRequestButtons(target, type.acceptCommand + " " + requester.getName(), type.denyCommand + " " + requester.getName(), type.acceptHover, type.denyHover);
+    }
+
+    private boolean handleAccept(CommandSender sender, RequestType type) {
+        Player receiver = requirePlayer(sender);
+        if (receiver == null) {
+            return true;
+        }
+
+        UUID requesterId = requestsFor(type).remove(receiver.getUniqueId());
+        if (requesterId == null) {
+            sendNoRequest(receiver);
+            return true;
+        }
+
+        Player requester = Bukkit.getPlayer(requesterId);
+        if (requester == null) {
+            sendNoRequest(receiver);
+            return true;
+        }
+
+        Player movingPlayer = type == RequestType.TPA ? requester : receiver;
+        Player destinationPlayer = type == RequestType.TPA ? receiver : requester;
+        teleportWithConfiguredDelay(movingPlayer, destinationPlayer);
+        return true;
+    }
+
+    private boolean handleDeny(CommandSender sender, RequestType type) {
+        Player receiver = requirePlayer(sender);
+        if (receiver == null) {
+            return true;
+        }
+
+        UUID requesterId = requestsFor(type).remove(receiver.getUniqueId());
+        if (requesterId == null) {
+            sendNoRequest(receiver);
+            return true;
+        }
+
+        Player requester = Bukkit.getPlayer(requesterId);
+        String deniedKey = type == RequestType.TPA ? "TpaMessages.TpaDeny" : "TpaMessages.TpaHereDeny";
+        String deniedTargetKey = type == RequestType.TPA ? "TpaMessages.TpaDenyTarget" : "TpaMessages.TpaHereDenyTarget";
+        String deniedDefault = type == RequestType.TPA ? "&aYou declined the teleportation request!" : "&cYou declined the tpahere request.";
+        String deniedTargetDefault = type == RequestType.TPA
+                ? "&6%Player% &chas declined your teleportation request!"
+                : "&6%Player% &chas declined the tpahere request!";
+
+        send(receiver, lang(receiver, deniedKey, deniedDefault));
+        if (requester != null) {
+            send(requester, lang(requester, deniedTargetKey, deniedTargetDefault, Map.of("%Player%", receiver.getName())));
+        }
+        return true;
+    }
+
+    private boolean handleTeleportHereAll(CommandSender sender) {
+        Player player = requirePlayer(sender);
+        if (player == null) {
+            return true;
+        }
+
+        if (!hasPermission(player, "tphereall")) {
+            return true;
+        }
+
+        Location location = player.getLocation();
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            onlinePlayer.teleport(location);
+        }
+        return true;
+    }
+
+    private Map<UUID, UUID> requestsFor(RequestType type) {
+        return type == RequestType.TPA ? tpRequests : tpHereRequests;
+    }
+
+    private void teleportWithConfiguredDelay(Player movingPlayer, Player destinationPlayer) {
+        if (!plugin.getConfig().getBoolean("TeleportInOtherWorld")) {
+            teleportIfSameWorld(movingPlayer, destinationPlayer);
+            return;
+        }
+
+        int delay = Math.max(0, plugin.getConfig().getInt("TeleportDelay"));
+        if (delay == 0) {
+            completeTeleport(movingPlayer, destinationPlayer);
+            return;
+        }
+
+        teleportQueue.add(movingPlayer.getUniqueId());
+        send(movingPlayer, lang(movingPlayer, "TpaMessages.Delay",
+                "&aYou'll be teleported in &6%Time%! &aIf you move the teleportation will be cancelled.",
+                Map.of("%Time%", String.valueOf(delay))));
+        scheduleTeleport(movingPlayer.getUniqueId(), destinationPlayer.getUniqueId(), delay);
+    }
+
+    private void teleportIfSameWorld(Player movingPlayer, Player destinationPlayer) {
+        if (movingPlayer.getWorld().equals(destinationPlayer.getWorld())) {
+            completeTeleport(movingPlayer, destinationPlayer);
+            return;
+        }
+
+        send(movingPlayer, "§aThe Player §6" + destinationPlayer.getName() + " §cis not in the same World!");
+    }
+
+    private void scheduleTeleport(UUID movingPlayerId, UUID destinationPlayerId, int delay) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!teleportQueue.remove(movingPlayerId)) {
+                    return;
+                }
+
+                Player movingPlayer = Bukkit.getPlayer(movingPlayerId);
+                Player destinationPlayer = Bukkit.getPlayer(destinationPlayerId);
+                if (movingPlayer == null || destinationPlayer == null) {
+                    return;
+                }
+
+                completeTeleport(movingPlayer, destinationPlayer);
+            }
+        }.runTaskLater(plugin, 20L * delay);
+    }
+
+    private void completeTeleport(Player movingPlayer, Player destinationPlayer) {
+        movingPlayer.teleport(destinationPlayer.getLocation());
+        send(movingPlayer, lang(movingPlayer, "TpaMessages.TeleportToPlayer", "&aYou were teleported to &6%Player%!",
+                Map.of("%Player%", destinationPlayer.getName())));
+        send(destinationPlayer, lang(destinationPlayer, "TpaMessages.TargetMessage", "&6%Target% &ateleported to you!",
+                Map.of("%Target%", movingPlayer.getName())));
+    }
+
+    private void sendRequestButtons(Player target, String acceptCommand, String denyCommand, String acceptHover, String denyHover) {
+        TextComponent accept = new TextComponent("§6[Accept]");
+        accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + acceptCommand));
+        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(acceptHover)));
+
+        TextComponent deny = new TextComponent("§c[Deny]");
+        deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + denyCommand));
+        deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(denyHover)));
+
+        target.spigot().sendMessage(accept);
+        target.spigot().sendMessage(deny);
+    }
+
+    private void sendNoRequest(Player player) {
+        send(player, lang(player, Variables.TP_MESSAGES + ".NoRequest", "&cYou don't have any requests!"));
+    }
+
+    private Player requirePlayer(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return player;
+        }
+
+        send(sender, plugin.getOnlyPlayer());
+        return null;
+    }
+
+    private boolean hasPermission(CommandSender sender, String permissionSuffix) {
+        if (sender.hasPermission(plugin.getPermissionBase() + permissionSuffix)) {
+            return true;
+        }
+
+        send(sender, plugin.getNoPerms());
         return false;
+    }
+
+    private String lang(CommandSender sender, String key, String defaultMessage) {
+        return lang(sender, key, defaultMessage, Map.of());
+    }
+
+    private String lang(CommandSender sender, String key, String defaultMessage, Map<String, String> replacements) {
+        String message = null;
+        try {
+            message = plugin.getLanguageConfig(sender).getString(key);
+        } catch (RuntimeException ignored) {
+        }
+
+        if (message == null) {
+            message = defaultMessage;
+        }
+
+        for (Map.Entry<String, String> replacement : replacements.entrySet()) {
+            message = ReplaceCharConfig.replaceObjectWithData(message, replacement.getKey(), replacement.getValue());
+        }
+        return ReplaceCharConfig.replaceParagraph(message);
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
     }
 
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!plugin.getConfig().getBoolean("TeleportInOtherWorld")) {
-            Player player = event.getPlayer();
-            for (Player player1 : Bukkit.getOnlinePlayers()) {
-                if (Objects.equals(event.getTo(), player1.getLocation())) {
-                    if (!player1.getWorld().getName().equalsIgnoreCase(player.getWorld().getName())) {
-                        player.sendMessage(plugin.getPrefix() + "§6" + player1.getName() + " §cis not in the same World!");
-                        event.setCancelled(true);
-                    }
-                }
+        if (plugin.getConfig().getBoolean("TeleportInOtherWorld") || event.getTo() == null || event.getTo().getWorld() == null) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            if (target.getUniqueId().equals(player.getUniqueId())) {
+                continue;
+            }
+
+            if (sameBlock(event.getTo(), target.getLocation()) && !target.getWorld().equals(player.getWorld())) {
+                send(player, "§6" + target.getName() + " §cis not in the same World!");
+                event.setCancelled(true);
+                return;
             }
         }
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (queue.contains(event.getPlayer())) {
-            if(event.getTo() == null) return;
-            int movX = event.getFrom().getBlockX() - event.getTo().getBlockX();
-            int movZ = event.getFrom().getBlockZ() - event.getTo().getBlockZ();
-            if (Math.abs(movX) > 0 || Math.abs(movZ) > 0) {
-                queue.remove(event.getPlayer());
-                String message = plugin.getLanguageConfig(event.getPlayer()).getString(Variables.TP_MESSAGES + ".Denied");
-                message = ReplaceCharConfig.replaceParagraph(message);
-                event.getPlayer().sendMessage(plugin.getPrefix() + message);
-            }
+        if (!teleportQueue.contains(event.getPlayer().getUniqueId()) || event.getTo() == null) {
+            return;
+        }
+
+        int moveX = event.getFrom().getBlockX() - event.getTo().getBlockX();
+        int moveZ = event.getFrom().getBlockZ() - event.getTo().getBlockZ();
+        if (Math.abs(moveX) > 0 || Math.abs(moveZ) > 0) {
+            teleportQueue.remove(event.getPlayer().getUniqueId());
+            send(event.getPlayer(), lang(event.getPlayer(), Variables.TP_MESSAGES + ".Denied",
+                    "&cYou moved. &6Teleportation has been cancelled!"));
         }
     }
 
+    private boolean sameBlock(Location first, Location second) {
+        return first.getWorld() != null
+                && first.getWorld().equals(second.getWorld())
+                && first.getBlockX() == second.getBlockX()
+                && first.getBlockY() == second.getBlockY()
+                && first.getBlockZ() == second.getBlockZ();
+    }
+
     public void runnable(Player player, Player target, int delay) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (queue.contains(player)) {
-                    player.teleport(target.getLocation());
-                    queue.remove(player);
-                    tpHereRequest.remove(player);
-                }
-            }
-        }.runTaskLater(plugin, 20L * delay);
+        teleportQueue.add(player.getUniqueId());
+        scheduleTeleport(player.getUniqueId(), target.getUniqueId(), Math.max(0, delay));
+    }
+
+    private enum RequestType {
+        TPA("/tpa <PlayerName>", TPA_ACCEPT, TPA_DENY, "§aAccept Tpa Request!", "§cDeny Tpa Request!"),
+        TPA_HERE("/tpahere <PlayerName>", TPA_HERE_ACCEPT, TPA_HERE_DENY, "§aAccept TpaHere Request!", "§cDeny TpaHere Request!");
+
+        private final String usage;
+        private final String acceptCommand;
+        private final String denyCommand;
+        private final String acceptHover;
+        private final String denyHover;
+        RequestType(String usage, String acceptCommand, String denyCommand, String acceptHover, String denyHover) {
+            this.usage = usage;
+            this.acceptCommand = acceptCommand;
+            this.denyCommand = denyCommand;
+            this.acceptHover = acceptHover;
+            this.denyHover = denyHover;
+        }
     }
 }

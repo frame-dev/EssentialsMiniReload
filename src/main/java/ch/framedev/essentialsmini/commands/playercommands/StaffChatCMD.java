@@ -21,30 +21,63 @@ import org.jetbrains.annotations.NotNull;
 
 public class StaffChatCMD extends CommandBase {
 
+    private static final String COMMAND_NAME = "staffchat";
+    private static final String PERMISSION = "staffchat";
+    private static final String USAGE = "Usage: /staffchat <message>";
+    private static final String FORMAT_CONFIG_KEY = "staffChatFormat";
+    private static final String DEFAULT_FORMAT = "&7[&cStaff&7] &f%player%: &7%message%";
+
     public StaffChatCMD(Main plugin) {
-        super(plugin, "staffchat");
+        super(plugin, COMMAND_NAME);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!sender.hasPermission("essentialsmini.staffchat")) {
-            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getNoPerms());
-            return true;
-        }
+        if (!command.getName().equalsIgnoreCase(COMMAND_NAME)) return false;
+
+        if (!hasPermission(sender)) return true;
 
         if (args.length == 0) {
-            sender.sendMessage(getPlugin().getPrefix() + "Usage: /staffchat <message>");
+            send(sender, USAGE);
             return true;
         }
 
-        String message = String.join(" ", args);
-        String format = getPlugin().getConfig().getString("staffChatFormat", "&7[&cStaff&7] &f%player%: &7%message%");
-        format = format.replace("%player%", sender.getName()).replace("%message%", message);
+        broadcastStaffMessage(formatStaffMessage(sender, String.join(" ", args)));
+        return true;
+    }
+
+    private void broadcastStaffMessage(String message) {
         for (Player staff : getPlugin().getServer().getOnlinePlayers()) {
-            if (staff.hasPermission("essentialsmini.staffchat")) {
-                staff.sendMessage(getPlugin().getPrefix() + ChatColor.translateAlternateColorCodes('&', format));
+            if (staff.hasPermission(getPlugin().getPermissionBase() + PERMISSION)) {
+                send(staff, message);
             }
         }
-        return true;
+    }
+
+    private String formatStaffMessage(CommandSender sender, String message) {
+        String format = getPlugin().getConfig().getString(FORMAT_CONFIG_KEY, DEFAULT_FORMAT);
+        if (format.isBlank()) {
+            format = DEFAULT_FORMAT;
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', format
+                .replace("%player%", senderName(sender))
+                .replace("%message%", message));
+    }
+
+    private String senderName(CommandSender sender) {
+        String name = sender.getName();
+        return name.isBlank() ? "Console" : name;
+    }
+
+    private boolean hasPermission(CommandSender sender) {
+        if (sender.hasPermission(getPlugin().getPermissionBase() + PERMISSION)) return true;
+
+        send(sender, getPlugin().getNoPerms(sender instanceof Player player ? player : null));
+        return false;
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(getPlugin().getPrefix() + message);
     }
 }

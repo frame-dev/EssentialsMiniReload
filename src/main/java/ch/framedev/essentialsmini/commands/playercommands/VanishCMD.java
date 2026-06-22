@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.utils.TextUtils;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -23,149 +23,151 @@ import java.util.ArrayList;
  */
 public class VanishCMD extends CommandListenerBase {
 
+    private static final String COMMAND_NAME = "vanish";
+    private static final String PERMISSION = "essentialsmini.vanish";
+    private static final String SEE_PERMISSION = "essentialsmini.vanish.see";
+
     private final Main plugin;
     public final static ArrayList<String> hided = new ArrayList<>();
 
     public VanishCMD(Main plugin) {
-        super(plugin, "vanish");
+        super(plugin, COMMAND_NAME);
         this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("vanish")) {
-            if (sender.hasPermission("essentialsmini.vanish")) {
-                if (args.length == 0) {
-                    if (sender instanceof Player player) {
-                        if (hided.contains(player.getName())) {
-                            Bukkit.getOnlinePlayers().forEach(o -> o.showPlayer(this.plugin, player));
-                            hided.remove(player.getName());
-                            String message = plugin.getLanguageConfig(player).getString("VanishOff.Single");
-                            if(message == null) {
-                                player.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOff.Single' not found!");
-                                return true;
-                            }
-                            if (message.contains("&"))
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            player.sendMessage(plugin.getPrefix() + message);
-                            if (plugin.getConfig().getBoolean("Vanish.Message")) {
-                                String joinMessage = plugin.getConfig().getString("JoinMessage");
-                                if(joinMessage == null) {
-                                    player.sendMessage(plugin.getPrefix() + "§cConfig 'JoinMessage' not found!");
-                                    return true;
-                                }
-                                if (joinMessage.contains("&"))
-                                    joinMessage = joinMessage.replace('&', '§');
-                                if (joinMessage.contains("%Player%"))
-                                    joinMessage = joinMessage.replace("%Player%", player.getName());
-                                Bukkit.broadcastMessage(joinMessage);
-                            }
-                        } else {
-                            Bukkit.getOnlinePlayers().forEach(o -> {
-                                if (!o.hasPermission("essentialsmini.vanish.see")) {
-                                    o.hidePlayer(this.plugin, player);
-                                }
-                            });
-                            hided.add(player.getName());
-                            String message = plugin.getLanguageConfig(player).getString("VanishOn.Single");
-                            if(message == null) {
-                                player.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOn.Single' not found!");
-                                return true;
-                            }
-                            if (message.contains("&"))
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            player.sendMessage(plugin.getPrefix() + message);
-                            if (plugin.getConfig().getBoolean("Vanish.Message")) {
-                                String leaveMessage = plugin.getConfig().getString("LeaveMessage");
-                                if(leaveMessage == null) {
-                                    player.sendMessage(plugin.getPrefix() + "§cConfig 'LeaveMessage' not found!");
-                                    return true;
-                                }
-                                if (leaveMessage.contains("&"))
-                                    leaveMessage = leaveMessage.replace('&', '§');
-                                if (leaveMessage.contains("%Player%"))
-                                    leaveMessage = leaveMessage.replace("%Player%", player.getName());
-                                Bukkit.broadcastMessage(leaveMessage);
-                            }
-                        }
-                        return true;
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
-                    }
-                } else if (args.length == 1) {
-                    Player target = Bukkit.getPlayer(args[0]);
-                    if (target != null) {
-                        if (hided.contains(target.getName())) {
-                            Bukkit.getOnlinePlayers().forEach(o -> o.showPlayer(this.plugin, target));
-                            hided.remove(target.getName());
-                            String message = plugin.getLanguageConfig(sender).getString("VanishOff.Single");
-                            if(message == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOff.Single' not found!");
-                                return true;
-                            }
-                            if (message.contains("&"))
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            String playerMessage = plugin.getLanguageConfig(sender).getString("VanishOff.Multi");
-                            if(playerMessage == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOff.Multi' not found!");
-                                return true;
-                            }
-                            if (playerMessage.contains("%Player%"))
-                                playerMessage = playerMessage.replace("%Player%", target.getName());
-                            if (playerMessage.contains("&")) playerMessage = playerMessage.replace('&', '§');
-                            if (!Main.getSilent().contains(sender.getName()))
-                                target.sendMessage(plugin.getPrefix() + message);
-                            sender.sendMessage(plugin.getPrefix() + playerMessage);
-                            return true;
+        if (!command.getName().equalsIgnoreCase(COMMAND_NAME)) {
+            return false;
+        }
 
-                        } else {
-                            Bukkit.getOnlinePlayers().forEach(o -> {
-                                if (!o.hasPermission("essentialsmini.vanish.see")) {
-                                    o.hidePlayer(this.plugin, target);
-                                }
-                            });
-                            hided.add(target.getName());
-                            String message = plugin.getLanguageConfig(sender).getString("VanishOn.Single");
-                            if(message == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOn.Single' not found!");
-                                return true;
-                            }
-                            if (message.contains("&"))
-                                message = new TextUtils().replaceAndWithParagraph(message);
-                            String playerMessage = plugin.getLanguageConfig(sender).getString("VanishOn.Multi");
-                            if(playerMessage == null) {
-                                sender.sendMessage(plugin.getPrefix() + "§cConfig 'VanishOn.Multi' not found!");
-                                return true;
-                            }
-                            if (playerMessage.contains("%Player%"))
-                                playerMessage = playerMessage.replace("%Player%", target.getName());
-                            if (playerMessage.contains("&")) playerMessage = playerMessage.replace('&', '§');
-                            if (!Main.getSilent().contains(sender.getName()))
-                                target.sendMessage(plugin.getPrefix() + message);
-                            sender.sendMessage(plugin.getPrefix() + playerMessage);
-                        }
-                    } else {
-                        sender.sendMessage(plugin.getPrefix() + plugin.getVariables().getPlayerNameNotOnline(args[0]));
-                    }
-                    return true;
-                } else {
-                    sender.sendMessage(plugin.getPrefix() + plugin.getWrongArgs("/vanish §coder §6/vanish <PlayerName>"));
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+        if (!sender.hasPermission(PERMISSION)) {
+            send(sender, plugin.getNoPerms());
+            return true;
+        }
+
+        if (args.length == 0) {
+            return handleSelfVanish(sender);
+        }
+
+        if (args.length == 1) {
+            return handleOtherVanish(sender, args[0]);
+        }
+
+        send(sender, plugin.getWrongArgs("/vanish §coder §6/vanish <PlayerName>"));
+        return true;
+    }
+
+    private boolean handleSelfVanish(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            send(sender, plugin.getOnlyPlayer());
+            return true;
+        }
+
+        boolean vanished = toggleVanish(player);
+        send(player, vanishMessage(player, vanished, false, player.getName()));
+        broadcastFakeJoinLeave(player, vanished);
+        return true;
+    }
+
+    private boolean handleOtherVanish(CommandSender sender, String playerName) {
+        Player target = Bukkit.getPlayer(playerName);
+        if (target == null) {
+            send(sender, plugin.getVariables().getPlayerNameNotOnline(playerName));
+            return true;
+        }
+
+        boolean vanished = toggleVanish(target);
+        if (!Main.getSilent().contains(sender.getName())) {
+            send(target, vanishMessage(target, vanished, false, target.getName()));
+        }
+        send(sender, vanishMessage(sender, vanished, true, target.getName()));
+        return true;
+    }
+
+    private boolean toggleVanish(Player target) {
+        boolean vanished = !isVanished(target);
+        if (vanished) {
+            vanish(target);
+        } else {
+            unVanish(target);
+        }
+        return vanished;
+    }
+
+    private void vanish(Player target) {
+        if (!hided.contains(target.getName())) {
+            hided.add(target.getName());
+        }
+
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (!onlinePlayer.hasPermission(SEE_PERMISSION)) {
+                onlinePlayer.hidePlayer(plugin, target);
             }
         }
-        return false;
+    }
+
+    private void unVanish(Player target) {
+        hided.remove(target.getName());
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            onlinePlayer.showPlayer(plugin, target);
+        }
+    }
+
+    private boolean isVanished(Player player) {
+        return hided.contains(player.getName());
+    }
+
+    private String vanishMessage(CommandSender receiver, boolean vanished, boolean multi, String playerName) {
+        String key = vanished
+                ? (multi ? "VanishOn.Multi" : "VanishOn.Single")
+                : (multi ? "VanishOff.Multi" : "VanishOff.Single");
+        String fallback = vanished
+                ? (multi ? "&6%Player% &ais now in vanish" : "&aYou are now in vanish")
+                : (multi ? "&6%Player% &cis not in vanish anymore" : "&cYou aren't in vanish anymore");
+        return configuredMessage(receiver, key, fallback, playerName);
+    }
+
+    private void broadcastFakeJoinLeave(Player player, boolean vanished) {
+        if (!plugin.getConfig().getBoolean("Vanish.Message")) {
+            return;
+        }
+
+        String key = vanished ? "LeaveMessage" : "JoinMessage";
+        String fallback = vanished ? "&6%Player% &ahas left the Server!" : "&aWelcome &6%Player% &aon this Server!";
+        Bukkit.broadcastMessage(configMessage(key, fallback, player.getName()));
+    }
+
+    private String configuredMessage(CommandSender receiver, String key, String fallback, String playerName) {
+        String message = plugin.getLanguageConfig(receiver).getString(key);
+        if (message == null) {
+            message = fallback;
+        }
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", playerName);
+        return ReplaceCharConfig.replaceParagraph(message);
+    }
+
+    private String configMessage(String key, String fallback, String playerName) {
+        String message = plugin.getConfig().getString(key, fallback);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", playerName);
+        return ReplaceCharConfig.replaceParagraph(message);
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(plugin.getPrefix() + message);
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        for (String vanish : hided) {
-            Player vanishPlayer = Bukkit.getPlayer(vanish);
-            if(vanishPlayer == null) return;
-            if (!player.hasPermission("essentialsmini.vanish.see")) {
-                player.hidePlayer(plugin, vanishPlayer);
+        if (player.hasPermission(SEE_PERMISSION)) {
+            return;
+        }
+
+        for (String vanishedName : new ArrayList<>(hided)) {
+            Player vanishedPlayer = Bukkit.getPlayer(vanishedName);
+            if (vanishedPlayer != null) {
+                player.hidePlayer(plugin, vanishedPlayer);
             }
         }
     }

@@ -2,6 +2,9 @@ package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
+import ch.framedev.essentialsmini.utils.PlayerUtils;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
+import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
@@ -10,58 +13,105 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class TimePlayedCMD extends CommandBase {
+
+    private static final String TIME_PLAYED_KEY = "timePlayed";
+    private static final String DEFAULT_SELF_MESSAGE = "§aPlayed: §6%TimePlayed%";
+    private static final String TARGET_MESSAGE = "§aPlayer §6%Player% §ahas Played: §6%TimePlayed%";
+
     public TimePlayedCMD(Main plugin) {
-        super(plugin, "playedtime", "timeplayed");
+        super(plugin, "timeplayed", "playedtime");
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, String[] args) {
-        if (args.length == 0) {
-            if (sender instanceof Player player) {
-                String message = getPlugin().getLanguageConfig(player).getString("timePlayed");
-                if(message == null) {
-                    message = "§aPlayed: §6%TimePlayed%";
-                }
-                message = message.replace("%TimePlayed%", toFormattedTime(calculateSeconds(player)));
-                message = message.replace("&", "§");
-                player.sendMessage(getPrefix() + message);
-            } else {
-                sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
+        return switch (args.length) {
+            case 0 -> handleOwnPlaytime(sender);
+            case 1 -> handleOtherPlaytime(sender, args[0]);
+            default -> {
+                sender.sendMessage(getPrefix() + getPlugin().getWrongArgs("/timeplayed [Player]"));
+                yield true;
             }
-            return true;
-        }
-
-        if (args.length == 1) {
-            OfflinePlayer offline = Bukkit.getOfflinePlayer(args[0]);
-            if (!offline.hasPlayedBefore()) {
-                sender.sendMessage(getPrefix() + "§cPlayer §6" + args[0] + " §cis not known.");
-                return true;
-            }
-
-            Player online = offline.getPlayer();
-            if (online != null) {
-                long seconds = calculateSeconds(online);
-                sender.sendMessage(getPrefix() + "§aPlayer §6" + online.getName() + " §ahas Played: §6" + toFormattedTime(seconds));
-            } else {
-                // Cannot access statistics for truly offline players via Bukkit API without loading player data.
-                sender.sendMessage(getPrefix() + "§cPlayer §6" + (offline.getName() != null ? offline.getName() : args[0])
-                        + " §ais offline; playtime data is unavailable.");
-            }
-            return true;
-        }
-
-        return super.onCommand(sender, command, label, args);
+        };
     }
 
-    private long calculateSeconds(OfflinePlayer player) {
-        if (player instanceof Player p) {
-            long playedTicks = p.getStatistic(Statistic.PLAY_ONE_MINUTE); // ticks
-            return playedTicks / 20L; // convert ticks to seconds
+    private boolean handleOwnPlaytime(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer());
+            return true;
         }
-        return 0L;
+
+        sendPlaytimeMessage(player, player, false);
+        return true;
+    }
+
+    private boolean handleOtherPlaytime(CommandSender sender, String playerName) {
+        if (playerName == null || playerName.isBlank()) {
+            sender.sendMessage(getPrefix() + getPlugin().getWrongArgs("/timeplayed [Player]"));
+            return true;
+        }
+
+        Player online = Bukkit.getPlayer(playerName);
+        if (online != null) {
+            sendPlaytimeMessage(sender, online, true);
+            return true;
+        }
+
+        OfflinePlayer offline = findOfflinePlayer(playerName);
+        if (offline == null || !offline.hasPlayedBefore()) {
+            sender.sendMessage(getPrefix() + "§cPlayer §6" + playerName + " §cis not known.");
+            return true;
+        }
+
+        sender.sendMessage(getPrefix() + "§cPlayer §6" + safeName(offline, playerName)
+                + " §ais offline; playtime data is unavailable.");
+        return true;
+    }
+
+    private OfflinePlayer findOfflinePlayer(String playerName) {
+        try {
+            return PlayerUtils.getOfflinePlayerByName(playerName);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private void sendPlaytimeMessage(CommandSender receiver, Player target, boolean includePlayerName) {
+        String formattedTime = toFormattedTime(calculateSeconds(target));
+        String message = includePlayerName
+                ? TARGET_MESSAGE
+                : getLanguageMessage(receiver);
+
+        message = replacePlaceholders(message, target.getName(), formattedTime);
+        receiver.sendMessage(getPrefix() + message);
+    }
+
+    private String getLanguageMessage(CommandSender sender) {
+        String message = getPlugin().getLanguageConfig(sender).getString(TIME_PLAYED_KEY);
+        return message == null ? DEFAULT_SELF_MESSAGE : message;
+    }
+
+    private String replacePlaceholders(String message, String playerName, String formattedTime) {
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", playerName);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%TimePlayed%", formattedTime);
+        message = ReplaceCharConfig.replaceObjectWithData(message, "%Time%", formattedTime);
+        return ReplaceCharConfig.replaceParagraph(message);
+    }
+
+    @SuppressWarnings("deprecation")
+    private long calculateSeconds(Player player) {
+        long playedTicks = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        return Math.max(0L, playedTicks / 20L);
+    }
+
+    private String safeName(OfflinePlayer player, String fallback) {
+        String name = player.getName();
+        return name == null ? fallback : name;
     }
 
     private String toFormattedTime(long totalSeconds) {
@@ -69,6 +119,24 @@ public class TimePlayedCMD extends CommandBase {
         long hours = (totalSeconds % 86400) / 3600;
         long minutes = (totalSeconds % 3600) / 60;
         long seconds = totalSeconds % 60;
-        return String.format("%d days, %d hours, %d minutes, %d seconds", days, hours, minutes, seconds);
+        return String.format(Locale.ROOT, "%d days, %d hours, %d minutes, %d seconds", days, hours, minutes, seconds);
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (args.length != 1) {
+            return super.onTabComplete(sender, command, label, args);
+        }
+
+        List<String> playerNames = new ArrayList<>();
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.getName() != null) {
+                playerNames.add(offlinePlayer.getName());
+            }
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            playerNames.add(player.getName());
+        }
+        return TabCompleteUtils.matchingStrings(playerNames, args[0]);
     }
 }
