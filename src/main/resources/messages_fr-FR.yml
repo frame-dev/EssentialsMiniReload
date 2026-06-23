@@ -117,3 +117,24 @@ Experience:
     XP: "&a%Player% a actuellement &6%XP% &ad'expérience"
 
 timePlayed: '&aVous avez joué pendant &6%TimePlayed%&a!'
+
+RetrieveIngredients:
+  NoItem: '&cVous devez tenir un objet.'
+  NoRecipe: '&cAucun ingrédient trouvé pour &6%Item%&c.'
+  Success: '&aVous avez récupéré &6%Count% &aingrédients de &6%Item%&a.'
+  InventoryFull: '&eVotre inventaire était plein, donc &6%Dropped% &eingrédients ont été déposés.'
+
+UtilityStation:
+  Opened: '&aOuvert: &6%Station%&a.'
+
+Near:
+  InvalidRadius: '&cVeuillez entrer un rayon valide entre &61 &cet &6%MaxRadius%&c.'
+  None: '&cAucun joueur trouvé dans un rayon de &6%Radius% &cblocs.'
+  Found: '&aJoueurs dans un rayon de &6%Radius% &ablocs: &6%Players%'
+
+ShowRecipe:
+  NoItem: '&cTenez un objet ou utilisez &6/showrecipe <item>&c.'
+  UnknownItem: '&cCet objet n''existe pas: &6%Item%&c.'
+  NoRecipe: '&cAucune recette trouvée pour &6%Item%&c.'
+  Header: '&aRecette pour &6%Item%&a:'
+  Ingredient: '&7- &6%Amount%x &f%Ingredient%'

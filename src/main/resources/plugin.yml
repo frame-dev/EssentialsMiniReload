@@ -294,6 +294,33 @@ commands:
     aliases:
       - essmini
     description: Main Command for all EssentialsMini Commands
+  retrieve:
+    description: Retrieve Ingredients from a Item's Recipe and removes the Item from the Inventory
+  workbench:
+    description: Open a crafting table anywhere
+    aliases:
+      - craft
+  anvil:
+    description: Open an anvil anywhere
+  grindstone:
+    description: Open a grindstone anywhere
+  smithingtable:
+    description: Open a smithing table anywhere
+    aliases:
+      - smithing
+      - smith
+  cartographytable:
+    description: Open a cartography table anywhere
+    aliases:
+      - cartography
+  loom:
+    description: Open a loom anywhere
+  stonecutter:
+    description: Open a stonecutter anywhere
+  near:
+    description: Show nearby players
+  showrecipe:
+    description: Show the recipe for the held or specified item
 
 permissions:
   essentialsmini.*:
@@ -427,6 +454,15 @@ permissions:
       essentialsmini.reload: true
       essentialsmini.economy: true
       essentialsmini.help: true
+      essentialsmini.retrieve: true
+      essentialsmini.anvil: true
+      essentialsmini.grindstone: true
+      essentialsmini.smithingtable: true
+      essentialsmini.cartographytable: true
+      essentialsmini.loom: true
+      essentialsmini.stonecutter: true
+      essentialsmini.near: true
+      essentialsmini.showrecipe: true
   essentialsmini.sethome:
     default: op
   essentialsmini.worldutils:
@@ -732,4 +768,22 @@ permissions:
   essentialsmini.reload:
     default: op
   essentialsmini.economy:
+    default: op
+  essentialsmini.retrieve:
+    default: op
+  essentialsmini.anvil:
+    default: op
+  essentialsmini.grindstone:
+    default: op
+  essentialsmini.smithingtable:
+    default: op
+  essentialsmini.cartographytable:
+    default: op
+  essentialsmini.loom:
+    default: op
+  essentialsmini.stonecutter:
+    default: op
+  essentialsmini.near:
+    default: op
+  essentialsmini.showrecipe:
     default: op

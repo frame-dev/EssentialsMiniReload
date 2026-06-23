@@ -129,3 +129,24 @@ Bank:
 PlayerWeather:
   Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
   Reset: "&aYour Player weather has been reset!"
+
+RetrieveIngredients:
+  NoItem: '&cMusisz trzymać przedmiot.'
+  NoRecipe: '&cNie znaleziono składników dla &6%Item%&c.'
+  Success: '&aOdzyskano &6%Count% &askładników z &6%Item%&a.'
+  InventoryFull: '&eTwój ekwipunek był pełny, więc &6%Dropped% &eskładników zostało upuszczonych.'
+
+UtilityStation:
+  Opened: '&aOtwarto: &6%Station%&a.'
+
+Near:
+  InvalidRadius: '&cPodaj prawidłowy promień od &61 &cdo &6%MaxRadius%&c.'
+  None: '&cNie znaleziono graczy w promieniu &6%Radius% &cbloków.'
+  Found: '&aGracze w promieniu &6%Radius% &abloków: &6%Players%'
+
+ShowRecipe:
+  NoItem: '&cTrzymaj przedmiot albo użyj &6/showrecipe <item>&c.'
+  UnknownItem: '&cTen przedmiot nie istnieje: &6%Item%&c.'
+  NoRecipe: '&cNie znaleziono receptury dla &6%Item%&c.'
+  Header: '&aReceptura dla &6%Item%&a:'
+  Ingredient: '&7- &6%Amount%x &f%Ingredient%'

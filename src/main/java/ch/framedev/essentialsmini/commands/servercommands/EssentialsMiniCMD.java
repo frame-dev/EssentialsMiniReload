@@ -93,6 +93,7 @@ public class EssentialsMiniCMD extends CommandBase {
         try {
             long startTime = System.currentTimeMillis();
             getPlugin().reloadConfig();
+            getPlugin().reloadLanguageConfigs();
             long duration = System.currentTimeMillis() - startTime;
 
             sender.sendMessage(PREFIX + "§aConfiguration reloaded successfully! §7(" + duration + "ms)");

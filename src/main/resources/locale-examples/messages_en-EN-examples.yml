@@ -168,3 +168,24 @@ PlayerWeather:
   Reset: "&aYour Player weather has been reset!"
 
 timePlayed: '&aYou have played for &6%Time% &auntil now!'
+
+RetrieveIngredients:
+  NoItem: '&cYou must hold an item.'
+  NoRecipe: '&cNo ingredients found for &6%Item%&c.'
+  Success: '&aRetrieved &6%Count% &aingredients from &6%Item%&a.'
+  InventoryFull: '&eYour inventory was full, so &6%Dropped% &eingredients were dropped.'
+
+UtilityStation:
+  Opened: '&aOpened &6%Station%&a.'
+
+Near:
+  InvalidRadius: '&cPlease enter a valid radius between &61 &cand &6%MaxRadius%&c.'
+  None: '&cNo players found within &6%Radius% &cblocks.'
+  Found: '&aPlayers within &6%Radius% &ablocks: &6%Players%'
+
+ShowRecipe:
+  NoItem: '&cHold an item or use &6/showrecipe <item>&c.'
+  UnknownItem: '&cThis item does not exist: &6%Item%&c.'
+  NoRecipe: '&cNo recipe found for &6%Item%&c.'
+  Header: '&aRecipe for &6%Item%&a:'
+  Ingredient: '&7- &6%Amount%x &f%Ingredient%'

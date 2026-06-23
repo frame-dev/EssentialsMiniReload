@@ -137,3 +137,24 @@ Bank:
 PlayerWeather:
   Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
   Reset: "&aYour Player weather has been reset!"
+
+RetrieveIngredients:
+  NoItem: '&cВы должны держать предмет в руке.'
+  NoRecipe: '&cИнгредиенты для &6%Item% &cне найдены.'
+  Success: '&aВы вернули &6%Count% &aингредиентов из &6%Item%&a.'
+  InventoryFull: '&eВаш инвентарь был полон, поэтому &6%Dropped% &eингредиентов было выброшено.'
+
+UtilityStation:
+  Opened: '&aОткрыто: &6%Station%&a.'
+
+Near:
+  InvalidRadius: '&cВведите радиус от &61 &cдо &6%MaxRadius%&c.'
+  None: '&cИгроки в радиусе &6%Radius% &cблоков не найдены.'
+  Found: '&aИгроки в радиусе &6%Radius% &aблоков: &6%Players%'
+
+ShowRecipe:
+  NoItem: '&cДержите предмет или используйте &6/showrecipe <item>&c.'
+  UnknownItem: '&cТакого предмета нет: &6%Item%&c.'
+  NoRecipe: '&cРецепт для &6%Item% &cне найден.'
+  Header: '&aРецепт для &6%Item%&a:'
+  Ingredient: '&7- &6%Amount%x &f%Ingredient%'

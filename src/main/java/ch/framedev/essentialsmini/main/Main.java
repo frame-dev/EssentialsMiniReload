@@ -74,6 +74,19 @@ public class Main extends JavaPlugin {
 
     private boolean debug;
 
+    private final Map<String, FileConfiguration> languageConfigs = new HashMap<>();
+
+    private static final Map<String, Language> LANGUAGE_BY_PREFIX = Map.of(
+            "en", Language.EN,
+            "de", Language.DE,
+            "fr", Language.FR,
+            "it", Language.IT,
+            "es", Language.ES,
+            "pt", Language.PT,
+            "pl", Language.PL,
+            "ru", Language.RU
+    );
+
 
     @Override
     public void onEnable() {
@@ -99,6 +112,7 @@ public class Main extends JavaPlugin {
         moveExampleMessages();
         // Check and move messages configs
         checkAndMoveMessagesConfigs();
+        reloadLanguageConfigs();
 
         /* HashMaps / Lists Initialing */
         this.commands = new HashMap<>();
@@ -115,19 +129,7 @@ public class Main extends JavaPlugin {
         if (getConfig().getBoolean("MongoDB.Boolean") || getConfig().getBoolean("MongoDB.LocalHost")) {
             this.mongoDBUtils = new MongoDBUtils(this);
             if (isMongoDB()) {
-                for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                    databaseManager.getBackendManager().createUser(player, "essentialsmini_data", new BackendManager.Callback<>() {
-                        @Override
-                        public void onResult(Void result) {
-                            logger.info("User " + player.getUniqueId() + " created successfully in MongoDB.");
-                        }
-
-                        @Override
-                        public void onError(Exception exception) {
-                            logger.error("Could not create User: " + exception.getMessage(), exception);
-                        }
-                    });
-                }
+                initializeMongoUsersAsync(Bukkit.getOfflinePlayers());
                 Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aMongoDB Enabled!");
             }
         }
@@ -152,25 +154,49 @@ public class Main extends JavaPlugin {
 
         // Checking for Update and when enabled, Download the Latest Version automatically
 
-        // Server not online, so the update check is disabled
         if (getConfig().getBoolean("checkForUpdates")) {
-            if (!checkUpdate(getConfig().getBoolean("AutoDownload"))) {
-                // If no update is found, inform the console
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
-            } else {
-                // If an update is found and downloaded, inform the console to restart the server
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
-            }
+            checkUpdatesAsync(getConfig().getBoolean("AutoDownload"));
         } else {
             // Update check is disabled in config.yml
             Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cUpdate check is disabled in config.yml!");
         }
 
         // Restore Backpacks
-        Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::restore);
+        BackpackCMD.restoreAll();
 
         // Log that the plugin has been enabled
         getLogger4J().info("EssentialsMini has been enabled!");
+    }
+
+    private void initializeMongoUsersAsync(OfflinePlayer[] offlinePlayers) {
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            for (OfflinePlayer player : offlinePlayers) {
+                databaseManager.getBackendManager().createUser(player, "essentialsmini_data", new BackendManager.Callback<>() {
+                    @Override
+                    public void onResult(Void result) {
+                        logger.info("User " + player.getUniqueId() + " created successfully in MongoDB.");
+                    }
+
+                    @Override
+                    public void onError(Exception exception) {
+                        logger.error("Could not create User: " + exception.getMessage(), exception);
+                    }
+                });
+            }
+        });
+    }
+
+    private void checkUpdatesAsync(boolean autoDownload) {
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            boolean updateAvailable = checkUpdate(autoDownload);
+            Bukkit.getScheduler().runTask(this, () -> {
+                if (updateAvailable) {
+                    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
+                } else {
+                    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
+                }
+            });
+        });
     }
 
     @Override
@@ -181,7 +207,7 @@ public class Main extends JavaPlugin {
         }
 
         // Save Backpacks
-        Arrays.stream(Bukkit.getOfflinePlayers()).forEach(BackpackCMD::save);
+        BackpackCMD.saveAll();
 
         // Clear lists, maps and variables
         instance = null;
@@ -367,28 +393,16 @@ public class Main extends JavaPlugin {
      * @return The FileConfiguration for the player's language.
      */
     public FileConfiguration getLanguageConfig(CommandSender player) {
-        String locale = "en"; // Default locale
-        File configFile;
-
         if (player == null) {
-            configFile = new File(getDataFolder(), "messages_en-EN.yml");
-            return YamlConfiguration.loadConfiguration(configFile);
+            return getCachedLanguageConfig("en-EN");
         }
 
+        String locale = "en-EN";
         if (player instanceof Player) {
             locale = getLanguageCode(player);
-        } else {
-            getLogger4J().info("CommandSender is not a Player. Using default locale (en-EN).");
         }
 
-        // Load the appropriate file
-        configFile = new File(getDataFolder(), "messages_" + locale + ".yml");
-        if (!configFile.exists()) {
-            getLogger4J().warn("Language file for locale '" + locale + "' not found. Falling back to default (en-EN).");
-            configFile = new File(getDataFolder(), "messages_en-EN.yml");
-        }
-
-        return YamlConfiguration.loadConfiguration(configFile);
+        return getCachedLanguageConfig(locale);
     }
 
     @NotNull
@@ -417,24 +431,34 @@ public class Main extends JavaPlugin {
      * @return The FileConfiguration for the player's language.
      */
     public FileConfiguration getLanguageConfig(Player player) {
-        String locale; // Default locale
-        File configFile;
-
         if (player == null) {
-            configFile = new File(getDataFolder(), "messages_en-EN.yml");
-            return YamlConfiguration.loadConfiguration(configFile);
+            return getCachedLanguageConfig("en-EN");
         }
 
-        locale = getLanguageCode(player);
+        return getCachedLanguageConfig(getLanguageCode(player));
+    }
 
-        // Load the appropriate file
-        configFile = new File(getDataFolder(), "messages_" + locale + ".yml");
-        if (!configFile.exists()) {
-            getLogger4J().warn("Language file for locale '" + locale + "' not found. Falling back to default (en-EN).");
-            configFile = new File(getDataFolder(), "messages_en-EN.yml");
+    public void reloadLanguageConfigs() {
+        languageConfigs.clear();
+        for (String locale : SUPPORTED_LOCALES) {
+            File configFile = new File(getDataFolder(), "messages_" + locale + ".yml");
+            if (configFile.exists()) {
+                languageConfigs.put(locale, YamlConfiguration.loadConfiguration(configFile));
+            }
         }
 
-        return YamlConfiguration.loadConfiguration(configFile);
+        languageConfigs.computeIfAbsent("en-EN", locale ->
+                YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages_en-EN.yml")));
+    }
+
+    private FileConfiguration getCachedLanguageConfig(String locale) {
+        FileConfiguration config = languageConfigs.get(locale);
+        if (config != null) {
+            return config;
+        }
+
+        getLogger4J().warn("Language file for locale '" + locale + "' not found. Falling back to default (en-EN).");
+        return languageConfigs.get("en-EN");
     }
 
     /**
@@ -448,18 +472,7 @@ public class Main extends JavaPlugin {
         if (player instanceof Player) {
             String playerLocale = ((Player) player).getLocale().toLowerCase();
 
-            Map<String, Language> languageMap = new HashMap<>() {{
-                put("en", Language.EN);
-                put("de", Language.DE);
-                put("fr", Language.FR);
-                put("it", Language.IT);
-                put("es", Language.ES);
-                put("pt", Language.PT);
-                put("pl", Language.PL);
-                put("ru", Language.RU);
-            }};
-
-            for (Map.Entry<String, Language> entry : languageMap.entrySet()) {
+            for (Map.Entry<String, Language> entry : LANGUAGE_BY_PREFIX.entrySet()) {
                 if (playerLocale.startsWith(entry.getKey())) {
                     return entry.getValue();
                 }

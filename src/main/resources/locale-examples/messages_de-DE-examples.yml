@@ -165,3 +165,24 @@ LeaveMessage: '&6%Player% &ahat den Server verlassen!'
 PlayerWeather:
   Set: "&aDein Wetter wurde auf &6%WEATHER% &agesetzt!"
   Reset: "&aDein Wetter wurde zurückgesetzt!"
+
+RetrieveIngredients:
+  NoItem: '&cDu musst ein Item in der Hand halten.'
+  NoRecipe: '&cKeine Zutaten fuer &6%Item% &cgefunden.'
+  Success: '&aDu hast &6%Count% &aZutaten aus &6%Item% &azurueckgeholt.'
+  InventoryFull: '&eDein Inventar war voll, daher wurden &6%Dropped% &eZutaten gedroppt.'
+
+UtilityStation:
+  Opened: '&aGeoeffnet: &6%Station%&a.'
+
+Near:
+  InvalidRadius: '&cBitte gib einen gueltigen Radius zwischen &61 &cund &6%MaxRadius% &cein.'
+  None: '&cKeine Spieler innerhalb von &6%Radius% &cBloecken gefunden.'
+  Found: '&aSpieler innerhalb von &6%Radius% &aBloecken: &6%Players%'
+
+ShowRecipe:
+  NoItem: '&cHalte ein Item in der Hand oder nutze &6/showrecipe <item>&c.'
+  UnknownItem: '&cDieses Item existiert nicht: &6%Item%&c.'
+  NoRecipe: '&cKein Rezept fuer &6%Item% &cgefunden.'
+  Header: '&aRezept fuer &6%Item%&a:'
+  Ingredient: '&7- &6%Amount%x &f%Ingredient%'

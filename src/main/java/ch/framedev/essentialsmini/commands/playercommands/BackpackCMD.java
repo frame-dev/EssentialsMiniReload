@@ -92,20 +92,42 @@ public class BackpackCMD extends CommandListenerBase {
         }
     }
 
+    public static void restoreAll() {
+        initializeStorage();
+        itemsStringHashMap.clear();
+        for (String key : cfg.getKeys(false)) {
+            String content = cfg.getString(key + INVENTORY_PATH);
+            if (content != null) {
+                itemsStringHashMap.put(key, content);
+            }
+        }
+    }
+
     // Save Backpack
     public static void save(OfflinePlayer player) {
         initializeStorage();
         if (player == null) return;
         String key = player.getUniqueId().toString();
-        if (!itemsStringHashMap.isEmpty() && itemsStringHashMap.containsKey(key)) {
-            for (Map.Entry<String, String> entry : itemsStringHashMap.entrySet()) {
-                cfg.set(entry.getKey() + INVENTORY_PATH, entry.getValue());
-            }
+        String content = itemsStringHashMap.get(key);
+        if (content != null) {
+            cfg.set(key + INVENTORY_PATH, content);
             try {
                 cfg.save(file);
             } catch (IOException e) {
                 Main.getInstance().getLogger4J().error(e);
             }
+        }
+    }
+
+    public static void saveAll() {
+        initializeStorage();
+        for (Map.Entry<String, String> entry : itemsStringHashMap.entrySet()) {
+            cfg.set(entry.getKey() + INVENTORY_PATH, entry.getValue());
+        }
+        try {
+            cfg.save(file);
+        } catch (IOException e) {
+            Main.getInstance().getLogger4J().error(e);
         }
     }
 
@@ -182,6 +204,8 @@ public class BackpackCMD extends CommandListenerBase {
         } else {
             player.sendMessage(plugin.getPrefix() + (english ? "§cError while Deleting BackPacks!" : "§cError beim Löschen der Backpacks"));
         }
+        file = null;
+        cfg = null;
         initializeStorage();
     }
 

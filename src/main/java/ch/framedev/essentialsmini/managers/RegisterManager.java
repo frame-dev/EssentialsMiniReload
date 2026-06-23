@@ -138,6 +138,11 @@ public class RegisterManager {
 
         new TopCMD(plugin);
 
+        new RetrieveIngredientsCMD(plugin, "retrieve");
+        new UtilityStationCMD(plugin);
+        new NearCMD(plugin);
+        new ShowRecipeCMD(plugin);
+
         // Register the mail command
         new MailCMD(plugin);
 
