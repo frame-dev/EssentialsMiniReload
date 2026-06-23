@@ -1,0 +1,256 @@
+[CENTER][SIZE=6][B]EssentialsMiniReload[/B][/SIZE]
+[SIZE=4]A lightweight, modular essentials plugin for modern Minecraft servers[/SIZE]
+
+[B]Homes | Warps | Spawn | Economy | Kits | Moderation | Private Messages | Mail | Nicknames | Backpacks | Utilities[/B]
+[/CENTER]
+
+[SIZE=5][B]Overview[/B][/SIZE]
+
+EssentialsMiniReload is a modern essentials plugin for Spigot, Paper, and Purpur servers. It brings together the most common server tools in one lightweight plugin, so you do not need a large stack of separate plugins for everyday commands.
+
+The plugin includes homes, warps, spawn management, economy commands, kits, moderation tools, private messages, mail, nicknames, backpacks, inventory utilities, world controls, and more.
+
+It is designed for Minecraft [B]1.20.6 and higher[/B] and runs on Java 17.
+
+[SIZE=5][B]Features[/B][/SIZE]
+
+[LIST]
+[*][B]Spawn System[/B] - Set and teleport to the server spawn.
+[*][B]Homes[/B] - Set, delete, and teleport to homes.
+[*][B]Home GUI[/B] - Open a GUI to manage and select homes.
+[*][B]Warps[/B] - Create, delete, list, and teleport to warps.
+[*][B]Teleport Requests[/B] - TPA, TPAHere, accept, deny, and teleport toggles.
+[*][B]Back Command[/B] - Return to your last death or previous location.
+[*][B]Economy[/B] - Balance, pay, balance top, eco admin commands, and bank features.
+[*][B]Vault Support[/B] - Economy integration through Vault.
+[*][B]Kits[/B] - Create and use permission-based kits.
+[*][B]Inventory Tools[/B] - Invsee, ender chest, backpack, trash, workbench, repair, and item commands.
+[*][B]Moderation[/B] - Mute, temp mute, ban, temp ban, unban, global mute, maintenance mode, and clear chat.
+[*][B]Private Messaging[/B] - Message, reply, spy, and message toggle commands.
+[*][B]Mail System[/B] - Send and manage player mail.
+[*][B]Nicknames[/B] - Set player nicknames and view nickname lists.
+[*][B]Player Utilities[/B] - Fly, god mode, heal, feed, speed, AFK, time played, online/offline player lists.
+[*][B]World Controls[/B] - Day, night, sun, rain, thunder, player time, player weather, lightning, and firework commands.
+[*][B]Geyser Support[/B] - Support for Bedrock players through Geyser where available.
+[*][B]Custom Messages[/B] - Configure and customize plugin messages.
+[*][B]Multiple Storage Options[/B] - YAML, SQLite, MySQL, and MongoDB support depending on the feature.
+[/LIST]
+
+[SIZE=5][B]Requirements[/B][/SIZE]
+
+[LIST]
+[*]Minecraft server running Spigot, Paper, or Purpur
+[*]Minecraft version: [B]1.20.6 or higher[/B]
+[*]Java: [B]17 or higher[/B]
+[/LIST]
+
+[SIZE=5][B]Optional Dependencies[/B][/SIZE]
+
+[LIST]
+[*][B]Vault[/B] - Required for economy integration.
+[*][B]LuckPerms[/B] - Recommended for permission management.
+[*][B]ProtocolLib[/B] - Used for extended packet-based features.
+[*][B]Geyser[/B] - Optional support for Bedrock players.
+[/LIST]
+
+[SIZE=5][B]Installation[/B][/SIZE]
+
+[LIST=1]
+[*]Download the plugin jar.
+[*]Place the jar inside your server's [CODE]plugins[/CODE] folder.
+[*]Start or restart your server.
+[*]Edit the generated configuration files in [CODE]plugins/EssentialsMini/[/CODE].
+[*]Restart the server again after configuring.
+[/LIST]
+
+[SIZE=5][B]Main Commands[/B][/SIZE]
+
+[B]Teleportation[/B]
+[CODE]/spawn
+/setspawn
+/home
+/sethome
+/delhome
+/homegui
+/warp
+/setwarp
+/delwarp
+/warps
+/back
+/top
+/tpa
+/tpahere
+/tpaaccept
+/tpadeny
+/tphereall
+/tptoggle[/CODE]
+
+[B]Economy[/B]
+[CODE]/balance
+/balancetop
+/eco
+/pay
+/bank[/CODE]
+
+[B]Kits and Items[/B]
+[CODE]/kits
+/createkit
+/item
+/repair
+/enchant
+/renameitem
+/signitem
+/playerheads[/CODE]
+
+[B]Moderation[/B]
+[CODE]/mute
+/tempmute
+/removetempmute
+/muteinfo
+/muteforplayer
+/ban
+/tempban
+/eban
+/eunban
+/removetempban
+/globalmute
+/maintenance
+/chatclear
+/silent
+/staffchat[/CODE]
+
+[B]Chat and Player Tools[/B]
+[CODE]/msg
+/r
+/spy
+/msgtoggle
+/mail
+/afk
+/nick
+/nicklist
+/timeplayed
+/online
+/offline[/CODE]
+
+[B]Inventory and Utilities[/B]
+[CODE]/fly
+/flyspeed
+/walkspeed
+/gamemode
+/godmode
+/heal
+/feed
+/invsee
+/enderchest
+/backpack
+/trash
+/workbench
+/sleep[/CODE]
+
+[B]World Control[/B]
+[CODE]/day
+/night
+/sun
+/rain
+/thunder
+/plweather
+/resetplweather
+/pltime
+/resetpltime
+/lightningstrike
+/firework[/CODE]
+
+[SIZE=5][B]Permissions[/B][/SIZE]
+
+All permissions use the [CODE]essentialsmini.[/CODE] prefix.
+
+Main admin permission:
+[CODE]essentialsmini.*[/CODE]
+
+Examples:
+[CODE]essentialsmini.spawn
+essentialsmini.setspawn
+essentialsmini.home
+essentialsmini.sethome
+essentialsmini.warp
+essentialsmini.setwarp
+essentialsmini.fly
+essentialsmini.fly.others
+essentialsmini.gamemode
+essentialsmini.gamemode.others
+essentialsmini.invsee
+essentialsmini.enderchest
+essentialsmini.balance
+essentialsmini.pay
+essentialsmini.economy
+essentialsmini.mute
+essentialsmini.tempmute
+essentialsmini.ban
+essentialsmini.tempban
+essentialsmini.maintenance
+essentialsmini.maintenance.bypass
+essentialsmini.staffchat
+essentialsmini.mail
+essentialsmini.nick
+essentialsmini.reload[/CODE]
+
+Kit permissions:
+[CODE]essentialsmini.kits.<kitname>[/CODE]
+
+[SIZE=5][B]Configuration[/B][/SIZE]
+
+The plugin generates configuration and data files automatically after the first server start.
+
+Common files include:
+
+[LIST]
+[*][CODE]config.yml[/CODE]
+[*]Language/message files
+[*][CODE]locations.yml[/CODE]
+[*][CODE]kits.yml[/CODE]
+[*][CODE]mail.yml[/CODE]
+[*][CODE]tempMutes.yml[/CODE]
+[*][CODE]nicks.yml[/CODE]
+[/LIST]
+
+You can customize messages, storage options, economy settings, moderation behavior, and many other plugin features.
+
+[SIZE=5][B]Storage Support[/B][/SIZE]
+
+EssentialsMiniReload supports different storage systems depending on your setup:
+
+[LIST]
+[*]YAML files
+[*]SQLite
+[*]MySQL
+[*]MongoDB
+[/LIST]
+
+[SIZE=5][B]Current Version[/B][/SIZE]
+
+[CODE]1.0.7-1.20.6-HIGHER-RELEASE[/CODE]
+
+This release includes:
+
+[LIST]
+[*]Full code clean-up
+[*]Performance improvements
+[*]Geyser support for Bedrock players
+[*]Updated messages
+[/LIST]
+
+[SIZE=5][B]Support[/B][/SIZE]
+
+If you find a bug or have a suggestion, please report it through the project support channels.
+
+Website:
+[URL]https://framedev.ch[/URL]
+
+GitHub:
+[URL]https://github.com/frame-dev/EssentialsMiniReload[/URL]
+
+[SIZE=5][B]License[/B][/SIZE]
+
+EssentialsMiniReload is licensed under the MIT License.
+
+[CENTER][B]Thank you for using EssentialsMiniReload![/B][/CENTER]

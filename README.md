@@ -156,7 +156,7 @@ Back up these files before upgrading on a production server.
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.0.6.5-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.0.7-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 
 ## License

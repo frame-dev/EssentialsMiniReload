@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * / Copyrighted by FrameDev
  */
 
+@SuppressWarnings("unused")
 public class PlayerInventoryClearEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
 

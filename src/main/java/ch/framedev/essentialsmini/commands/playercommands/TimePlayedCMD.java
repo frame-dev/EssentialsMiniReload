@@ -103,7 +103,6 @@ public class TimePlayedCMD extends CommandBase {
         return ReplaceCharConfig.replaceParagraph(message);
     }
 
-    @SuppressWarnings("deprecation")
     private long calculateSeconds(Player player) {
         long playedTicks = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
         return Math.max(0L, playedTicks / 20L);

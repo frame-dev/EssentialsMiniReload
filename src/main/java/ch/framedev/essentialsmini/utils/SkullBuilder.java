@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.UUID;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("deprecation")
 public class SkullBuilder {
 
     private final String skullOwner;
@@ -30,7 +30,6 @@ public class SkullBuilder {
         if (Bukkit.getServer().getOnlineMode()) {
             this.player = Bukkit.getOfflinePlayer(UUIDFetcher.getUUID(skullOwner));
         } else {
-            //noinspection deprecation
             this.player = Bukkit.getOfflinePlayer(skullOwner);
         }
     }

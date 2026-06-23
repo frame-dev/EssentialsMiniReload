@@ -41,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
  * Project: EssentialsMini
  * Copyrighted by FrameDev
  */
+@SuppressWarnings("deprecation")
 public class MuteCMD extends CommandBase implements Listener {
 
     private static final String MUTE = "mute";

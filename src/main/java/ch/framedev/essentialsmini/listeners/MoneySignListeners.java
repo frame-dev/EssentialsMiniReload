@@ -25,8 +25,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This Plugin was Created by FrameDev
@@ -35,6 +36,7 @@ import java.util.Objects;
  * Project: EssentialsMini
  * Copyrighted by FrameDev
  */
+@SuppressWarnings("deprecation")
 public class MoneySignListeners extends ListenerBase implements CommandExecutor {
 
     private Economy eco;
@@ -78,7 +80,7 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         }
     }
 
-    @SuppressWarnings({"deprecation", "DataFlowIssue"})
+    @SuppressWarnings("DataFlowIssue")
     @EventHandler
     public void onClickBalance(PlayerInteractEvent e) {
         if (e == null || e.getPlayer() == null) return;
@@ -584,11 +586,10 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
 
     final File file = new File(Main.getInstance().getDataFolder(), "items.yml");
     final FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
-    final HashMap<Player, String> cmdMessage = new HashMap<>();
-    final HashMap<Player, Sign> playerSign = new HashMap<>();
-    final HashMap<Player, ItemStack> itemHash = new HashMap<>();
+    final Map<Player, String> cmdMessage = new ConcurrentHashMap<>();
+    final Map<Player, Sign> playerSign = new ConcurrentHashMap<>();
+    final Map<Player, ItemStack> itemHash = new ConcurrentHashMap<>();
 
-    @SuppressWarnings("deprecation")
     @EventHandler
     public void onPlayerClickSign(PlayerInteractEvent event) {
         if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) return;
@@ -613,7 +614,6 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         itemHash.put(event.getPlayer(), item);
     }
 
-    @SuppressWarnings("deprecation")
     @EventHandler
     public void onAsync(AsyncPlayerChatEvent event) {
         if (!Main.getInstance().getConfig().getBoolean("PlayerShop")) return;
@@ -624,6 +624,11 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         String message = event.getMessage();
         if (message == null) return;
 
+        event.setCancelled(true);
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> handlePlayerShopChat(player, message));
+    }
+
+    private void handlePlayerShopChat(Player player, String message) {
         String command = cmdMessage.get(player);
         if (command == null) return;
 
@@ -634,7 +639,6 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             sign.setWaxed(true);
             cmdMessage.remove(player);
             sign.setLine(1, ChatColor.translateAlternateColorCodes('&', message));
-            event.setCancelled(true);
             cmdMessage.put(player, "amount");
             player.sendMessage("§aWie viel soll man kaufen können?");
 
@@ -655,10 +659,15 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             playerSign.put(player, sign);
 
         } else if (command.equalsIgnoreCase("amount")) {
+            Integer amount = parsePositiveInt(message);
+            if (amount == null) {
+                player.sendMessage(Main.getInstance().getPrefix() + "§cBitte gib eine gültige Anzahl ein.");
+                return;
+            }
+
             sign.setEditable(true);
             cmdMessage.remove(player);
-            sign.setLine(2, message);
-            event.setCancelled(true);
+            sign.setLine(2, String.valueOf(amount));
             cmdMessage.put(player, "price");
             player.sendMessage("§aWie viel soll es kosten?");
             sign.update(true);
@@ -666,10 +675,17 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             playerSign.put(player, sign);
 
         } else if (command.equalsIgnoreCase("price")) {
+            Double price = parsePositiveDouble(message);
+            if (price == null) {
+                player.sendMessage(Main.getInstance().getPrefix() + "§cBitte gib einen gültigen Preis ein.");
+                return;
+            }
+
             sign.setLine(0, "§6Buy");
-            sign.setLine(3, message);
-            event.setCancelled(true);
+            sign.setLine(3, String.valueOf(price));
             cmdMessage.remove(player);
+            playerSign.remove(player);
+            itemHash.remove(player);
 
             new BukkitRunnable() {
                 @Override
@@ -677,6 +693,24 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
                     sign.update(true, true);
                 }
             }.runTaskLater(Main.getInstance(), 60);
+        }
+    }
+
+    private Integer parsePositiveInt(String value) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private Double parsePositiveDouble(String value) {
+        try {
+            double parsed = Double.parseDouble(value);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ignored) {
+            return null;
         }
     }
 

@@ -13,7 +13,8 @@ import org.bukkit.plugin.Plugin;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings("deprecation")
+
+@SuppressWarnings({"deprecation", "null"})
 public final class SkinService {
 
     private final Plugin plugin;

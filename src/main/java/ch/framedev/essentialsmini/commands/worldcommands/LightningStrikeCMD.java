@@ -14,14 +14,13 @@ import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.jetbrains.annotations.NotNull;
 
-public class LightningStrikeCMD extends CommandBase implements CommandExecutor {
+public class LightningStrikeCMD extends CommandBase {
 
     private final Main plugin;
 

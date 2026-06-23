@@ -22,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("deprecation")
 public class PlayerHeadsCMD extends CommandBase {
 
     private static final String USAGE = "/playerheads <SpielerName> [TargetPlayer]";

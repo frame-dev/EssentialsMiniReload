@@ -598,7 +598,8 @@ public class Main extends JavaPlugin {
             String latestVersion = jsonElement.getAsJsonObject().get("latest").getAsString();
             String oldVersion = Main.getInstance().getDescription().getVersion();
             if (!latestVersion.equalsIgnoreCase(oldVersion)) {
-                if (!oldVersion.contains("PRE-RELEASE") || !oldVersion.contains("1.20.6-HIGHER-RELEASE")) {
+                UpdateChecker updateChecker = new UpdateChecker();
+                if (!updateChecker.isOldVersionPreRelease()) {
                     if (download) {
                         downloadLatest();
                         Bukkit.getConsoleSender().sendMessage(getPrefix() + "Latest Version will be Downloaded : New Version : " + latestVersion);
@@ -607,8 +608,8 @@ public class Main extends JavaPlugin {
                     }
                     return true;
                 } else {
-                    if (new UpdateChecker().hasPreReleaseUpdate()) {
-                        Bukkit.getConsoleSender().sendMessage(getPrefix() + "A new pre-release update is available: version " + new UpdateChecker().getLatestPreRelease());
+                    if (updateChecker.hasPreReleaseUpdate()) {
+                        Bukkit.getConsoleSender().sendMessage(getPrefix() + "A new pre-release update is available: version " + updateChecker.getLatestPreRelease());
                         return true;
                     }
                 }
