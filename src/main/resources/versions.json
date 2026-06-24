@@ -1,7 +1,7 @@
 {
   "latest": "1.3.9-RELEASE",
   "latest-pre-release": "1.4.9.3-1.20.6-PRE-RELEASE",
-  "1.20.6-higher-release": "1.0.9-1.20.6-HIGHER-RELEASE",
+  "1.20.6-higher-release": "1.1.0-1.20.6-HIGHER-RELEASE",
   "1.20.6-higher-releases": [
     "1.0.0-1.20.6-HIGHER-PRE-RELEASE",
     "1.0.1-1.20.6-HIGHER-PRE-RELEASE",
@@ -19,7 +19,8 @@
     "1.0.6.5-1.20.6-HIGHER-RELEASE",
     "1.0.7-1.20.6-HIGHER-RELEASE",
     "1.0.8-1.20.6-HIGHER-RELEASE",
-    "1.0.9-1.20.6-HIGHER-RELEASE"
+    "1.0.9-1.20.6-HIGHER-RELEASE",
+    "1.1.0-1.20.6-HIGHER-RELEASE"
   ],
   "pre-releases": [
     "1.4.2-1.20.6-PRE-RELEASE",
@@ -205,6 +206,19 @@
         "Removed unused commands",
         "changed Staffchat command to support custom formatting and Support to enable or disable the Plugin's Prefix",
         "Messages added for more commands"
+      ]
+    },
+    {
+      "version": "1.1.0-1.20.6-HIGHER-RELEASE",
+      "description": [
+        "Added /emhelp command help GUI with paged command items",
+        "Command help items now show description, usage, aliases, permission, and extra notes in hover lore",
+        "Added /essentialshelp alias and /emhelp text fallback for console or chat-based help",
+        "Improved ProtocolLib skin refresh so /nick <nickname> <skin> updates visible player skins more reliably",
+        "Nickname reset now restores the original skin data more reliably",
+        "Updated /flyspeed with reset/default/normal arguments and tab completion",
+        "Added Geyser-Spigot and Floodgate as optional soft dependencies",
+        "Updated README.md and SpigotMC description for the new release"
       ]
     }
   ]

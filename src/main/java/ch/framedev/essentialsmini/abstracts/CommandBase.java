@@ -1,14 +1,5 @@
 package ch.framedev.essentialsmini.abstracts;
 
-/*
- * de.framedev.essentialsmini.managers
- * ===================================================
- * This File was Created by FrameDev
- * Please do not change anything without my consent!
- * ===================================================
- * This Class was created at 17.09.2020 20:54
- */
-
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,6 +10,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+/**
+ * An abstract base class for managing commands and tab completions in a plugin.
+ * This class provides centralized functionality to simplify the registration
+ * and execution of commands and associated tab completions.
+ * Subclasses should extend this class to define specific commands
+ * by implementing the required methods from {@link CommandExecutor} and {@link TabCompleter}.
+ */
 public abstract class CommandBase implements CommandExecutor, TabCompleter {
 
     private final Main plugin;

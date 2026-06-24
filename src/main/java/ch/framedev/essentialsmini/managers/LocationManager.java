@@ -25,7 +25,7 @@ import java.util.*;
  * This Class was created at 03.07.2020 20:00
  */
 @SuppressWarnings("unused")
-public class LocationsManager {
+public class LocationManager {
 
     private String name;
     private final File fileBackup = new File(Main.getInstance().getDataFolder(), "locationsBackup.yml");
@@ -36,11 +36,11 @@ public class LocationsManager {
 
     private final Main instance = Main.getInstance();
 
-    public LocationsManager(String name) {
+    public LocationManager(String name) {
         this.name = name;
     }
 
-    public LocationsManager() {
+    public LocationManager() {
     }
 
     /**
@@ -59,6 +59,18 @@ public class LocationsManager {
      */
     public FileConfiguration getCfg() {
         return cfg;
+    }
+
+    public boolean exists(String name) {
+        if (name == null || !cfg.contains(name)) {
+            return false;
+        }
+
+        Object value = cfg.get(name);
+        if (value instanceof String stringValue) {
+            return !stringValue.isBlank();
+        }
+        return value != null;
     }
 
     /**
@@ -291,7 +303,7 @@ public class LocationsManager {
      * Deletes the Position Locations every Reload or restart
      */
     public void deleteLocations() {
-        ConfigurationSection cs = new LocationsManager().getCfg().getConfigurationSection("position");
+        ConfigurationSection cs = new LocationManager().getCfg().getConfigurationSection("position");
         if (cs != null) {
             for (String s : cs.getKeys(false)) {
                 if (s != null) {

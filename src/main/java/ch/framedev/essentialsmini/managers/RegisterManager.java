@@ -151,6 +151,9 @@ public class RegisterManager {
         // Register the mail command
         new MailCMD(plugin);
 
+        // Register the full command help GUI
+        new HelpCMD(plugin);
+
         // Register the main EssentialsMini command
         new EssentialsMiniCMD(plugin);
 

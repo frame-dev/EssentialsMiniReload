@@ -1,5 +1,6 @@
 package ch.framedev.essentialsmini.utils;
 
+import ch.framedev.essentialsmini.commands.playercommands.VanishCMD;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -17,9 +18,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings({"deprecation", "null"})
 public final class SkinService {
 
+    private static final long TAB_READD_DELAY_TICKS = 2L;
+    private static final long ENTITY_RESPAWN_DELAY_TICKS = 2L;
+    private static final long ENTITY_SHOW_DELAY_TICKS = 1L;
+    private static final String VANISH_SEE_PERMISSION = "essentialsmini.vanish.see";
+
     private final Plugin plugin;
     private final ProtocolManager pm;
     private final Map<UUID, ProfileOverride> overrides = new ConcurrentHashMap<>();
+    private final Map<UUID, WrappedGameProfile> originalProfiles = new ConcurrentHashMap<>();
 
     public SkinService(Plugin plugin) {
         this.plugin = plugin;
@@ -48,17 +55,10 @@ public final class SkinService {
                     if (ov == null) continue;
 
                     WrappedGameProfile old = d.getProfile();
-                    WrappedGameProfile repl = new WrappedGameProfile(profileId, ov.profileName());
-                    for (WrappedSignedProperty prop : old.getProperties().values()) {
-                        if (!"textures".equalsIgnoreCase(Objects.requireNonNull(prop).getName())) {
-                            repl.getProperties().put(prop.getName(), prop);
-                        }
-                    }
-                    if (ov.textures() != null) {
-                        repl.getProperties().put("textures", ov.textures());
-                    }
+                    WrappedGameProfile repl = createProfile(profileId, ov.profileName(), ov.textures(), old);
 
                     list.set(i, createPlayerInfoData(
+                            d,
                             profileId,
                             repl,
                             d.getLatency(),
@@ -78,59 +78,60 @@ public final class SkinService {
     }
 
     public void apply(Player player, String profileName, String value, String signature) {
+        captureOriginalProfile(player);
         WrappedSignedProperty textures = value == null || signature == null
                 ? null
                 : new WrappedSignedProperty("textures", value, signature);
         overrides.put(player.getUniqueId(), new ProfileOverride(profileName, textures));
-        pushTabRefreshLegacy(player, profileName, textures);
+        pushSkinRefresh(player, profileName, textures, null);
     }
 
     public void clear(Player player) {
         overrides.remove(player.getUniqueId());
-        pushTabRefreshLegacy(player, player.getName(), null);
+        WrappedGameProfile originalProfile = originalProfiles.remove(player.getUniqueId());
+        if (originalProfile == null) {
+            originalProfile = readCurrentProfile(player);
+        }
+        pushSkinRefresh(player, player.getName(), getTextures(originalProfile), originalProfile);
     }
 
-    private void pushTabRefreshLegacy(Player target, String profileName, WrappedSignedProperty textures) {
+    private void pushSkinRefresh(Player target, String profileName, WrappedSignedProperty textures, WrappedGameProfile baseProfile) {
         try {
-            // ----- REMOVE -----
             PacketContainer remove = createRemovePacket(target);
-
-            // ----- ADD (must be PlayerInfoData list) -----
-            PacketContainer add = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
-            writeAddActions(add);
-
-            WrappedGameProfile profile = new WrappedGameProfile(target.getUniqueId(), profileName);
-            if (textures != null) {
-                profile.getProperties().put("textures", textures);
-            }
-
-            if (add.getPlayerInfoDataLists().size() > 0) {
-                add.getPlayerInfoDataLists().write(0, Collections.singletonList(createPlayerInfoData(
-                        target.getUniqueId(),
-                        profile,
-                        0,
-                        true,
-                        EnumWrappers.NativeGameMode.fromBukkit(target.getGameMode()),
-                        WrappedChatComponent.fromText(profileName)
-                )));
-            } else {
-                // Fallback: extremely old mappings - send nothing rather than crashing.
-                plugin.getLogger().warning("[SkinRefresh] ADD_PLAYER has no PlayerInfoData list on this mapping.");
-            }
-
-            // Send to everyone (others first, then self)
-            for (Player viewer : Bukkit.getOnlinePlayers()) {
-                if (!viewer.equals(target)) {
-                    pm.sendServerPacket(viewer, remove);
-                    pm.sendServerPacket(viewer, add);
-                }
-            }
-            pm.sendServerPacket(target, remove);
-            pm.sendServerPacket(target, add);
-
+            PacketContainer add = createAddPacket(target, profileName, textures, baseProfile);
+            sendRemovePacket(target, remove);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!target.isOnline()) return;
+                sendAddPacket(target, add);
+                target.updateInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> refreshEntityForViewers(target), ENTITY_RESPAWN_DELAY_TICKS);
+            }, TAB_READD_DELAY_TICKS);
         } catch (Exception e) {
             plugin.getLogger().warning("[SkinRefresh] " + e.getMessage());
         }
+    }
+
+    private PacketContainer createAddPacket(Player target, String profileName, WrappedSignedProperty textures,
+                                            WrappedGameProfile baseProfile) {
+        PacketContainer add = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
+        writeAddActions(add);
+
+        WrappedGameProfile profile = createProfile(target.getUniqueId(), profileName, textures, baseProfile);
+
+        if (add.getPlayerInfoDataLists().size() > 0) {
+            add.getPlayerInfoDataLists().write(0, Collections.singletonList(createPlayerInfoData(
+                    null,
+                    target.getUniqueId(),
+                    profile,
+                    target.getPing(),
+                    true,
+                    EnumWrappers.NativeGameMode.fromBukkit(target.getGameMode()),
+                    WrappedChatComponent.fromText(profileName)
+            )));
+        } else {
+            plugin.getLogger().warning("[SkinRefresh] ADD_PLAYER has no PlayerInfoData list on this mapping.");
+        }
+        return add;
     }
 
     private PacketContainer createRemovePacket(Player target) {
@@ -151,6 +152,7 @@ public final class SkinService {
             remove.getUUIDLists().write(0, Collections.singletonList(target.getUniqueId()));
         } else if (remove.getPlayerInfoDataLists().size() > 0) {
             remove.getPlayerInfoDataLists().write(0, Collections.singletonList(createPlayerInfoData(
+                    null,
                     target.getUniqueId(),
                     new WrappedGameProfile(target.getUniqueId(), target.getName()),
                     0,
@@ -206,9 +208,18 @@ public final class SkinService {
         packet.getPlayerInfoAction().write(0, EnumWrappers.PlayerInfoAction.ADD_PLAYER);
     }
 
-    private PlayerInfoData createPlayerInfoData(UUID profileId, WrappedGameProfile profile, int latency,
+    private PlayerInfoData createPlayerInfoData(PlayerInfoData source, UUID profileId, WrappedGameProfile profile, int latency,
                                                 boolean listed, EnumWrappers.NativeGameMode gameMode,
                                                 WrappedChatComponent displayName) {
+        if (source != null) {
+            try {
+                return new PlayerInfoData(profileId, latency, listed, gameMode, profile, displayName,
+                        source.isShowHat(), source.getListOrder(), source.getRemoteChatSessionData());
+            } catch (Throwable ignored) {
+                // Older ProtocolLib constructors are handled below.
+            }
+        }
+
         try {
             return new PlayerInfoData(profileId, latency, listed, gameMode, profile, displayName);
         } catch (Throwable ignored) {
@@ -226,6 +237,113 @@ public final class SkinService {
             // Older ProtocolLib versions only expose the profile UUID.
         }
         return data.getProfile() == null ? null : data.getProfile().getUUID();
+    }
+
+    private void captureOriginalProfile(Player player) {
+        originalProfiles.computeIfAbsent(player.getUniqueId(), ignored -> {
+            WrappedGameProfile profile = readCurrentProfile(player);
+            return profile == null ? new WrappedGameProfile(player.getUniqueId(), player.getName()) : profile;
+        });
+    }
+
+    private WrappedGameProfile readCurrentProfile(Player player) {
+        try {
+            return cloneProfile(WrappedGameProfile.fromPlayer(player), player.getUniqueId(), player.getName());
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private WrappedGameProfile createProfile(UUID profileId, String profileName, WrappedSignedProperty textures,
+                                             WrappedGameProfile baseProfile) {
+        WrappedGameProfile profile = new WrappedGameProfile(profileId, profileName);
+        if (baseProfile != null) {
+            for (WrappedSignedProperty prop : baseProfile.getProperties().values()) {
+                if (prop != null && !"textures".equalsIgnoreCase(prop.getName())) {
+                    profile.getProperties().put(prop.getName(), prop);
+                }
+            }
+        }
+        if (textures != null) {
+            profile.getProperties().put("textures", textures);
+        }
+        return profile;
+    }
+
+    private WrappedGameProfile cloneProfile(WrappedGameProfile source, UUID profileId, String fallbackName) {
+        String name = source == null || source.getName() == null ? fallbackName : source.getName();
+        WrappedGameProfile copy = new WrappedGameProfile(profileId, name);
+        if (source != null) {
+            for (WrappedSignedProperty prop : source.getProperties().values()) {
+                if (prop != null) {
+                    copy.getProperties().put(prop.getName(), prop);
+                }
+            }
+        }
+        return copy;
+    }
+
+    private WrappedSignedProperty getTextures(WrappedGameProfile profile) {
+        if (profile == null) {
+            return null;
+        }
+        for (WrappedSignedProperty prop : profile.getProperties().get("textures")) {
+            if (prop != null) {
+                return prop;
+            }
+        }
+        return null;
+    }
+
+    private void sendRemovePacket(Player target, PacketContainer packet) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            sendPacket(viewer, packet);
+        }
+    }
+
+    private void sendAddPacket(Player target, PacketContainer packet) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.equals(target) || viewer.canSee(target)) {
+                sendPacket(viewer, packet);
+            }
+        }
+    }
+
+    private void sendPacket(Player viewer, PacketContainer packet) {
+        try {
+            pm.sendServerPacket(viewer, packet);
+        } catch (Exception e) {
+            plugin.getLogger().warning("[SkinRefresh] Could not send packet to " + viewer.getName() + ": " + e.getMessage());
+        }
+    }
+
+    private void refreshEntityForViewers(Player target) {
+        if (!target.isOnline()) {
+            return;
+        }
+
+        List<Player> visibleViewers = new ArrayList<>();
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (!viewer.equals(target) && viewer.canSee(target)) {
+                visibleViewers.add(viewer);
+                viewer.hidePlayer(plugin, target);
+            }
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!target.isOnline()) {
+                return;
+            }
+            for (Player viewer : visibleViewers) {
+                if (viewer.isOnline() && shouldRestoreVisibility(viewer, target)) {
+                    viewer.showPlayer(plugin, target);
+                }
+            }
+        }, ENTITY_SHOW_DELAY_TICKS);
+    }
+
+    private boolean shouldRestoreVisibility(Player viewer, Player target) {
+        return !VanishCMD.hided.contains(target.getName()) || viewer.hasPermission(VANISH_SEE_PERMISSION);
     }
 
     private record ProfileOverride(String profileName, WrappedSignedProperty textures) {

@@ -2,7 +2,7 @@ package ch.framedev.essentialsmini.listeners;
 
 import ch.framedev.essentialsmini.abstracts.ListenerBase;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.LocationsManager;
+import ch.framedev.essentialsmini.managers.LocationManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -50,10 +50,10 @@ public class WarpSigns extends ListenerBase {
         }
 
         // Create single LocationsManager instance
-        LocationsManager locationsManager = new LocationsManager();
+        LocationManager locationManager = new LocationManager();
         boolean warpFound = false;
 
-        for (String warpName : locationsManager.getWarpNames()) {
+        for (String warpName : locationManager.getWarpNames()) {
             if (warpName == null || warpName.trim().isEmpty()) {
                 continue;
             }
@@ -62,8 +62,8 @@ public class WarpSigns extends ListenerBase {
                 event.setLine(0, "§6[§bWARP§6]");
                 event.setLine(1, "§a" + warpName);
 
-                if (locationsManager.costWarp(warpName)) {
-                    double cost = locationsManager.getWarpCost(warpName);
+                if (locationManager.costWarp(warpName)) {
+                    double cost = locationManager.getWarpCost(warpName);
                     event.setLine(2, "§b" + cost + Main.getInstance().getCurrencySymbolMulti());
                 }
 
@@ -142,8 +142,8 @@ public class WarpSigns extends ListenerBase {
         }
 
         // Get and validate location
-        LocationsManager locationsManager = new LocationsManager();
-        Location location = locationsManager.getLocation("warps." + warpName);
+        LocationManager locationManager = new LocationManager();
+        Location location = locationManager.getLocation("warps." + warpName);
 
         if (location == null) {
             player.sendMessage(getPlugin().getPrefix() + "§cWarp location not found!");

@@ -5,7 +5,7 @@
 package ch.framedev.essentialsmini.commands.playercommands;
 
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.LocationsManager;
+import ch.framedev.essentialsmini.managers.LocationManager;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -44,7 +44,7 @@ public record SpawnCMD(Main plugin) implements CommandExecutor {
         Player player = requirePlayer(sender);
         if (player == null) return true;
 
-        new LocationsManager(SPAWN).setLocation(player.getLocation());
+        new LocationManager(SPAWN).setLocation(player.getLocation());
         send(sender, "§6Spawn §aset!");
         return true;
     }
@@ -55,7 +55,7 @@ public record SpawnCMD(Main plugin) implements CommandExecutor {
         Player player = requirePlayer(sender);
         if (player == null) return true;
 
-        Location location = new LocationsManager(SPAWN).getLocation();
+        Location location = new LocationManager(SPAWN).getLocation();
         if (location == null) {
             location = player.getWorld().getSpawnLocation();
         }

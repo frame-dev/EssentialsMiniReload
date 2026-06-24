@@ -8,7 +8,7 @@ import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.InventoryManager;
 import ch.framedev.essentialsmini.managers.ItemBuilder;
-import ch.framedev.essentialsmini.managers.LocationsManager;
+import ch.framedev.essentialsmini.managers.LocationManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TabCompleteUtils;
@@ -50,7 +50,7 @@ public class HomeCMD extends CommandListenerBase {
     private static final String EMPTY_LOCATION = " ";
 
     private final Main plugin;
-    private LocationsManager locationsManager;
+    private LocationManager locationManager;
 
     final ArrayList<String> homes = new ArrayList<>();
 
@@ -65,7 +65,7 @@ public class HomeCMD extends CommandListenerBase {
             setup(HOME_GUI, this);
             plugin.getTabCompleters().put(HOME, this);
             plugin.getTabCompleters().put(DEL_HOME, this);
-            this.locationsManager = new LocationsManager();
+            this.locationManager = new LocationManager();
         }
     }
 
@@ -135,7 +135,7 @@ public class HomeCMD extends CommandListenerBase {
             return true;
         }
 
-        new LocationsManager(path).setLocation(player.getLocation());
+        new LocationManager(path).setLocation(player.getLocation());
         reloadLocations();
 
         String message = defaultHome
@@ -207,7 +207,7 @@ public class HomeCMD extends CommandListenerBase {
         String path = homePath(playerName, homeName);
         if (!homeExists(path)) return false;
 
-        LocationsManager manager = new LocationsManager(path);
+        LocationManager manager = new LocationManager(path);
         manager.getCfg().set(path, EMPTY_LOCATION);
         manager.saveCfg();
         reloadLocations();
@@ -217,7 +217,7 @@ public class HomeCMD extends CommandListenerBase {
     private Location getHomeLocation(String playerName, String homeName) {
         String path = homePath(playerName, homeName);
         if (!homeExists(path)) return null;
-        return new LocationsManager(path).getLocation();
+        return new LocationManager(path).getLocation();
     }
 
     private boolean homeExists(String path) {
@@ -315,15 +315,15 @@ public class HomeCMD extends CommandListenerBase {
         return homeName.toLowerCase(Locale.ROOT);
     }
 
-    private LocationsManager locations() {
-        if (locationsManager == null) {
-            locationsManager = new LocationsManager();
+    private LocationManager locations() {
+        if (locationManager == null) {
+            locationManager = new LocationManager();
         }
-        return locationsManager;
+        return locationManager;
     }
 
     private void reloadLocations() {
-        locationsManager = new LocationsManager();
+        locationManager = new LocationManager();
         homes.clear();
     }
 

@@ -7,14 +7,21 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * / This Plugin was Created by FrameDev
- * / Package: de.framedev.essentialsmini.managers
- * / ClassName CommandListenerBase
- * / Date: 24.08.21
- * / Project: EssentialsMini
- * / Copyrighted by FrameDev
+ * Represents a base class for commands that also act as event listeners.
+ * This class extends the functionality of the CommandBase class while
+ * implementing the Listener interface to handle events.
+ * <p>
+ * The CommandListenerBase class provides multiple constructors to fit
+ * various use cases, allowing for flexible initialization with different
+ * combinations of command names, executors, tab completers, and listeners.
+ * <p>
+ * Features include:
+ * - Automatic registration of the class as a listener with the plugin's event manager.
+ * - Support for multiple command names and custom behavior via CommandExecutor and TabCompleter.
+ * <p>
+ * Subclasses should inherit this class to create commands capable of responding
+ * to both command execution and event handling.
  */
-
 @SuppressWarnings("unused")
 public abstract class CommandListenerBase extends CommandBase implements Listener {
 

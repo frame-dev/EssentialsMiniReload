@@ -7,6 +7,8 @@ softdepend:
   - Vault
   - ProtocolLib
   - LuckPerms
+  - Geyser-Spigot
+  - floodgate
 
 loadbefore:
   - Vault
@@ -292,6 +294,11 @@ commands:
     aliases:
       - essmini
     description: Main Command for all EssentialsMini Commands
+  emhelp:
+    aliases:
+      - essentialshelp
+    permission: essentialsmini.help
+    description: Shows all EssentialsMini commands in a paged GUI
   retrieve:
     description: Retrieve Ingredients from a Item's Recipe and removes the Item from the Inventory
   workbench:

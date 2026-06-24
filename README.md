@@ -20,7 +20,8 @@ Optional integrations:
 | --- | --- |
 | Vault | Economy support |
 | LuckPerms | Permission management |
-| ProtocolLib | Extended packet-based features such as skin refreshes |
+| ProtocolLib | Extended packet-based features such as live skin refreshes |
+| Geyser / Floodgate | Optional Bedrock player support |
 
 ## Installation
 
@@ -57,6 +58,8 @@ EssentialsMiniReload supports multiple storage modes depending on the feature an
 Economy features require Vault and an economy provider.
 
 ## Command Overview
+
+- `/emhelp` opens the full EssentialsMiniReload command help GUI. Hover over any command item to see its description, usage, aliases, and permission. Console users can run `/emhelp text`.
 
 ### Teleportation
 
@@ -102,7 +105,7 @@ Economy features require Vault and an economy provider.
 - `/msg`, `/r`, `/spy`, `/msgtoggle`
 - `/mail`
 - `/afk`
-- `/nick`
+- `/nick`, `/nick reset`
 - `/nicklist`
 - `/timeplayed`
 - `/online`, `/offline`
@@ -129,6 +132,15 @@ Economy features require Vault and an economy provider.
 - `/lightningstrike`
 - `/firework`
 
+### Admin And Help
+
+- `/emhelp`, `/essentialshelp`
+- `/essentialsmini`
+- `/essentialsmini reload`
+- `/essentialsmini help`
+- `/essentialsmini version`
+- `/essentialsmini economy <on|off>`
+
 ## Permissions
 
 Permissions use the `essentialsmini.` prefix.
@@ -136,6 +148,7 @@ Permissions use the `essentialsmini.` prefix.
 Examples:
 
 - `essentialsmini.fly`
+- `essentialsmini.help`
 - `essentialsmini.home`
 - `essentialsmini.kits.<kitname>`
 - `essentialsmini.item`
@@ -168,7 +181,7 @@ Back up these files before upgrading on a production server.
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.0.8-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.1.0-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 
 ## License

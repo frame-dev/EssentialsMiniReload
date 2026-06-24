@@ -1,19 +1,16 @@
 package ch.framedev.essentialsmini.abstracts;
 
-
-/*
- * de.framedev.essentialsmini.abstracts
- * ===================================================
- * This File was Created by FrameDev
- * Please do not change anything without my consent!
- * ===================================================
- * This Class was created at 23.09.2020 19:13
- */
-
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Abstract base class for handling listeners in a plugin environment.
+ * <p>
+ * This class provides a structure for managing listeners in plugins by
+ * automatically registering the listener upon instantiation and providing
+ * helper methods to interact with the plugin instance.
+ */
 public abstract class ListenerBase implements Listener {
 
     /**

@@ -4,7 +4,7 @@ import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.InventoryManager;
 import ch.framedev.essentialsmini.managers.ItemBuilder;
-import ch.framedev.essentialsmini.managers.LocationsManager;
+import ch.framedev.essentialsmini.managers.LocationManager;
 import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import ch.framedev.essentialsmini.utils.Variables;
@@ -83,20 +83,20 @@ public class WarpCMD extends CommandListenerBase {
             return true;
         }
 
-        LocationsManager locationsManager = new LocationsManager();
+        LocationManager locationManager = new LocationManager();
         if (args.length == 1) {
-            locationsManager.setLocation("warps." + name, player.getLocation());
+            locationManager.setLocation("warps." + name, player.getLocation());
         } else {
             Double cost = parseCost(sender, args[1]);
             if (cost == null) {
                 return true;
             }
-            locationsManager.setWarp(name, player.getLocation(), cost);
+            locationManager.setWarp(name, player.getLocation(), cost);
         }
 
         send(player, warpMessage(player, "Created", "&aWarp has been created with the name &6%WarpName%&c!", name, null));
         if (args.length == 2) {
-            send(player, warpMessage(player, "Cost", "&aThis Warp costs &6%Cost%&c!", name, locationsManager.getWarpCost(name)));
+            send(player, warpMessage(player, "Cost", "&aThis Warp costs &6%Cost%&c!", name, locationManager.getWarpCost(name)));
         }
         return true;
     }
@@ -166,21 +166,21 @@ public class WarpCMD extends CommandListenerBase {
             return true;
         }
 
-        new LocationsManager().removeLocation("warps." + warp);
+        new LocationManager().removeLocation("warps." + warp);
         send(sender, warpMessage(sender, "Delete", "&aThe Warp with the name &6%WarpName% &ahas been &cdeleted!", warp, null));
         return true;
     }
 
     private void teleportToWarp(Player player, String inputName) {
         String name = normalizeWarpName(inputName);
-        LocationsManager locationsManager = new LocationsManager();
-        Location location = locationsManager.getWarp(name);
+        LocationManager locationManager = new LocationManager();
+        Location location = locationManager.getWarp(name);
         if (location == null) {
             send(player, warpMessage(player, "NotExist", "&cThis Warp doesn't exist!", name, null));
             return;
         }
 
-        if (!chargeWarpCost(player, name, locationsManager)) {
+        if (!chargeWarpCost(player, name, locationManager)) {
             return;
         }
 
@@ -188,12 +188,12 @@ public class WarpCMD extends CommandListenerBase {
         send(player, warpMessage(player, "Teleport", "&aYou've teleported to &6%WarpName%!", name, null));
     }
 
-    private boolean chargeWarpCost(Player player, String warpName, LocationsManager locationsManager) {
-        if (!locationsManager.costWarp(warpName) || plugin.getVaultManager() == null || plugin.getVaultManager().getEco() == null) {
+    private boolean chargeWarpCost(Player player, String warpName, LocationManager locationManager) {
+        if (!locationManager.costWarp(warpName) || plugin.getVaultManager() == null || plugin.getVaultManager().getEco() == null) {
             return true;
         }
 
-        double cost = locationsManager.getWarpCost(warpName);
+        double cost = locationManager.getWarpCost(warpName);
         if (cost <= 0) {
             return true;
         }
@@ -221,13 +221,13 @@ public class WarpCMD extends CommandListenerBase {
         inventoryManager.setSize(rows);
         inventoryManager.create();
 
-        LocationsManager locationsManager = new LocationsManager();
+        LocationManager locationManager = new LocationManager();
         int maxItems = Math.min(warps.size(), inventoryManager.getSize());
         for (int i = 0; i < maxItems; i++) {
             String warp = warps.get(i);
             ItemBuilder builder = new ItemBuilder(Material.ENDER_PEARL).setDisplayName("§6" + warp);
-            if (locationsManager.costWarp(warp)) {
-                builder.setLore("§aCost : §6" + locationsManager.getWarpCost(warp), "§aTeleport to this Warp");
+            if (locationManager.costWarp(warp)) {
+                builder.setLore("§aCost : §6" + locationManager.getWarpCost(warp), "§aTeleport to this Warp");
             } else {
                 builder.setLore("§aTeleport to this Warp");
             }
@@ -239,34 +239,34 @@ public class WarpCMD extends CommandListenerBase {
     }
 
     private List<String> getWarpNames() {
-        LocationsManager locationsManager = new LocationsManager();
+        LocationManager locationManager = new LocationManager();
         List<String> warps = new ArrayList<>();
 
-        ConfigurationSection section = locationsManager.getCfg().getConfigurationSection("warps");
+        ConfigurationSection section = locationManager.getCfg().getConfigurationSection("warps");
         if (section != null) {
             for (String key : section.getKeys(false)) {
-                if (isActiveWarp(locationsManager, key)) {
+                if (isActiveWarp(locationManager, key)) {
                     warps.add(key);
                 }
             }
             return warps;
         }
 
-        for (String name : locationsManager.getWarpNames()) {
+        for (String name : locationManager.getWarpNames()) {
             String cleaned = name == null ? "" : name.replace("warps.", "");
-            if (!cleaned.isEmpty() && isActiveWarp(locationsManager, cleaned)) {
+            if (!cleaned.isEmpty() && isActiveWarp(locationManager, cleaned)) {
                 warps.add(cleaned);
             }
         }
         return warps;
     }
 
-    private boolean isActiveWarp(LocationsManager locationsManager, String warpName) {
+    private boolean isActiveWarp(LocationManager locationManager, String warpName) {
         if (warpName == null || warpName.isBlank()) {
             return false;
         }
 
-        Object value = locationsManager.getCfg().get("warps." + warpName);
+        Object value = locationManager.getCfg().get("warps." + warpName);
         return value != null && !" ".equals(String.valueOf(value));
     }
 

@@ -15,7 +15,7 @@ import ch.framedev.essentialsmini.commands.playercommands.SpawnCMD;
 import ch.framedev.essentialsmini.commands.playercommands.VanishCMD;
 import ch.framedev.essentialsmini.database.mongodb.BackendManager;
 import ch.framedev.essentialsmini.main.Main;
-import ch.framedev.essentialsmini.managers.LocationsManager;
+import ch.framedev.essentialsmini.managers.LocationManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
@@ -162,7 +162,7 @@ public class PlayerListeners implements Listener {
                     }
 
                     try {
-                        LocationsManager spawnLocation = new LocationsManager("spawn");
+                        LocationManager spawnLocation = new LocationManager("spawn");
                         player.teleport(spawnLocation.getLocation());
                     } catch (IllegalArgumentException | NullPointerException ex) {
                         if (player.getWorld() != null) {
@@ -258,7 +258,7 @@ public class PlayerListeners implements Listener {
         if (event == null || event.getPlayer() == null) return;
 
         try {
-            LocationsManager spawnManager = new LocationsManager("spawn");
+            LocationManager spawnManager = new LocationManager("spawn");
             if (event.getPlayer().getRespawnLocation() == null ||
                 (event.getPlayer().getRespawnLocation().equals(spawnManager.getLocation()) && !event.isBedSpawn())) {
                 event.setRespawnLocation(spawnManager.getLocation());
