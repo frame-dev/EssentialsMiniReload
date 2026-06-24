@@ -30,6 +30,7 @@ commands:
       - bal
   eco:
     description: Main Command for all Economy Commands
+    usage: /eco <add|remove|set> <amount> [player]
   tpaheredeny:
     description: Disallow the Teleport Request
   home:
@@ -185,6 +186,7 @@ commands:
     description: Summon a Lightningstrike
   pay:
     description: Pay Money to another Player
+    usage: /pay <amount> <player>
   pltime:
     description: Change the Playertime
   resetpltime:
@@ -406,6 +408,8 @@ permissions:
       essentialsmini.balance.others: true
       essentialsmini.eco.add: true
       essentialsmini.eco.add.others: true
+      essentialsmini.eco.remove: true
+      essentialsmini.eco.remove.others: true
       essentialsmini.eco.set: true
       essentialsmini.eco.set.others: true
       essentialsmini.pay: true
@@ -650,6 +654,12 @@ permissions:
     default: op
     children:
       essentialsmini.eco.add: true
+  essentialsmini.eco.remove:
+    default: op
+  essentialsmini.eco.remove.others:
+    default: op
+    children:
+      essentialsmini.eco.remove: true
   essentialsmini.eco.set:
     default: op
   essentialsmini.eco.set.others:

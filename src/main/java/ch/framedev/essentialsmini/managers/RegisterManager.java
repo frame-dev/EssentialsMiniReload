@@ -113,10 +113,13 @@ public class RegisterManager {
         new LightningStrikeCMD(plugin);
         new ClearChatCMD(plugin);
         // Vault commands
-        if (plugin.getConfig().getBoolean("Economy.Activate")) {
+        if (plugin.getConfig().getBoolean("Economy.Activate") && plugin.getVaultManager() != null) {
             new EcoCMDs(plugin);
             new BankCMD(plugin);
             new MoneySignListeners(plugin);
+        } else if (plugin.getConfig().getBoolean("Economy.Activate")) {
+            plugin.getLogger4J().info("Economy is enabled in config.yml, but Vault is not available!");
+            plugin.getLogger4J().info("/eco /balance /bank /pay and MoneySigns are disabled!");
         } else {
             plugin.getLogger4J().info("Economy is disabled in config.yml!");
             plugin.getLogger4J().info("/eco /balance /bank /pay and MoneySigns are disabled!");

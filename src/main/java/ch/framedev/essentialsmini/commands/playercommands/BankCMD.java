@@ -6,6 +6,7 @@ import ch.framedev.essentialsmini.utils.PlayerUtils;
 import ch.framedev.essentialsmini.utils.TextUtils;
 import ch.framedev.essentialsmini.utils.Variables;
 import net.milkbowl.vault.economy.EconomyResponse;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -117,7 +118,17 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.create")) return true;
 
-        EconomyResponse response = plugin.getVaultManager().getEconomy().createBank(args[1], player);
+        if (bankExists(args[1])) {
+            player.sendMessage(plugin.getPrefix() + "§6" + args[1] + " §calready exists!");
+            return true;
+        }
+
+        Economy economy = economyOrNull();
+        if (economy == null || !ensureAccount(player, player)) {
+            return true;
+        }
+
+        EconomyResponse response = economy.createBank(args[1], player);
         if (response.transactionSuccess()) {
             player.sendMessage(plugin.getPrefix() + lang(player, "Created"));
         } else {
@@ -197,6 +208,8 @@ public class BankCMD extends CommandBase {
         if (args.length != 3) return true;
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.deposit")) return true;
+        Economy economy = economyOrNull();
+        if (economy == null || !ensureAccount(player, player)) return true;
 
         String bankName = args[1];
         if (!bankExists(bankName)) {
@@ -207,18 +220,23 @@ public class BankCMD extends CommandBase {
         Double amount = parsePositiveAmount(sender, args[2]);
         if (amount == null) return true;
 
-        if (!plugin.getVaultManager().getEconomy().has(player, amount)) {
+        if (!economy.has(player, amount)) {
             player.sendMessage(plugin.getPrefix() + "§cNot enougt Money!");
             return true;
         }
 
-        plugin.getVaultManager().getEconomy().withdrawPlayer(player, amount);
-        EconomyResponse response = plugin.getVaultManager().getEconomy().bankDeposit(bankName, amount);
+        EconomyResponse response = economy.bankDeposit(bankName, amount);
         if (response.transactionSuccess()) {
-            player.sendMessage(plugin.getPrefix() + langWithObject(player, "Deposit", "%Amount%", String.valueOf(amount)));
-        } else {
-            sendError(player, "Deposit to the Bank!", response.errorMessage == null ? "Error : None" : response.errorMessage);
+            EconomyResponse withdraw = economy.withdrawPlayer(player, amount);
+            if (withdraw.transactionSuccess()) {
+                player.sendMessage(plugin.getPrefix() + langWithObject(player, "Deposit", "%Amount%", String.valueOf(amount)));
+                return true;
+            }
+            economy.bankWithdraw(bankName, amount);
+            sendError(player, "Deposit to the Bank!", withdraw.errorMessage == null ? "Error : None" : withdraw.errorMessage);
+            return true;
         }
+        sendError(player, "Deposit to the Bank!", response.errorMessage == null ? "Error : None" : response.errorMessage);
         return true;
     }
 
@@ -226,6 +244,8 @@ public class BankCMD extends CommandBase {
         if (args.length != 3) return true;
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.withdraw")) return true;
+        Economy economy = economyOrNull();
+        if (economy == null || !ensureAccount(player, player)) return true;
 
         String bankName = args[1];
         if (!bankExists(bankName)) {
@@ -240,13 +260,22 @@ public class BankCMD extends CommandBase {
         Double amount = parsePositiveAmount(sender, args[2]);
         if (amount == null) return true;
 
-        if (!plugin.getVaultManager().getEconomy().bankHas(bankName, amount).transactionSuccess()) {
+        if (!economy.bankHas(bankName, amount).transactionSuccess()) {
             player.sendMessage(plugin.getPrefix() + "§cThe Bank has not enought Money!");
             return true;
         }
 
-        plugin.getVaultManager().getEconomy().depositPlayer(player, amount);
-        plugin.getVaultManager().getEconomy().bankWithdraw(bankName, amount);
+        EconomyResponse withdraw = economy.bankWithdraw(bankName, amount);
+        if (!withdraw.transactionSuccess()) {
+            sendError(player, "Withdraw from the Bank!", withdraw.errorMessage == null ? "Error : None" : withdraw.errorMessage);
+            return true;
+        }
+        EconomyResponse deposit = economy.depositPlayer(player, amount);
+        if (!deposit.transactionSuccess()) {
+            economy.bankDeposit(bankName, amount);
+            sendError(player, "Withdraw from the Bank!", deposit.errorMessage == null ? "Error : None" : deposit.errorMessage);
+            return true;
+        }
         player.sendMessage(plugin.getPrefix() + langWithObject(player, "Withdraw", "%Amount%", String.valueOf(amount)));
         return true;
     }
@@ -335,14 +364,25 @@ public class BankCMD extends CommandBase {
 
         Double amount = parsePositiveAmount(sender, args[3]);
         if (amount == null) return true;
+        Economy economy = economyOrNull();
+        if (economy == null) return true;
 
-        if (!plugin.getVaultManager().getEconomy().bankHas(fromBank, amount).transactionSuccess()) {
+        if (!economy.bankHas(fromBank, amount).transactionSuccess()) {
             player.sendMessage(plugin.getPrefix() + "§cThe Bank has not enought Money!");
             return true;
         }
 
-        plugin.getVaultManager().getEconomy().bankWithdraw(fromBank, amount);
-        plugin.getVaultManager().getEconomy().bankDeposit(toBank, amount);
+        EconomyResponse withdraw = economy.bankWithdraw(fromBank, amount);
+        if (!withdraw.transactionSuccess()) {
+            sendError(player, "Transfer from the Bank!", withdraw.errorMessage == null ? "Error : None" : withdraw.errorMessage);
+            return true;
+        }
+        EconomyResponse deposit = economy.bankDeposit(toBank, amount);
+        if (!deposit.transactionSuccess()) {
+            economy.bankDeposit(fromBank, amount);
+            sendError(player, "Transfer to the Bank!", deposit.errorMessage == null ? "Error : None" : deposit.errorMessage);
+            return true;
+        }
         player.sendMessage(plugin.getPrefix() + "§aYou transferred §6" + amount + " §ato the Bank §6" + toBank + "!");
         return true;
     }
@@ -536,11 +576,27 @@ public class BankCMD extends CommandBase {
             return null;
         }
 
-        if (amount <= 0.0D) {
+        if (!Double.isFinite(amount) || amount <= 0.0D) {
             sender.sendMessage(plugin.getPrefix() + "§cAmount must be greater than 0.");
             return null;
         }
         return amount;
+    }
+
+    private boolean ensureAccount(CommandSender sender, OfflinePlayer player) {
+        Economy economy = economyOrNull();
+        if (economy == null) {
+            sender.sendMessage(plugin.getPrefix() + "§cEconomy provider is not available.");
+            return false;
+        }
+        if (economy.hasAccount(player)) {
+            return true;
+        }
+        if (economy.createPlayerAccount(player) || economy.hasAccount(player)) {
+            return true;
+        }
+        sender.sendMessage(plugin.getPrefix() + "§cCould not create an economy account for " + (player.getName() == null ? "that player" : player.getName()) + ".");
+        return false;
     }
 
     private net.milkbowl.vault.economy.Economy economyOrNull() {

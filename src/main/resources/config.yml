@@ -66,6 +66,8 @@ AFK:
   IsAFK: '&7[Player] is now AFK'
   IsNotAFK: '&7[Player] is no longer AFK'
 NotAllowCommand: '&cNope'
+# checkForUpdates checks framedev.ch for a newer compatible plugin version on startup.
+# AutoDownload only works when checkForUpdates is true. It downloads the update jar into the server update folder.
 AutoDownload: false
 checkForUpdates: false
 ColoredChat: true

@@ -106,7 +106,9 @@ Aliases use the same arguments as their base command.
 [CODE]/balance [player]
 /balancetop
 /eco <add|remove|set> <amount> [player]
+/eco <add|remove|set> <player> <amount>
 /pay <amount> <player>
+/pay <player> <amount>
 /bank
 /bank list
 /bank create <bank>

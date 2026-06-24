@@ -217,6 +217,12 @@
         "Improved ProtocolLib skin refresh so /nick <nickname> <skin> updates visible player skins more reliably",
         "Nickname reset now restores the original skin data more reliably",
         "Updated /flyspeed with reset/default/normal arguments and tab completion",
+        "Fixed /eco set for other players and added support for both amount-first and player-first usage",
+        "Hardened economy commands so /pay, /eco, and /bank check transaction failures and account creation more reliably",
+        "Added /eco remove permissions and fixed /pay usage to support both amount-first and player-first order",
+        "Fixed the update checker to use the correct release channel and download folder",
+        "Auto-download now verifies downloaded jars before moving them into the update folder",
+        "Added config comments explaining AutoDownload and checkForUpdates",
         "Added Geyser-Spigot and Floodgate as optional soft dependencies",
         "Updated README.md and SpigotMC description for the new release"
       ]

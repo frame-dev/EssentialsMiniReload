@@ -419,7 +419,7 @@ public class HelpCMD extends CommandListenerBase {
         usages.put("delotherhome", "/delotherhome <player> <home>");
         usages.put("delwarp", "/delwarp <name>");
         usages.put("eban", "/eban <player> <reason>");
-        usages.put("eco", "/eco <add|remove|set> <player> <amount>");
+        usages.put("eco", "/eco <add|remove|set> <amount> [player] or /eco <add|remove|set> <player> <amount>");
         usages.put("enchant", "/enchant <enchantment> [level]");
         usages.put("enderchest", "/enderchest [player]");
         usages.put("essentialsmini", "/essentialsmini <reload|help|economy|version|about>");
@@ -456,7 +456,7 @@ public class HelpCMD extends CommandListenerBase {
         usages.put("night", "/night [world]");
         usages.put("offline", "/offline");
         usages.put("online", "/online");
-        usages.put("pay", "/pay <player> <amount>");
+        usages.put("pay", "/pay <amount> <player> or /pay <player> <amount>");
         usages.put("playerheads", "/playerheads <player>");
         usages.put("playerweather", "/playerweather <sun|rain|thunder> [player]");
         usages.put("pltime", "/pltime <day|night|ticks> [player]");

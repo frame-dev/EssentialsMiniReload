@@ -18,10 +18,7 @@ import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.managers.RegisterManager;
 import ch.framedev.essentialsmini.managers.VaultManager;
 import ch.framedev.essentialsmini.utils.*;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -36,8 +33,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -187,16 +182,7 @@ public class Main extends JavaPlugin {
     }
 
     private void checkUpdatesAsync(boolean autoDownload) {
-        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-            boolean updateAvailable = checkUpdate(autoDownload);
-            Bukkit.getScheduler().runTask(this, () -> {
-                if (updateAvailable) {
-                    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
-                } else {
-                    Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aNo new updates found!");
-                }
-            });
-        });
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> checkUpdate(autoDownload));
     }
 
     @Override
@@ -602,66 +588,50 @@ public class Main extends JavaPlugin {
      */
     public boolean checkUpdate(boolean download) {
         Bukkit.getConsoleSender().sendMessage(getPrefix() + "Checking for updates...");
-        URLConnection conn;
-        BufferedReader br = null;
-        try {
-            conn = new URL("https://framedev.ch/others/versions/essentialsmini-versions.json").openConnection();
-            br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            JsonElement jsonElement = JsonParser.parseReader(br);
-            String latestVersion = jsonElement.getAsJsonObject().get("latest").getAsString();
-            String oldVersion = Main.getInstance().getDescription().getVersion();
-            if (!latestVersion.equalsIgnoreCase(oldVersion)) {
-                UpdateChecker updateChecker = new UpdateChecker();
-                if (!updateChecker.isOldVersionPreRelease()) {
-                    if (download) {
-                        downloadLatest();
-                        Bukkit.getConsoleSender().sendMessage(getPrefix() + "Latest Version will be Downloaded : New Version : " + latestVersion);
-                    } else {
-                        Bukkit.getConsoleSender().sendMessage(getPrefix() + "A new update is available: version " + latestVersion);
-                    }
-                    return true;
-                } else {
-                    if (updateChecker.hasPreReleaseUpdate()) {
-                        Bukkit.getConsoleSender().sendMessage(getPrefix() + "A new pre-release update is available: version " + updateChecker.getLatestPreRelease());
-                        return true;
-                    }
-                }
-            } else {
-                Bukkit.getConsoleSender().sendMessage(getPrefix() + "You're running the newest plugin version!");
-                return false;
-            }
-        } catch (IOException ex) {
-            getLogger4J().log(Level.ERROR, "Error", ex);
-            Bukkit.getConsoleSender().sendMessage(getPrefix() + "Failed to check for updates on framedev.ch");
-            // Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease write an Email to framedev@framedev.stream with the Error");
-        } finally {
-            try {
-                if (br != null)
-                    br.close();
-            } catch (IOException e) {
-                getLogger4J().error(e.getMessage(), e);
-            }
+
+        UpdateChecker updateChecker = new UpdateChecker();
+        UpdateChecker.UpdateStatus updateStatus = updateChecker.checkForUpdate();
+        if (!updateStatus.metadataAvailable()) {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cFailed to check for updates on framedev.ch");
+            return false;
         }
-        return false;
+
+        if (!updateStatus.updateAvailable()) {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aYou're running the newest plugin version!");
+            return false;
+        }
+
+        Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cA new update is available: version " + updateStatus.latestVersion());
+        if (!download) {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§7Current version: " + updateStatus.currentVersion());
+            return true;
+        }
+
+        if (downloadLatest(updateStatus.latestVersion())) {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§aLatest version downloaded: " + updateStatus.latestVersion());
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cPlease restart the server to apply the update!");
+        } else {
+            Bukkit.getConsoleSender().sendMessage(getPrefix() + "§cThe update was found, but the download failed.");
+        }
+        return true;
     }
 
     /**
      * Download the Latest Plugin from the Website <a href="https://framedev.ch">https://framedev.ch</a>
      */
     public void downloadLatest() {
-        final File pluginFile = getDataFolder().getParentFile();
-        final File updaterFile = new File(pluginFile, "update");
+        downloadLatest(new UpdateChecker().getLatestVersion());
+    }
+
+    public boolean downloadLatest(String latest) {
+        final File updaterFile = getServer().getUpdateFolderFile();
         if (!updaterFile.exists())
             if (!updaterFile.mkdir())
                 getLogger4J().error("Could not create Update Directory : " + updaterFile.getAbsolutePath());
-        try {
-            URL url = new URL("https://framedev.ch/others/versions/essentialsmini-versions.json");
-            JsonElement jsonElement = JsonParser.parseReader(new InputStreamReader(url.openConnection().getInputStream()));
-            String latest = jsonElement.getAsJsonObject().get("latest").getAsString();
-            new UpdateChecker().download("https://framedev.ch/downloads/EssentialsMini-" + latest + ".jar", getServer().getUpdateFolder(), "EssentialsMini.jar");
-        } catch (IOException ex) {
-            getLogger4J().error(ex.getMessage(), ex);
+        if (!updaterFile.exists()) {
+            return false;
         }
+        return new UpdateChecker().downloadVersion(latest, updaterFile.getAbsolutePath(), "EssentialsMini.jar");
     }
 
     /**

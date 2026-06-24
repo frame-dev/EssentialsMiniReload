@@ -72,8 +72,10 @@ Economy features require Vault and an economy provider.
 ### Economy
 
 - `/balance`, `/balancetop`
-- `/eco`
-- `/pay`
+- `/eco <add|remove|set> <amount> [player]`
+- `/eco <add|remove|set> <player> <amount>`
+- `/pay <amount> <player>`
+- `/pay <player> <amount>`
 - `/bank`
 
 ### Kits And Items
