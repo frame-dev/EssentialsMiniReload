@@ -1,16 +1,19 @@
 [CENTER][SIZE=6][B]EssentialsMiniReload[/B][/SIZE]
 [SIZE=4]A lightweight, modular essentials plugin for modern Minecraft servers[/SIZE]
 
-[B]Homes | Warps | Spawn | Economy | Kits | Moderation | Private Messages | Mail | Nicknames | Backpacks | Utilities[/B]
+[B]Homes | Warps | Spawn | Economy | Kits | Moderation | Private Messages | Mail | Nicknames | Backpacks | Utility Stations | Recipes[/B]
 [/CENTER]
 
 [SIZE=5][B]Overview[/B][/SIZE]
 
 EssentialsMiniReload is a modern essentials plugin for Spigot, Paper, and Purpur servers. It brings together the most common server tools in one lightweight plugin, so you do not need a large stack of separate plugins for everyday commands.
 
-The plugin includes homes, warps, spawn management, economy commands, kits, moderation tools, private messages, mail, nicknames, backpacks, inventory utilities, world controls, and more.
+The plugin includes homes, warps, spawn management, economy commands, kits, moderation tools, private messages, mail, nicknames, backpacks, portable utility stations, recipe helpers, inventory utilities, world controls, and more.
 
 It is designed for Minecraft [B]1.20.6 and higher[/B] and runs on Java 17.
+
+Need support for older Minecraft versions? Use the original EssentialsMini plugin:
+[URL]https://www.spigotmc.org/resources/essentialsmini.82775/[/URL]
 
 [SIZE=5][B]Features[/B][/SIZE]
 
@@ -24,7 +27,9 @@ It is designed for Minecraft [B]1.20.6 and higher[/B] and runs on Java 17.
 [*][B]Economy[/B] - Balance, pay, balance top, eco admin commands, and bank features.
 [*][B]Vault Support[/B] - Economy integration through Vault.
 [*][B]Kits[/B] - Create and use permission-based kits.
-[*][B]Inventory Tools[/B] - Invsee, ender chest, backpack, trash, workbench, repair, and item commands.
+[*][B]Inventory Tools[/B] - Invsee, ender chest, backpack, trash, repair, item commands, and portable utility stations.
+[*][B]Portable Utility Stations[/B] - Open crafting, anvil, grindstone, smithing table, cartography table, loom, and stonecutter menus anywhere.
+[*][B]Recipe Helpers[/B] - Show item recipes and retrieve ingredients from crafted items.
 [*][B]Moderation[/B] - Mute, temp mute, ban, temp ban, unban, global mute, maintenance mode, and clear chat.
 [*][B]Private Messaging[/B] - Message, reply, spy, and message toggle commands.
 [*][B]Mail System[/B] - Send and manage player mail.
@@ -65,86 +70,121 @@ It is designed for Minecraft [B]1.20.6 and higher[/B] and runs on Java 17.
 
 [SIZE=5][B]Main Commands[/B][/SIZE]
 
+Aliases use the same arguments as their base command.
+
 [B]Teleportation[/B]
 [CODE]/spawn
 /setspawn
-/home
-/sethome
-/delhome
+/home [name]
+/sethome [name]
+/delhome <name>
+/delotherhome <player> <name>
 /homegui
-/warp
-/setwarp
-/delwarp
+/warp <name>
+/setwarp <name> [cost]
+/delwarp <name>
 /warps
 /back
 /top
-/tpa
-/tpahere
+/tpa <player>
+/tpahere <player>
 /tpaaccept
 /tpadeny
+/tpahereaccept
+/tpaheredeny
 /tphereall
 /tptoggle[/CODE]
 
 [B]Economy[/B]
-[CODE]/balance
+[CODE]/balance [player]
 /balancetop
-/eco
-/pay
-/bank[/CODE]
+/eco <add|remove|set> <amount> [player]
+/pay <amount> <player>
+/bank
+/bank list
+/bank create <bank>
+/bank remove <bank>
+/bank balance <bank>
+/bank info <bank>
+/bank listmembers <bank>
+/bank deposit <bank> <amount>
+/bank withdraw <bank> <amount>
+/bank addmember <bank> <player>
+/bank removemember <bank> <player>
+/bank transfer <fromBank> <toBank> <amount>[/CODE]
 
 [B]Kits and Items[/B]
-[CODE]/kits
-/createkit
-/item
-/repair
-/enchant
-/renameitem
+[CODE]/kits <kit>
+/createkit <kit> [cooldown] [cost]
+/item <item> [amount] [player]
+/repair [player]
+/enchant <enchantment> <level> [player]
+/enchant unbreakable <true|false> [player]
+/renameitem <name>
 /signitem
-/playerheads[/CODE]
+/playerheads <player> [targetPlayer]
+/retrieve [all]
+/showrecipe [item]
+/xp <set|add|remove|send> <amount> <player> <level|xp>[/CODE]
 
 [B]Moderation[/B]
-[CODE]/mute
-/tempmute
-/removetempmute
+[CODE]/mute <player>
+/tempmute <type|own> <player> <reason> <time> <SEC|MIN|DAY|WEEK|MONTH|YEAR>
+/removetempmute <player>
 /muteinfo
-/muteforplayer
-/ban
-/tempban
-/eban
-/eunban
-/removetempban
-/globalmute
+/muteforplayer <mode> <player>
+/eban <type|own> <player> <reason>
+/tempban <type|own> <player> <reason> <time> <SEC|MIN|DAY|WEEK|MONTH|YEAR>
+/eunban <player>
+/removetempban <player>
+/globalmute <on|off|status>
 /maintenance
+/maintenance <on|off|status|list>
+/maintenance add <player>
+/maintenance remove <player>
 /chatclear
 /silent
-/staffchat[/CODE]
+/staffchat <message>[/CODE]
 
 [B]Chat and Player Tools[/B]
-[CODE]/msg
-/r
+[CODE]/msg <player> <message>
+/r <message>
 /spy
 /msgtoggle
-/mail
+/mail <send|read|clear> [args]
+/mail send <player> <message>
+/mail read [player]
+/mail clear [player]
 /afk
-/nick
+/nick <nickname> <skin>
+/nick reset
 /nicklist
-/timeplayed
+/timeplayed [player]
 /online
-/offline[/CODE]
+/offline
+/near [radius][/CODE]
 
 [B]Inventory and Utilities[/B]
-[CODE]/fly
-/flyspeed
-/walkspeed
-/gamemode
-/godmode
-/heal
-/feed
-/invsee
-/enderchest
-/backpack
+[CODE]/fly [player]
+/flyspeed <speed> [player]
+/walkspeed <0-10>
+/gamemode <mode> [player]
+/vanish [player]
+/godmode [player]
+/heal [player]
+/feed [player]
+/invsee <player>
+/enderchest [player]
+/backpack [delete|player]
 /trash
 /workbench
+/craft
+/anvil
+/grindstone
+/smithingtable
+/cartographytable
+/loom
+/stonecutter
 /sleep[/CODE]
 
 [B]World Control[/B]
@@ -153,12 +193,18 @@ It is designed for Minecraft [B]1.20.6 and higher[/B] and runs on Java 17.
 /sun
 /rain
 /thunder
-/plweather
+/plweather <CLEAR|DOWNFALL>
 /resetplweather
-/pltime
+/pltime <time|day|night>
 /resetpltime
-/lightningstrike
+/lightningstrike [player]
 /firework[/CODE]
+
+[B]Admin and Misc[/B]
+[CODE]/essentialsmini
+/essentialsmini <reload|help|version|about>
+/essentialsmini economy <on|off|true|false>
+/signremove <shop name>[/CODE]
 
 [SIZE=5][B]Permissions[/B][/SIZE]
 
@@ -167,32 +213,144 @@ All permissions use the [CODE]essentialsmini.[/CODE] prefix.
 Main admin permission:
 [CODE]essentialsmini.*[/CODE]
 
-Examples:
-[CODE]essentialsmini.spawn
-essentialsmini.setspawn
-essentialsmini.home
+All permissions:
+[CODE]essentialsmini.*
 essentialsmini.sethome
-essentialsmini.warp
-essentialsmini.setwarp
+essentialsmini.worldutils
+essentialsmini.setspawn
+essentialsmini.spawn
 essentialsmini.fly
 essentialsmini.fly.others
+essentialsmini.plugins
+essentialsmini.help
+essentialsmini.showlocation
+essentialsmini.showcrafting
+essentialsmini.position
+essentialsmini.vanish
+essentialsmini.invsee
+essentialsmini.resethealth
+essentialsmini.setwarp
+essentialsmini.warp
+essentialsmini.warps
+essentialsmini.delwarp
 essentialsmini.gamemode
 essentialsmini.gamemode.others
-essentialsmini.invsee
+essentialsmini.vanish.see
+essentialsmini.online
+essentialsmini.offline
+essentialsmini.day
+essentialsmini.night
+essentialsmini.sun
+essentialsmini.rain
+essentialsmini.thunder
+essentialsmini.ignorejoin
+essentialsmini.ignoreleave
+essentialsmini.tphereall
+essentialsmini.suicid
+essentialsmini.suicid.others
+essentialsmini.killall
+essentialsmini.item
+essentialsmini.sleep
+essentialsmini.home
+essentialsmini.deletehome.others
 essentialsmini.enderchest
+essentialsmini.enderchest.others
+essentialsmini.trash
+essentialsmini.backpack.see
+essentialsmini.backpack.delete
+essentialsmini.restart
+essentialsmini.feed
+essentialsmini.feed.others
+essentialsmini.heal
+essentialsmini.heal.others
+essentialsmini.repair
+essentialsmini.repair.others
+essentialsmini.generatekey
+essentialsmini.removekey
+essentialsmini.enchant
+essentialsmini.enchant.others
+essentialsmini.showitem
+essentialsmini.playerhead
+essentialsmini.playerdata
+essentialsmini.god
+essentialsmini.godmode
+essentialsmini.god.others
+essentialsmini.summon
+essentialsmini.sethealth
+essentialsmini.sethealth.others
+essentialsmini.chatclear
+essentialsmini.signs.use
+essentialsmini.signs.create
+essentialsmini.signs.delete
+essentialsmini.playertime
+essentialsmini.invsee.owner
+essentialsmini.enderchest.owner
 essentialsmini.balance
+essentialsmini.balance.others
+essentialsmini.eco.add
+essentialsmini.eco.add.others
+essentialsmini.eco.set
+essentialsmini.eco.set.others
 essentialsmini.pay
-essentialsmini.economy
+essentialsmini.msg
+essentialsmini.spy
+essentialsmini.msgtoggle
+essentialsmini.msgtoggle.bypass
+essentialsmini.tptoggle
+essentialsmini.tptoggle.bypass
+essentialsmini.silent
+essentialsmini.flyspeed
+essentialsmini.flyspeed.others
+essentialsmini.speed
+essentialsmini.lightningstrike
 essentialsmini.mute
-essentialsmini.tempmute
-essentialsmini.ban
 essentialsmini.tempban
+essentialsmini.ban
+essentialsmini.unban
+essentialsmini.tempmute
+essentialsmini.muteinfo
+essentialsmini.removetempmute
+essentialsmini.signs.update
+essentialsmini.bank.create
+essentialsmini.bank.balance
+essentialsmini.bank.remove
+essentialsmini.bank.deposit
+essentialsmini.bank.withdraw
+essentialsmini.bank.addmember
+essentialsmini.bank.removemember
+essentialsmini.bank.info
+essentialsmini.bank.list
+essentialsmini.bank.listmembers
+essentialsmini.bank.transfer
+essentialsmini.workbench
+essentialsmini.balancetop
+essentialsmini.xp
+essentialsmini.createkit
+essentialsmini.checkupdates
+essentialsmini.globalmute
+essentialsmini.globalmute.bypass
+essentialsmini.plweather
+essentialsmini.playerweather
 essentialsmini.maintenance
 essentialsmini.maintenance.bypass
 essentialsmini.staffchat
+essentialsmini.top
 essentialsmini.mail
+essentialsmini.mail.read.others
+essentialsmini.mail.clear.others
 essentialsmini.nick
-essentialsmini.reload[/CODE]
+essentialsmini.book
+essentialsmini.reload
+essentialsmini.economy
+essentialsmini.retrieve
+essentialsmini.anvil
+essentialsmini.grindstone
+essentialsmini.smithingtable
+essentialsmini.cartographytable
+essentialsmini.loom
+essentialsmini.stonecutter
+essentialsmini.near
+essentialsmini.showrecipe[/CODE]
 
 Kit permissions:
 [CODE]essentialsmini.kits.<kitname>[/CODE]
@@ -228,7 +386,7 @@ EssentialsMiniReload supports different storage systems depending on your setup:
 
 [SIZE=5][B]Current Version[/B][/SIZE]
 
-[CODE]1.0.7-1.20.6-HIGHER-RELEASE[/CODE]
+[CODE]1.0.8-1.20.6-HIGHER-RELEASE[/CODE]
 
 This release includes:
 
@@ -237,6 +395,8 @@ This release includes:
 [*]Performance improvements
 [*]Geyser support for Bedrock players
 [*]Updated messages
+[*]Portable utility station commands
+[*]Near-player and recipe helper commands
 [/LIST]
 
 [SIZE=5][B]Support[/B][/SIZE]

@@ -14,12 +14,12 @@ FlyOtherOn: '&6%Player% &acan fly now!'
 FlyOtherOff: "&6%Player% &ccan't fly anymore!"
 
 GameModeChanged: '&aYour Gamemode has been set to &6%GameMode%!'
-GameModeOtherChanged: '&aThe Gamemode of &6%Player% &ahas been set to &6%GameMode%'
+GameModeOtherChanged: "&6%Player%&a's Gamemode has been set to &6%GameMode%"
 
 God:
   Self:
     Activated: '&aYou are now invincible'
-    Deactivated: '&cYou are now &6vulnerable'
+    Deactivated: '&cYou are now &6vulnerable &cagain'
   Other:
     Activated: '&6%Player% &ais now invincible'
     Deactivated: '&6%Player% &cis now vulnerable again'
@@ -29,14 +29,14 @@ Heal:
   Other: '&6%Player% &ahas been healed!'
 
 HomeSet: '&aYour home has been set'
-HomeSetOther: '&aYour home was set with the name &6%Name%!'
+HomeSetOther: '&aYour home with the name &6%Name%! &ahas been set'
 HomeTeleport: "&aYou've been teleported to your home"
 HomeTeleportOther: "&aYou've been teleported to your home with the name &6%Name%"
 HomeDelete: '&cYour home has been deleted!'
 HomeDeleteOther: '&cYour home with the name &6%Name% &chas been deleted!'
 HomeNotExist: "&cThis home doesn't exist!"
 HomeExist: '&cThis home already exists!'
-NoMoreHomesSet: "&cYou can't make anymore homes!"
+NoMoreHomesSet: "&cYou can't make any more homes!"
 HomeButton: '&aSet Home? &6Click me and press enter'
 ShowTextHover: '&6Set Home?'
 ShowTextHoverOther: '&6Set %Home% Home?'
@@ -44,6 +44,7 @@ SpyMessage: '&6%Player% &ahas sent a message to &6%Target% &awith the text &6:&c
 Spy:
   Activate: '&aYou can now see messages from other players!'
   Deactivate: "&a You can't see anymore messages from other players now!"
+  notFound: '&cThis item does not exist! &6%Item%'
 
 Item:
   Get: '&aYou got the Item &6%Item%! Amount: &6%Amount%'
@@ -53,21 +54,20 @@ Item:
 Warp:
   Created: '&aWarp has been created with the name &6%WarpName%&c!'
   Teleport: "&aYou've teleported to &6%WarpName%!"
-  Delete: '&athe Warp with the name &6%WarpName% &ahas been &cdeleted!'
-  NotExist: "&cThis Warp hasn't been created!"
+  Delete: '&aThe Warp with the name &6%WarpName% &ahas been &cdeleted!'
+  NotExist: "&cThis Warp doesn't exist!"
   Cost: '&aThis Warp costs &6%Cost%&c!'
-  WarpSignCost: '&aYou have been charged &6%COST% &afor the warp cost!'
 
 TpaMessages:
   TeleportSend: '&aYou sent &6%Target% &aa teleport request!'
   TeleportGot: '&aYou got a teleport request from &6%Player%!'
-  TeleportToPlayer: '&aYou got teleported to &6%Player%!'
+  TeleportToPlayer: '&aYou were teleported to &6%Player%!'
   TargetMessage: '&6%Target% &ateleported to you!'
-  TpaDeny: '&aYou declined the teleport request!'
+  TpaDeny: '&aYou declined the teleportation request!'
   TpaDenyTarget: "&6%Player% &chas declined your teleportation request!"
-  Delay: "&aYou'll be teleported in &6%Time%! &aIf you move than it will abort the teleportation."
-  Denied: '&cYou moved. &6Teleportation has been aborted!'
-  TpaHereDeny: '&cYou declined the tpa here request.'
+  Delay: "&aYou'll be teleported in &6%Time%! &aIf you move the teleportation will be cancelled."
+  Denied: '&cYou moved. &6Teleportation has been cancelled!'
+  TpaHereDeny: '&cYou declined the tpahere request.'
   TpaHereDenyTarget: '&6%Player% &chas declined the tpahere request!'
   TpaHere: '&aDo you want to teleport &6%Player% to you?'
   TpaHereTarget: '&6%Player% &awants you to teleport to him!'
@@ -77,33 +77,33 @@ TpaMessages:
 Money:
   MSG:
     NotEnough: "&cYou don't have enough money &6:%Money%"
-    Balance: '&aYour money amount is &b[Money]'
+    Balance: '&aYour current balance is &b[Money]'
     Pay: '&aYou have paid &b[Target] &b[Money]!'
-    GotPay: '&aYou got paid from &b[Player] &b[Money]!'
-    Set: '&aYour money has been set to&b[Money]!'
+    GotPay: '&aYou were paid &b[Money] &afrom &b[Player]&a!'
+    Set: '&aYour money has been set to &b[Money]!'
   MoneyBalance:
     Other:
-      MSG: '&aThe amount of money from &b[Target] &ais &b[Money]'
+      MSG: "&b[Target]&a's balance is &b[Money]"
   MoneySet:
     Other:
-      MSG: '&aThe money from &b[Target] &a has been set to &b[Money]!'
+      MSG: "&b[Target]&a's balance has been set to &b[Money]&a!"
 
 DeathTeleport: "&aYou've been teleported to your deathpoint!"
 NoDeathLocationFound: '&cThere is no deathpoint currently saved!'
-DeathCommandUsage: '&aPleas write &6/back &a to go back to your deathpoint!'
+DeathCommandUsage: '&aPlease write &6/back &a to go back to your deathpoint!'
 
 NoBackPackFound: "&cThis Player doesn't have a backpack!"
 
-ChatClear: '&aThe Chat has been cleared from &6%Player%!'
+ChatClear: '&aThe Chat was cleared by &6%Player%!'
 
 Day: '&aThe time was set to &6day!'
 Night: '&aThe time was set to &6night!'
 
-EnchantNotExist: "&cThis enchantement doesn't exist!"
+EnchantNotExist: "&cThis enchantment doesn't exist!"
 NoItemFoundInHand: '&cNo item found in your hand!'
 
-WeatherSun: '&aIn &6%World% &ashines the sun!'
-WeatherRain: '&aIn &6%World% &arains now!'
+WeatherSun: '&aIn &6%World% &ait is now sunny!'
+WeatherRain: '&aIn &6%World% &ait rains now!'
 WeatherThunder: '&aIn &6%World% &ais now a thunderstorm!'
 
 VanishOn:
@@ -116,38 +116,40 @@ VanishOff:
 Repair:
   Success: '&aThe item &6: %Item% &ahas been repaired!'
   Failed: "&cThe item &6: %Item% &cdoesn't need to be repaired!"
-  AirRepair: "&cair can't be repaired!"
-  OtherSuccess: '&athe item &6: %Item% &afrom &6: %Player% &ahas been repaired!'
+  AirRepair: "&cAir can't be repaired!"
+  OtherSuccess: '&aThe item &6: %Item% &afrom &6: %Player% &ahas been repaired!'
   OtherFailed: "&cThe item &6: %Item% &cfrom &6: %Player% &cdoesn't have to be repaired!"
   Irreparable: "&cThe Item &6: %Item% &cfrom &6: %Player% &ccan't be repaired"
 
 Mute:
   Self:
     Activate: '&cYou have been muted!'
-    Deactivate: "&aYou've been unmuted!"
+    Deactivate: "&aYou have been unmuted!"
   Other:
     Activate: '&6%Player% &chas been muted!'
     Deactivate: '&6%Player% &ahas been unmuted!'
+  Chat:
+    Permanent: '&cYou are Muted!'
 
 ChangeFlySpeed: '&aYour flight speed has changed to &6%flyspeed%'
-ChangeFlySpeedOther: "&6%player%'s &afly speed has been changed to &6%flyspeed%"
+ChangeFlySpeedOther: "&6%player%'s &aflight speed has been changed to &6%flyspeed%"
 
 WalkSpeed: '&aYour walk speed has been changed to &6%WalkSpeed%'
 
 MsgToggle:
-  Activated: '&cNo more messages will be sent to you!'
-  Deactivated: '&aMessages will be sent to you!'
-  Message: "&cThis Player doesn't Allow Messages!"
+  Activated: '&cNo more messages will be sent to you anymore!'
+  Deactivated: '&aMessages will be sent to you again!'
+  Message: "&cThis player doesn't allow messages!"
 
 SkipNight: '&6%Player% &ahas skipped the night!'
 
 Experience:
   Self:
-    Level: '&aYour Level is now &6%Level%'
-    XP: '&aYou have now &6%XP% &aExperience'
+    Level: '&aYour current level is &6%Level%'
+    XP: '&aYou currently have &6%XP% &aExperience'
   Other:
-    Level: '&aYour Level is now &6%Level%'
-    XP: '&aYou have now &6%XP% &aExperience'
+    Level: '&aYour current Level is &6%Level%'
+    XP: '&aYou currently have &6%XP% &aExperience'
 
 Bank:
   NotFound: "&cThis Bank doesn't exist!"
@@ -163,11 +165,7 @@ Bank:
 JoinMessage: '&aWelcome &6%Player% &aon this Server!'
 LeaveMessage: '&6%Player% &ahas left the Server!'
 
-PlayerWeather:
-  Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
-  Reset: "&aYour Player weather has been reset!"
-
-timePlayed: '&aYou have played for &6%Time% &auntil now!'
+timePlayed: '&aYou have played for &6%TimePlayed%'
 
 RetrieveIngredients:
   NoItem: '&cYou must hold an item.'
@@ -189,3 +187,51 @@ ShowRecipe:
   NoRecipe: '&cNo recipe found for &6%Item%&c.'
   Header: '&aRecipe for &6%Item%&a:'
   Ingredient: '&7- &6%Amount%x &f%Ingredient%'
+TempMute:
+  Self:
+    Activate: '&cYou have been temporarily muted while &6%Reason% &cuntil &6%Expire%!'
+    Deactivate: '&aYour temporary mute has been removed!'
+  Other:
+    Activate: '&6%Player% &chas been temporarily muted while &6%Reason% &cfor &6%Time% %Unit%!'
+    Deactivate: '&6%Player% &ahas been temporarily unmuted!'
+  Chat: '&cYou are muted! Reason: &6%Reason% &7| &aExpires at: &6%Expire%'
+  Info:
+    Entry: '&6%Player% &ais muted while: &6%Reason%'
+    Expires: '&aExpires at &6%Expire%'
+  Errors:
+    InvalidMode: '&cPlease use &6type &cor &6own&c.'
+    PlayerNameEmpty: '&cPlayer name cannot be empty!'
+    UnknownReason: '&cUnknown mute reason: &6%Reason%'
+    UnknownUnit: '&cUnknown time unit: &6%Unit%'
+    InvalidTime: '&cInvalid time: &6%Time%'
+    TimeGreaterThanZero: '&cTime must be greater than 0.'
+    DurationTooLarge: '&cMute duration is too large.'
+
+TempBan:
+  Success: '&6%Player% &ahas been banned while &6%Reason% &afor &6%Time% %Unit%!'
+  Kick: '&bBan while &c%Reason%&b for &a%Time% %Unit%!'
+  LoginKick: '&aYou are Banned. Reason:&c %Reason% &aExpired at &6%Expire% &aWait another: &6%Remaining%'
+  BanListReason: '&aYou are Banned. Reason:&c %Reason%'
+  Remove:
+    Success: '&6%Player% &ahas been unbanned!'
+  Errors:
+    InvalidMode: '&cPlease use &6type &cor &6own&c.'
+    PlayerNotFound: '&cPlayer name not found: &6%Player%'
+    InvalidUnit: '&cInvalid time unit. Use SEC, MIN, DAY, WEEK, MONTH or YEAR.'
+    InvalidTime: '&cInvalid time: &6%Time%'
+    TimeGreaterThanZero: '&cTime must be greater than 0.'
+    InvalidType: '&cInvalid ban type: &6%Type%'
+    DurationTooLarge: '&cThat ban duration is too large.'
+
+EBan:
+  Success: '&6%Player% &ahas been banned while &6%Reason%!'
+  TargetOffline: '&6%Player% &awas banned, but is not online.'
+  Kick: '&cYou are Banned while &6%Reason%'
+  Errors:
+    UnknownType: '&cUnknown ban type: &6%Type%'
+    InvalidMode: '&cPlease use &6/eban <type|own> <Player> <Reason>&c.'
+
+EUnBan:
+  Success: '&6%Player% &ahas been unbanned!'
+  Errors:
+    PlayerNotFound: '&cThis Player is not online! &6%Player%'

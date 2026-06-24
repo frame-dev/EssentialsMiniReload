@@ -5,6 +5,7 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -32,6 +33,7 @@ public class BanCMD extends CommandBase {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (!sender.hasPermission(getPlugin().getPermissionBase() + "ban")) {
+            send(sender, getPlugin().getNoPerms(sender instanceof Player player ? player : null));
             return true;
         }
 
@@ -50,7 +52,8 @@ public class BanCMD extends CommandBase {
         if (mode.equals(SUB_TYPE)) {
             BanType type = parseBanType(args[2]);
             if (type == null) {
-                sender.sendMessage(getPlugin().getPrefix() + "§cUnknown ban type: " + args[2]);
+                sendMessage(sender, "EBan.Errors.UnknownType", "§cUnknown ban type: §6%Type%",
+                        "%Type%", args[2]);
                 return true;
             }
             applyBan(sender, targetName, type.getReason(), type);
@@ -67,7 +70,8 @@ public class BanCMD extends CommandBase {
             return true;
         }
 
-        sender.sendMessage(getPlugin().getPrefix() + getPlugin().getWrongArgs("/eban <type|own> <Player> <Reason>"));
+        sendMessage(sender, "EBan.Errors.InvalidMode", getPlugin().getWrongArgs(sender instanceof Player player ? player : null, "/eban <type|own> <Player> <Reason>"),
+                "%Mode%", args[0]);
         return true;
     }
 
@@ -123,10 +127,17 @@ public class BanCMD extends CommandBase {
     private void kickIfOnlineOrNotify(CommandSender sender, String playerName, String reason) {
         Player onlinePlayer = Bukkit.getPlayer(playerName);
         if (onlinePlayer == null) {
-            sender.sendMessage(getPlugin().getPrefix() + getPlugin().getVariables().getPlayerNotOnline());
+            sendMessage(sender, "EBan.TargetOffline", "§6%Player% §awas banned, but is not online.",
+                    "%Player%", playerName,
+                    "%Reason%", reason);
             return;
         }
-        onlinePlayer.kickPlayer(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + reason);
+        onlinePlayer.kickPlayer(message(onlinePlayer, "EBan.Kick", ChatColor.RED + "You are Banned while " + ChatColor.GOLD + "%Reason%",
+                "%Player%", playerName,
+                "%Reason%", reason));
+        sendMessage(sender, "EBan.Success", "§6%Player% §ahas been banned while §6%Reason%!",
+                "%Player%", playerName,
+                "%Reason%", reason);
     }
 
     private BanType parseBanType(String value) {
@@ -150,6 +161,24 @@ public class BanCMD extends CommandBase {
         }
         Collections.sort(results);
         return results;
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(getPlugin().getPrefix() + message);
+    }
+
+    private void sendMessage(CommandSender sender, String key, String defaultMessage, String... replacements) {
+        send(sender, message(sender, key, defaultMessage, replacements));
+    }
+
+    private String message(CommandSender receiver, String key, String defaultMessage, String... replacements) {
+        String message = getPlugin().getLanguageConfig(receiver).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        message = ReplaceCharConfig.replaceParagraph(message);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            message = ReplaceCharConfig.replaceObjectWithData(message, replacements[i], replacements[i + 1] == null ? "" : replacements[i + 1]);
+        }
+        return message;
     }
 
     public enum BanType {

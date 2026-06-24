@@ -5,6 +5,7 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import ch.framedev.essentialsmini.utils.DateUnit;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
@@ -63,7 +64,7 @@ public class TempBanCMD extends CommandBase {
 
         BanMode mode = parseMode(args[0]);
         if (mode == null) {
-            send(sender, "§cPlease use §6type §cor §6own§c.");
+            sendMessage(sender, "TempBan.Errors.InvalidMode", "§cPlease use §6type §cor §6own§c.");
             return true;
         }
 
@@ -93,8 +94,13 @@ public class TempBanCMD extends CommandBase {
         }
 
         applyTempBan(target, reason, expireDate);
-        kickIfOnline(target, reason, value, unit);
-        send(sender, "§6" + safeName(target) + " §ahas been banned while §6" + reason + " §afor §6" + value + " " + unit.getOutput() + "!");
+        kickIfOnline(target, reason, value, unit, expireDate);
+        sendMessage(sender, "TempBan.Success", "§6%Player% §ahas been banned while §6%Reason% §afor §6%Time% %Unit%!",
+                "%Player%", safeName(target),
+                "%Reason%", reason,
+                "%Time%", String.valueOf(value),
+                "%Unit%", unit.getOutput(),
+                "%Expire%", DATE_FORMAT.format(expireDate));
         return true;
     }
 
@@ -117,7 +123,8 @@ public class TempBanCMD extends CommandBase {
             new BanMuteManager().removeTempBan(target);
         }
         Bukkit.getServer().getBanList(BanList.Type.NAME).pardon(safeName(target));
-        send(sender, "§6" + safeName(target) + " §ahas been unbanned!");
+        sendMessage(sender, "TempBan.Remove.Success", "§6%Player% §ahas been unbanned!",
+                "%Player%", safeName(target));
         return true;
     }
 
@@ -146,7 +153,8 @@ public class TempBanCMD extends CommandBase {
     private OfflinePlayer findPlayer(CommandSender sender, String name) {
         OfflinePlayer target = PlayerUtils.getOfflinePlayerByName(name);
         if (target == null || target.getName() == null) {
-            send(sender, "§cPlayer name not found!");
+            sendMessage(sender, "TempBan.Errors.PlayerNotFound", "§cPlayer name not found!",
+                    "%Player%", name);
             return null;
         }
         return target;
@@ -156,7 +164,8 @@ public class TempBanCMD extends CommandBase {
         try {
             return DateUnit.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            send(sender, "§cInvalid time unit. Use SEC, MIN, DAY, WEEK, MONTH or YEAR.");
+            sendMessage(sender, "TempBan.Errors.InvalidUnit", "§cInvalid time unit. Use SEC, MIN, DAY, WEEK, MONTH or YEAR.",
+                    "%Unit%", value);
             return null;
         }
     }
@@ -165,12 +174,14 @@ public class TempBanCMD extends CommandBase {
         try {
             long parsed = Long.parseLong(value);
             if (parsed <= 0) {
-                send(sender, "§cTime must be greater than 0.");
+                sendMessage(sender, "TempBan.Errors.TimeGreaterThanZero", "§cTime must be greater than 0.",
+                        "%Time%", value);
                 return null;
             }
             return parsed;
         } catch (NumberFormatException ex) {
-            send(sender, "§cInvalid time: " + value);
+            sendMessage(sender, "TempBan.Errors.InvalidTime", "§cInvalid time: §6%Time%",
+                    "%Time%", value);
             return null;
         }
     }
@@ -183,7 +194,8 @@ public class TempBanCMD extends CommandBase {
         try {
             return Ban.valueOf(value.toUpperCase(Locale.ROOT)).getReason();
         } catch (IllegalArgumentException ex) {
-            send(sender, "§cInvalid ban type: " + value);
+            sendMessage(sender, "TempBan.Errors.InvalidType", "§cInvalid ban type: §6%Type%",
+                    "%Type%", value);
             return null;
         }
     }
@@ -194,7 +206,7 @@ public class TempBanCMD extends CommandBase {
             long millis = Math.multiplyExact(seconds, 1000L);
             return new Date(Math.addExact(System.currentTimeMillis(), millis));
         } catch (ArithmeticException ex) {
-            send(sender, "§cThat ban duration is too large.");
+            sendMessage(sender, "TempBan.Errors.DurationTooLarge", "§cThat ban duration is too large.");
             return null;
         }
     }
@@ -206,12 +218,20 @@ public class TempBanCMD extends CommandBase {
         }
 
         Bukkit.getServer().getBanList(BanList.Type.NAME)
-                .addBan(safeName(target), "§aYou are Banned. Reason:§c " + reason, expireDate, "true");
+                .addBan(safeName(target), message(null, "TempBan.BanListReason", "§aYou are Banned. Reason:§c %Reason%",
+                        "%Player%", safeName(target),
+                        "%Reason%", reason,
+                        "%Expire%", DATE_FORMAT.format(expireDate)), expireDate, "true");
     }
 
-    private void kickIfOnline(OfflinePlayer target, String reason, long value, DateUnit unit) {
+    private void kickIfOnline(OfflinePlayer target, String reason, long value, DateUnit unit, Date expireDate) {
         if (target.isOnline() && target.getPlayer() != null) {
-            target.getPlayer().kickPlayer("§bBan while §c" + reason + "§b for §a" + value + " " + unit.getOutput() + "!");
+            target.getPlayer().kickPlayer(message(target.getPlayer(), "TempBan.Kick", "§bBan while §c%Reason%§b for §a%Time% %Unit%!",
+                    "%Player%", safeName(target),
+                    "%Reason%", reason,
+                    "%Time%", String.valueOf(value),
+                    "%Unit%", unit.getOutput(),
+                    "%Expire%", DATE_FORMAT.format(expireDate)));
         }
     }
 
@@ -230,6 +250,20 @@ public class TempBanCMD extends CommandBase {
 
     private void send(CommandSender sender, String message) {
         sender.sendMessage(getPlugin().getPrefix() + message);
+    }
+
+    private void sendMessage(CommandSender sender, String key, String defaultMessage, String... replacements) {
+        send(sender, message(sender, key, defaultMessage, replacements));
+    }
+
+    private String message(CommandSender receiver, String key, String defaultMessage, String... replacements) {
+        String message = getPlugin().getLanguageConfig(receiver).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        message = ReplaceCharConfig.replaceParagraph(message);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            message = ReplaceCharConfig.replaceObjectWithData(message, replacements[i], replacements[i + 1] == null ? "" : replacements[i + 1]);
+        }
+        return message;
     }
 
     @Override

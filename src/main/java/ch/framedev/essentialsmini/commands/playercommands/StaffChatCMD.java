@@ -78,6 +78,7 @@ public class StaffChatCMD extends CommandBase {
     }
 
     private void send(CommandSender sender, String message) {
-        sender.sendMessage(getPlugin().getPrefix() + message);
+        boolean usePrefix = getPlugin().getConfig().getBoolean("staffChat.usePrefix", false);
+        sender.sendMessage(usePrefix ? getPlugin().getPrefix() + message : message);
     }
 }

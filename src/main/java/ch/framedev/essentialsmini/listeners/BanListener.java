@@ -4,9 +4,9 @@ import ch.framedev.essentialsmini.abstracts.ListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -34,6 +34,13 @@ public class BanListener extends ListenerBase {
         BanMuteManager manager = new BanMuteManager();
 
         if (useDb) {
+            if (manager.isPermBan(player)) {
+                e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+                e.setKickMessage(message("EBan.Kick", "§cYou are Banned while §6%Reason%",
+                        "%Player%", playerName,
+                        "%Reason%", manager.getPermBanReason(player)));
+                return;
+            }
             var tempBan = manager.getTempBan(player);
             if (tempBan != null) {
                 boolean expired = manager.isExpiredTempBan(player);
@@ -46,12 +53,19 @@ public class BanListener extends ListenerBase {
                             if (expires != null) {
                                 String safeReason = banReason != null ? banReason : "Unknown";
                                 Bukkit.getServer().getBanList(BanList.Type.NAME)
-                                        .addBan(playerName, "§aYou are Banned. Reason:§c " + safeReason, expires, "true");
+                                        .addBan(playerName, message("TempBan.BanListReason", "§aYou are Banned. Reason:§c %Reason%",
+                                                "%Player%", playerName,
+                                                "%Reason%", safeReason,
+                                                "%Expire%", expiresAt), expires, "true");
                                 long rest = expires.getTime() - System.currentTimeMillis();
                                 Calendar calendar = Calendar.getInstance();
                                 calendar.setTimeInMillis(rest);
                                 String t = String.format("%tT", calendar.getTimeInMillis() - TimeZone.getDefault().getRawOffset());
-                                reason[0] = "§aYou are Banned. Reason:§c " + safeReason + " §aExpired at §6: " + expiresAt + " §aWait another : §6" + t;
+                                reason[0] = message("TempBan.LoginKick", "§aYou are Banned. Reason:§c %Reason% §aExpired at §6%Expire% §aWait another: §6%Remaining%",
+                                        "%Player%", playerName,
+                                        "%Reason%", safeReason,
+                                        "%Expire%", expiresAt,
+                                        "%Remaining%", t);
                             }
                         } catch (ParseException parseException) {
                             getPlugin().getLogger4J().error(parseException.getMessage(), parseException);
@@ -64,18 +78,23 @@ public class BanListener extends ListenerBase {
                 manager.removeTempBan(player);
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.ALLOWED);
             }
-        }
-
-        if (useDb) {
-            if (manager.isPermBan(player)) {
-                e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + manager.getPermBanReason(player));
-            }
         } else {
             if (BanFileManager.cfg.getBoolean(e.getName() + ".isBanned")) {
                 e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-                e.setKickMessage(ChatColor.RED + "You are Banned while " + ChatColor.GOLD + BanFileManager.cfg.getString(e.getName() + ".reason"));
+                e.setKickMessage(message("EBan.Kick", "§cYou are Banned while §6%Reason%",
+                        "%Player%", playerName,
+                        "%Reason%", BanFileManager.cfg.getString(e.getName() + ".reason")));
             }
         }
+    }
+
+    private String message(String key, String defaultMessage, String... replacements) {
+        String message = getPlugin().getLanguageConfig(null).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        message = ReplaceCharConfig.replaceParagraph(message);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            message = ReplaceCharConfig.replaceObjectWithData(message, replacements[i], replacements[i + 1] == null ? "" : replacements[i + 1]);
+        }
+        return message;
     }
 }

@@ -119,7 +119,7 @@ public class MuteCMD extends CommandBase implements Listener {
         if (request == null) return true;
 
         setTempMute(request.target(), request.reason(), request.expiresAt());
-        notifyMuteState(sender, request.target(), true);
+        notifyTempMuteState(sender, request, true);
         return true;
     }
 
@@ -134,7 +134,7 @@ public class MuteCMD extends CommandBase implements Listener {
         if (target == null) return true;
 
         removeTempMute(target);
-        notifyMuteState(sender, target, false);
+        notifyTempMuteState(sender, new TempMuteRequest(target, "", null, 0L, null), false);
         return true;
     }
 
@@ -152,7 +152,8 @@ public class MuteCMD extends CommandBase implements Listener {
     private TempMuteRequest parseTempMuteRequest(CommandSender sender, String[] args) {
         String mode = args[0].toLowerCase(Locale.ROOT);
         if (!mode.equals("type") && !mode.equals("own")) {
-            sendWrongArgs(sender, TEMP_MUTE_USAGE);
+            sendMessage(sender, "TempMute.Errors.InvalidMode", "§cPlease use §6type §cor §6own§c.",
+                    "%Mode%", args[0]);
             return null;
         }
 
@@ -176,11 +177,11 @@ public class MuteCMD extends CommandBase implements Listener {
         try {
             durationMillis = Math.multiplyExact(Math.multiplyExact(amount, unit.getToSec()), 1000L);
         } catch (ArithmeticException ex) {
-            send(sender, "§cMute duration is too large.");
+            sendMessage(sender, "TempMute.Errors.DurationTooLarge", "§cMute duration is too large.");
             return null;
         }
 
-        return new TempMuteRequest(target, reason, new Date(System.currentTimeMillis() + durationMillis));
+        return new TempMuteRequest(target, reason, new Date(System.currentTimeMillis() + durationMillis), amount, unit);
     }
 
     private void setTempMute(OfflinePlayer target, String reason, Date expiresAt) {
@@ -240,7 +241,7 @@ public class MuteCMD extends CommandBase implements Listener {
 
         Player player = event.getPlayer();
         if (isPermanentlyMuted(player)) {
-            send(player, "§cYou are Muted!");
+            sendMessage(player, "Mute.Chat.Permanent", "§cYou are Muted!");
             event.setCancelled(true);
             return;
         }
@@ -253,7 +254,9 @@ public class MuteCMD extends CommandBase implements Listener {
             return;
         }
 
-        send(player, "§cYou are Muted! While §6" + muteData.reason() + " | §aExpired at : §6" + formatDate(muteData.expiresAt()));
+        sendMessage(player, "TempMute.Chat", "§cYou are Muted! While §6%Reason% &7| §aExpired at: §6%Expire%",
+                "%Reason%", muteData.reason(),
+                "%Expire%", formatDate(muteData.expiresAt()));
         event.setCancelled(true);
     }
 
@@ -317,8 +320,14 @@ public class MuteCMD extends CommandBase implements Listener {
     }
 
     private void sendMuteInfo(CommandSender sender, String playerName, TempMuteData data) {
-        send(sender, "§6" + playerName + " §ais Muted while : §6" + data.reason());
-        send(sender, "§aExpired at §6: " + formatDate(data.expiresAt()));
+        sendMessage(sender, "TempMute.Info.Entry", "§6%Player% §ais muted while: §6%Reason%",
+                "%Player%", playerName,
+                "%Reason%", data.reason(),
+                "%Expire%", formatDate(data.expiresAt()));
+        sendMessage(sender, "TempMute.Info.Expires", "§aExpired at §6%Expire%",
+                "%Player%", playerName,
+                "%Reason%", data.reason(),
+                "%Expire%", formatDate(data.expiresAt()));
     }
 
     private void notifyMuteState(CommandSender sender, OfflinePlayer target, boolean mutedNow) {
@@ -337,11 +346,35 @@ public class MuteCMD extends CommandBase implements Listener {
     }
 
     private void sendFormatted(CommandSender sender, String key, String defaultMessage, OfflinePlayer target) {
-        String message = plugin.getLanguageConfig(sender).getString(key, defaultMessage);
-        if (message == null) message = defaultMessage;
-        message = ReplaceCharConfig.replaceParagraph(message);
-        message = ReplaceCharConfig.replaceObjectWithData(message, "%Player%", safePlayerName(target));
-        send(sender, message);
+        sendMessage(sender, key, defaultMessage, "%Player%", safePlayerName(target));
+    }
+
+    private void notifyTempMuteState(CommandSender sender, TempMuteRequest request, boolean mutedNow) {
+        OfflinePlayer target = request.target();
+        String expiresAt = request.expiresAt() == null ? "" : formatDate(request.expiresAt());
+        String time = request.amount() <= 0 ? "" : String.valueOf(request.amount());
+        String unit = request.unit() == null ? "" : request.unit().getOutput();
+
+        Player onlineTarget = target.getPlayer();
+        if (onlineTarget != null) {
+            sendMessage(onlineTarget,
+                    mutedNow ? "TempMute.Self.Activate" : "TempMute.Self.Deactivate",
+                    mutedNow ? "§cYou have been temporarily muted while §6%Reason% §cuntil §6%Expire%!" : "§aYour temporary mute has been removed!",
+                    "%Player%", safePlayerName(target),
+                    "%Reason%", request.reason(),
+                    "%Time%", time,
+                    "%Unit%", unit,
+                    "%Expire%", expiresAt);
+        }
+
+        sendMessage(sender,
+                mutedNow ? "TempMute.Other.Activate" : "TempMute.Other.Deactivate",
+                mutedNow ? "§6%Player% §chas been temporarily muted while §6%Reason% §cfor §6%Time% %Unit%!" : "§6%Player% §ahas been temporarily unmuted!",
+                "%Player%", safePlayerName(target),
+                "%Reason%", request.reason(),
+                "%Time%", time,
+                "%Unit%", unit,
+                "%Expire%", expiresAt);
     }
 
     private boolean isPermanentlyMuted(OfflinePlayer player) {
@@ -360,7 +393,7 @@ public class MuteCMD extends CommandBase implements Listener {
         try {
             return PlayerUtils.getOfflinePlayerByName(playerName);
         } catch (IllegalArgumentException ex) {
-            send(sender, "§cPlayer name cannot be empty!");
+            sendMessage(sender, "TempMute.Errors.PlayerNameEmpty", "§cPlayer name cannot be empty!");
             return null;
         }
     }
@@ -369,7 +402,8 @@ public class MuteCMD extends CommandBase implements Listener {
         try {
             return MuteReason.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            send(sender, "§cUnknown mute reason: §6" + value);
+            sendMessage(sender, "TempMute.Errors.UnknownReason", "§cUnknown mute reason: §6%Reason%",
+                    "%Reason%", value);
             return null;
         }
     }
@@ -378,7 +412,8 @@ public class MuteCMD extends CommandBase implements Listener {
         try {
             return DateUnit.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            send(sender, "§cUnknown time unit: §6" + value);
+            sendMessage(sender, "TempMute.Errors.UnknownUnit", "§cUnknown time unit: §6%Unit%",
+                    "%Unit%", value);
             return null;
         }
     }
@@ -387,12 +422,14 @@ public class MuteCMD extends CommandBase implements Listener {
         try {
             long parsed = Long.parseLong(value);
             if (parsed <= 0) {
-                send(sender, "§cTime must be greater than 0.");
+                sendMessage(sender, "TempMute.Errors.TimeGreaterThanZero", "§cTime must be greater than 0.",
+                        "%Time%", value);
                 return null;
             }
             return parsed;
         } catch (NumberFormatException ex) {
-            send(sender, "§cInvalid time: §6" + value);
+            sendMessage(sender, "TempMute.Errors.InvalidTime", "§cInvalid time: §6%Time%",
+                    "%Time%", value);
             return null;
         }
     }
@@ -435,6 +472,20 @@ public class MuteCMD extends CommandBase implements Listener {
 
     private void send(CommandSender sender, String message) {
         sender.sendMessage(plugin.getPrefix() + message);
+    }
+
+    private void sendMessage(CommandSender sender, String key, String defaultMessage, String... replacements) {
+        send(sender, message(sender, key, defaultMessage, replacements));
+    }
+
+    private String message(CommandSender receiver, String key, String defaultMessage, String... replacements) {
+        String message = plugin.getLanguageConfig(receiver).getString(key, defaultMessage);
+        if (message == null) message = defaultMessage;
+        message = ReplaceCharConfig.replaceParagraph(message);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            message = ReplaceCharConfig.replaceObjectWithData(message, replacements[i], replacements[i + 1] == null ? "" : replacements[i + 1]);
+        }
+        return message;
     }
 
     private void ensureMuteFile() {
@@ -499,7 +550,7 @@ public class MuteCMD extends CommandBase implements Listener {
         return Collections.emptyList();
     }
 
-    private record TempMuteRequest(OfflinePlayer target, String reason, Date expiresAt) {
+    private record TempMuteRequest(OfflinePlayer target, String reason, Date expiresAt, long amount, DateUnit unit) {
     }
 
     private record TempMuteData(String reason, Date expiresAt) {

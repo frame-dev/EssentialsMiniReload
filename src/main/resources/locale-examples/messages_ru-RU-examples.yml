@@ -109,6 +109,8 @@ Mute:
   Other:
     Activate: '&6%Player% &cбыл заглушен!'
     Deactivate: '&6%Player% &aбыл размучен!'
+  Chat:
+    Permanent: '&cYou are Muted!'
 
 JoinMessage: '&aДобро пожаловать, &6%Player% &aна сервер!'
 LeaveMessage: '&6%Player% &aвышел с сервера!'
@@ -123,20 +125,7 @@ Experience:
     Level: '&aУровень &6%Player% &a: &6%Level%'
     XP: '&aОпыт &6%Player% &a: &6%XP%'
 
-Bank:
-  NotFound: "&cThis Bank doesn't exist!"
-  Created: '&aBank Successfully Created!'
-  Deleted: '&cBank successfully Deleted!'
-  Error: '&cError while &6%Reason% %Error%'
-  Deposit: '&6%Amount% &awas successfully transferred to the Bank!'
-  Withdraw: '&aYou successfully withdrew &6%Amount% &afrom the Bank!'
-  Balance: '&aThe Bank balance is &6%Balance%!'
-  NotOwnerOrMember: '&cYou are not a Bank Member or the Owner!'
-  NotOwner: '&cYou are not the Owner!'
-
-PlayerWeather:
-  Set: "&aYour Player Weather has been set to &6%WEATHER%&a!"
-  Reset: "&aYour Player weather has been reset!"
+timePlayed: '&aВы играли &6%TimePlayed%&a!'
 
 RetrieveIngredients:
   NoItem: '&cВы должны держать предмет в руке.'
@@ -158,3 +147,51 @@ ShowRecipe:
   NoRecipe: '&cРецепт для &6%Item% &cне найден.'
   Header: '&aРецепт для &6%Item%&a:'
   Ingredient: '&7- &6%Amount%x &f%Ingredient%'
+TempMute:
+  Self:
+    Activate: '&cYou have been temporarily muted while &6%Reason% &cuntil &6%Expire%!'
+    Deactivate: '&aYour temporary mute has been removed!'
+  Other:
+    Activate: '&6%Player% &chas been temporarily muted while &6%Reason% &cfor &6%Time% %Unit%!'
+    Deactivate: '&6%Player% &ahas been temporarily unmuted!'
+  Chat: '&cYou are muted! Reason: &6%Reason% &7| &aExpires at: &6%Expire%'
+  Info:
+    Entry: '&6%Player% &ais muted while: &6%Reason%'
+    Expires: '&aExpires at &6%Expire%'
+  Errors:
+    InvalidMode: '&cPlease use &6type &cor &6own&c.'
+    PlayerNameEmpty: '&cPlayer name cannot be empty!'
+    UnknownReason: '&cUnknown mute reason: &6%Reason%'
+    UnknownUnit: '&cUnknown time unit: &6%Unit%'
+    InvalidTime: '&cInvalid time: &6%Time%'
+    TimeGreaterThanZero: '&cTime must be greater than 0.'
+    DurationTooLarge: '&cMute duration is too large.'
+
+TempBan:
+  Success: '&6%Player% &ahas been banned while &6%Reason% &afor &6%Time% %Unit%!'
+  Kick: '&bBan while &c%Reason%&b for &a%Time% %Unit%!'
+  LoginKick: '&aYou are Banned. Reason:&c %Reason% &aExpired at &6%Expire% &aWait another: &6%Remaining%'
+  BanListReason: '&aYou are Banned. Reason:&c %Reason%'
+  Remove:
+    Success: '&6%Player% &ahas been unbanned!'
+  Errors:
+    InvalidMode: '&cPlease use &6type &cor &6own&c.'
+    PlayerNotFound: '&cPlayer name not found: &6%Player%'
+    InvalidUnit: '&cInvalid time unit. Use SEC, MIN, DAY, WEEK, MONTH or YEAR.'
+    InvalidTime: '&cInvalid time: &6%Time%'
+    TimeGreaterThanZero: '&cTime must be greater than 0.'
+    InvalidType: '&cInvalid ban type: &6%Type%'
+    DurationTooLarge: '&cThat ban duration is too large.'
+
+EBan:
+  Success: '&6%Player% &ahas been banned while &6%Reason%!'
+  TargetOffline: '&6%Player% &awas banned, but is not online.'
+  Kick: '&cYou are Banned while &6%Reason%'
+  Errors:
+    UnknownType: '&cUnknown ban type: &6%Type%'
+    InvalidMode: '&cPlease use &6/eban <type|own> <Player> <Reason>&c.'
+
+EUnBan:
+  Success: '&6%Player% &ahas been unbanned!'
+  Errors:
+    PlayerNotFound: '&cThis Player is not online! &6%Player%'

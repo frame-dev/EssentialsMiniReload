@@ -146,8 +146,6 @@ commands:
     description: set Thunder in our World
   renameitem:
     description: Rename a Item
-  showlocation:
-    description: Show you location to other Players
   position:
     aliases:
       - pos

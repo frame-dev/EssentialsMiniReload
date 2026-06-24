@@ -227,6 +227,11 @@ public class DisallowCommands extends ListenerBase {
             blockedCommands.add("glmute");
             blockedCommands.add("gmute");
         }
+        if(!player.hasPermission(plugin.getPermissionBase() + "staffchat")) {
+            blockedCommands.add("staffchat");
+            blockedCommands.add("sc");
+            blockedCommands.add("staffc");
+        }
         if (!event.getCommands().isEmpty()) {
             event.getCommands().removeAll(blockedCommands);
             event.getCommands().removeIf(string -> string.contains(":"));

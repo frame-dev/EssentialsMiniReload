@@ -113,6 +113,8 @@ mail:
     notFound: '&cMessage not found!'
     list: '&aYou have &6%Count% &amessages!'
     sender: '&6[Mail] &f%Sender% &7» &f%Message%'
-
+staffChatFormat: '&7[&cStaff&7] &f%player%: &7%message%'
+staffChat:
+  usePrefix: false
 geyser-support: false
 debug: false

@@ -112,11 +112,16 @@ public class RegisterManager {
         new SpeedCMD(plugin);
         new LightningStrikeCMD(plugin);
         new ClearChatCMD(plugin);
+        // Vault commands
         if (plugin.getConfig().getBoolean("Economy.Activate")) {
             new EcoCMDs(plugin);
             new BankCMD(plugin);
             new MoneySignListeners(plugin);
+        } else {
+            plugin.getLogger4J().info("Economy is disabled in config.yml!");
+            plugin.getLogger4J().info("/eco /balance /bank /pay and MoneySigns are disabled!");
         }
+
         if (plugin.getConfig().getBoolean("AFK.Boolean"))
             new AFKCMD(plugin);
         new SilentCMD(plugin);

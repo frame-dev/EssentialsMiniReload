@@ -3,7 +3,7 @@
 [![Maven Build](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven-build.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/maven-build.yml)
 [![Release Latest Jar](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release-latest-jar.yml/badge.svg)](https://github.com/frame-dev/EssentialsMiniReload/actions/workflows/release-latest-jar.yml)
 
-EssentialsMiniReload is a modular essentials plugin for modern Minecraft servers. It bundles everyday server tools such as homes, warps, spawn, economy, kits, moderation, private messages, mail, nicknames, backpacks, player utilities, and world controls without needing a large plugin stack.
+EssentialsMiniReload is a modular essentials plugin for modern Minecraft servers. It bundles everyday server tools such as homes, warps, spawn, economy, kits, moderation, private messages, mail, nicknames, backpacks, portable utility stations, player utilities, and world controls without needing a large plugin stack.
 
 ## Requirements
 
@@ -11,6 +11,8 @@ EssentialsMiniReload is a modular essentials plugin for modern Minecraft servers
 - Java `17`
 - Maven `3.8+` for local builds
 - Paper or Purpur is recommended for production servers
+
+For older Minecraft versions, use the original EssentialsMini plugin: [EssentialsMini on SpigotMC](https://www.spigotmc.org/resources/essentialsmini.82775/).
 
 Optional integrations:
 
@@ -81,6 +83,8 @@ Economy features require Vault and an economy provider.
 - `/renameitem`
 - `/signitem`
 - `/playerheads`
+- `/retrieve`, `/retrieve all`
+- `/showrecipe`, `/showrecipe <item>`
 
 ### Moderation
 
@@ -102,6 +106,7 @@ Economy features require Vault and an economy provider.
 - `/nicklist`
 - `/timeplayed`
 - `/online`, `/offline`
+- `/near`, `/near <radius>`
 
 ### Inventory And Utility
 
@@ -110,7 +115,9 @@ Economy features require Vault and an economy provider.
 - `/heal`, `/feed`
 - `/invsee`, `/enderchest`
 - `/backpack`, `/trash`
-- `/workbench`
+- `/workbench`, `/craft`
+- `/anvil`, `/grindstone`, `/smithingtable`
+- `/cartographytable`, `/loom`, `/stonecutter`
 - `/sleep`
 
 ### World Control
@@ -132,6 +139,11 @@ Examples:
 - `essentialsmini.home`
 - `essentialsmini.kits.<kitname>`
 - `essentialsmini.item`
+- `essentialsmini.retrieve`
+- `essentialsmini.showrecipe`
+- `essentialsmini.workbench`
+- `essentialsmini.anvil`
+- `essentialsmini.near`
 - `essentialsmini.mute`
 - `essentialsmini.tempmute`
 - `essentialsmini.ban`
@@ -156,7 +168,7 @@ Back up these files before upgrading on a production server.
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.0.7-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.0.8-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 
 ## License

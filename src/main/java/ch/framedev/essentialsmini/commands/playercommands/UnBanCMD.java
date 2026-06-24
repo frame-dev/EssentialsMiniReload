@@ -5,6 +5,7 @@ import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.BanFileManager;
 import ch.framedev.essentialsmini.managers.BanMuteManager;
 import ch.framedev.essentialsmini.utils.PlayerUtils;
+import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -46,7 +47,8 @@ public class UnBanCMD extends CommandBase {
 		}
 
 		unban(target);
-		send(sender, "§6" + target.getName() + " §ahas been unbanned!");
+		sendMessage(sender, "EUnBan.Success", "§6%Player% §ahas been unbanned!",
+				"%Player%", target.getName());
 		return true;
 	}
 
@@ -59,7 +61,8 @@ public class UnBanCMD extends CommandBase {
 		} catch (IllegalArgumentException ignored) {
 		}
 
-		send(sender, getPlugin().getVariables().getPlayerNameNotOnline(playerName));
+		sendMessage(sender, "EUnBan.Errors.PlayerNotFound", getPlugin().getVariables().getPlayerNameNotOnline(playerName),
+				"%Player%", playerName);
 		return null;
 	}
 
@@ -83,6 +86,20 @@ public class UnBanCMD extends CommandBase {
 
 	private void send(CommandSender sender, String message) {
 		sender.sendMessage(getPlugin().getPrefix() + message);
+	}
+
+	private void sendMessage(CommandSender sender, String key, String defaultMessage, String... replacements) {
+		send(sender, message(sender, key, defaultMessage, replacements));
+	}
+
+	private String message(CommandSender receiver, String key, String defaultMessage, String... replacements) {
+		String message = getPlugin().getLanguageConfig(receiver).getString(key, defaultMessage);
+		if (message == null) message = defaultMessage;
+		message = ReplaceCharConfig.replaceParagraph(message);
+		for (int i = 0; i + 1 < replacements.length; i += 2) {
+			message = ReplaceCharConfig.replaceObjectWithData(message, replacements[i], replacements[i + 1] == null ? "" : replacements[i + 1]);
+		}
+		return message;
 	}
 
 	@Override
