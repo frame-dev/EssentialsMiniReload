@@ -25,6 +25,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -33,6 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -88,14 +91,14 @@ public class Main extends JavaPlugin {
         // Set the instance to this plugin
         instance = this;
 
-        // Loads the default configuration file
-        saveDefaultConfig();
-        saveConfig();
-        debug = getConfig().getBoolean("debug", false);
-
         // Initialize the logger
         logger = Logger.getLogger("EssentialsMini");
         BasicConfigurator.configure();
+
+        // Loads the default configuration file and merges new defaults/comments into existing configs
+        saveDefaultConfig();
+        reloadConfig();
+        debug = getConfig().getBoolean("debug", false);
 
         // create the messages-examples directory if it does not exist
         if (!new File(getDataFolder() + "/messages-examples").exists()) {
@@ -161,6 +164,92 @@ public class Main extends JavaPlugin {
 
         // Log that the plugin has been enabled
         getLogger4J().info("EssentialsMini has been enabled!");
+    }
+
+    @Override
+    public void reloadConfig() {
+        super.reloadConfig();
+        mergeBundledConfigDefaults();
+        debug = getConfig().getBoolean("debug", false);
+    }
+
+    private void mergeBundledConfigDefaults() {
+        YamlConfiguration bundledConfig = loadBundledConfig();
+        if (bundledConfig == null) {
+            return;
+        }
+
+        FileConfiguration config = getConfig();
+        config.options().parseComments(true);
+        config.options().copyDefaults(true);
+        config.options().copyHeader(true);
+        config.setDefaults(bundledConfig);
+
+        boolean changed = false;
+        for (String path : bundledConfig.getKeys(true)) {
+            if (!config.contains(path, true)) {
+                Object value = bundledConfig.get(path);
+                if (!(value instanceof ConfigurationSection)) {
+                    config.set(path, value);
+                    changed = true;
+                }
+            }
+
+            if (copyConfigComments(bundledConfig, config, path)) {
+                changed = true;
+            }
+        }
+
+        if (!bundledConfig.options().getHeader().equals(config.options().getHeader())) {
+            config.options().setHeader(bundledConfig.options().getHeader());
+            changed = true;
+        }
+
+        if (!bundledConfig.options().getFooter().equals(config.options().getFooter())) {
+            config.options().setFooter(bundledConfig.options().getFooter());
+            changed = true;
+        }
+
+        if (changed) {
+            saveConfig();
+        }
+    }
+
+    private YamlConfiguration loadBundledConfig() {
+        try (InputStream inputStream = getResource("config.yml")) {
+            if (inputStream == null) {
+                getLogger().warning("Bundled config.yml was not found; default config values could not be merged.");
+                return null;
+            }
+
+            YamlConfiguration bundledConfig = new YamlConfiguration();
+            bundledConfig.options().parseComments(true);
+            try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                bundledConfig.load(reader);
+            }
+            return bundledConfig;
+        } catch (IOException | InvalidConfigurationException e) {
+            getLogger().warning("Bundled config.yml could not be loaded: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean copyConfigComments(YamlConfiguration source, FileConfiguration target, String path) {
+        boolean changed = false;
+
+        List<String> comments = source.getComments(path);
+        if (!comments.equals(target.getComments(path))) {
+            target.setComments(path, comments);
+            changed = true;
+        }
+
+        List<String> inlineComments = source.getInlineComments(path);
+        if (!inlineComments.equals(target.getInlineComments(path))) {
+            target.setInlineComments(path, inlineComments);
+            changed = true;
+        }
+
+        return changed;
     }
 
     private void initializeMongoUsersAsync(OfflinePlayer[] offlinePlayers) {

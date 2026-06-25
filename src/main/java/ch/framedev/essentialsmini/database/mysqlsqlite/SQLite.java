@@ -179,8 +179,6 @@ public class SQLite {
                 try (var stmt = connection.createStatement()) {
                     stmt.execute("PRAGMA foreign_keys = ON");
                 }
-
-                LOGGER.log(Level.INFO, "SQLite connection established successfully: " + url);
                 return connection;
 
             } catch (SQLException e) {

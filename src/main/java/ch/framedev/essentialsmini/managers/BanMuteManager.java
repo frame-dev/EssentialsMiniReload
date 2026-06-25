@@ -35,6 +35,7 @@ public class BanMuteManager {
 
     // Database table for MySQL / SQLite
     private final String table = "essentialsmini_ban_mute";
+    private volatile boolean sqlTableReady;
 
     public BanMuteManager() {
         if (Main.getInstance().isMongoDB()) {
@@ -43,49 +44,37 @@ public class BanMuteManager {
                     BackendManagerBanMute.getInstance(Main.getInstance()).createUser(player);
                 }
             }
+        } else if (isSQL()) {
+            ensureTableExists();
         }
     }
 
-    private void ensureTableExists() {
-        SQL.isTableExistsAsync(table, new SQL.Callback<>() {
-            @Override
-            public void accept(Boolean exists) {
-                if (!exists) {
-                    Main.getInstance().getLogger4J().log(Level.INFO, "Table " + table + " does not exist. Creating...");
-                    SQL.createTableAsync(
-                            table,
-                            new SQL.Callback<>() {
-                                @Override
-                                public void accept(Boolean created) {
-                                    if (created) {
-                                        Main.getInstance().getLogger4J().log(Level.INFO, "Successfully created table " + table);
-                                    } else {
-                                        Main.getInstance().getLogger4J().log(Level.WARN, "Table " + table + " creation failed.");
-                                    }
-                                }
+    private boolean ensureTableExists() {
+        if (sqlTableReady) {
+            return true;
+        }
 
-                                @Override
-                                public void onError(Throwable t) {
-                                    Main.getInstance().getLogger4J().log(Level.ERROR, "Error while creating table: " + table, t);
-                                }
-                            },
-                            "Player VARCHAR(255)",
-                            "TempMute TEXT",
-                            "TempMuteReason TEXT",
-                            "TempBan TEXT",
-                            "TempBanReason TEXT",
-                            "Ban TEXT",
-                            "BanReason TEXT"
-                    );
-                }
+        synchronized (this) {
+            if (sqlTableReady) {
+                return true;
             }
 
-            @Override
-            public void onError(Throwable t) {
-                Main.getInstance().getLogger4J().log(Level.ERROR, "Error while checking table existence: " + table, t);
+            SQL.createTable(
+                    table,
+                    "Player VARCHAR(255)",
+                    "TempMute TEXT",
+                    "TempMuteReason TEXT",
+                    "TempBan TEXT",
+                    "TempBanReason TEXT",
+                    "Ban TEXT",
+                    "BanReason TEXT"
+            );
+            sqlTableReady = SQL.isTableExists(table);
+            if (!sqlTableReady) {
+                Main.getInstance().getLogger4J().log(Level.ERROR, "Table " + table + " could not be created.");
             }
-        });
-
+            return sqlTableReady;
+        }
     }
 
     public void setTempMute(OfflinePlayer player, MuteCMD.MuteReason reason, String date) {
@@ -99,7 +88,10 @@ public class BanMuteManager {
     public CompletableFuture<Void> setTempMute(OfflinePlayer player, String reason, String date) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) {
+                future.complete(null);
+                return future;
+            }
             String playerName = player.getName();
 
             SQL.existsAsync(table, "Player", playerName, new SQL.Callback<>() {
@@ -166,7 +158,7 @@ public class BanMuteManager {
         if (playerName == null) return;
 
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return;
 
             String tempMute = String.valueOf(SQL.get(table, "TempMute", "Player", playerName));
             if (SQL.exists(table, "Player", playerName) && tempMute != null && !tempMute.equalsIgnoreCase(" ")) {
@@ -199,7 +191,10 @@ public class BanMuteManager {
     public CompletableFuture<Map<String, String>> getTempMute(OfflinePlayer player) {
         CompletableFuture<Map<String, String>> resultFuture = new CompletableFuture<>();
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) {
+                resultFuture.complete(null);
+                return resultFuture;
+            }
             String playerName = player.getName();
 
             SQL.existsAsync(table, "Player", playerName, new SQL.Callback<>() {
@@ -224,7 +219,7 @@ public class BanMuteManager {
                             @Override
                             public void onError(Throwable t) {
                                 Main.getInstance().getLogger4J().error(t);
-                                resultFuture.completeExceptionally(t);
+                                resultFuture.complete(null);
                             }
                         });
                     } else {
@@ -235,7 +230,7 @@ public class BanMuteManager {
                 @Override
                 public void onError(Throwable t) {
                     Main.getInstance().getLogger4J().error(t);
-                    resultFuture.completeExceptionally(t);
+                    resultFuture.complete(null);
                 }
             });
         } else {
@@ -255,7 +250,7 @@ public class BanMuteManager {
 
     public boolean isTempMute(OfflinePlayer player) {
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return false;
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -276,7 +271,7 @@ public class BanMuteManager {
 
     public void setTempBan(OfflinePlayer player, String reason, String date) {
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return;
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -296,7 +291,7 @@ public class BanMuteManager {
             String playerName = player.getName();
             if (playerName == null) return;
 
-            ensureTableExists();
+            if (!ensureTableExists()) return;
 
             if (SQL.exists(table, "Player", playerName)) {
                 Bukkit.getServer().getBanList(BanList.Type.NAME).pardon(playerName);
@@ -311,7 +306,7 @@ public class BanMuteManager {
 
     public Map<String, String> getTempBan(OfflinePlayer player) {
         if (isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return null;
             String playerName = player.getName();
             Map<String, String> tempBan = new HashMap<>();
 
@@ -342,7 +337,7 @@ public class BanMuteManager {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isExpiredTempBan(OfflinePlayer player) {
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return true;
 
             if (isTempBan(player)) {
                 Date[] date = {null};
@@ -375,7 +370,7 @@ public class BanMuteManager {
 
     public boolean isTempBan(OfflinePlayer player) {
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return false;
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -396,7 +391,7 @@ public class BanMuteManager {
 
     public void setPermBan(OfflinePlayer player, String reason, boolean permaBan) {
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return;
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -416,7 +411,7 @@ public class BanMuteManager {
 
     public boolean isPermBan(OfflinePlayer player) {
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return false;
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -432,7 +427,7 @@ public class BanMuteManager {
 
     public String getPermBanReason(OfflinePlayer player) {
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return "";
             String playerName = player.getName();
 
             if (SQL.exists(table, "Player", playerName)) {
@@ -448,7 +443,7 @@ public class BanMuteManager {
     public List<String> getAllBannedPlayers() {
         List<String> playerNames = new ArrayList<>();
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return playerNames;
 
             try (Connection conn = SQL.getConnection(); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
                 while (resultSet.next()) {
@@ -471,7 +466,7 @@ public class BanMuteManager {
     public List<String> getAllTempBannedPlayers() {
         List<String> playerNames = new ArrayList<>();
         if(isSQL()) {
-            ensureTableExists();
+            if (!ensureTableExists()) return playerNames;
 
             try (Connection conn = SQL.getConnection(); Statement statement = conn.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table)) {
                 while (resultSet.next()) {

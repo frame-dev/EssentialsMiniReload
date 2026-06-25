@@ -150,7 +150,6 @@ public class MySQL {
                 config.addDataSourceProperty("maintainTimeStats", "false");
 
                 hikariDataSource = new HikariDataSource(config);
-                Main.getInstance().getLogger4J().log(Level.INFO, "MySQL connection pool established successfully");
             } catch (Exception e) {
                 Main.getInstance().getLogger4J().log(Level.ERROR, "Failed to establish MySQL connection pool", e);
                 hikariDataSource = null;

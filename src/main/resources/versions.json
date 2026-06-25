@@ -1,7 +1,7 @@
 {
   "latest": "1.3.9-RELEASE",
   "latest-pre-release": "1.4.9.3-1.20.6-PRE-RELEASE",
-  "1.20.6-higher-release": "1.1.0-1.20.6-HIGHER-RELEASE",
+  "1.20.6-higher-release": "1.1.1-1.20.6-HIGHER-RELEASE",
   "1.20.6-higher-releases": [
     "1.0.0-1.20.6-HIGHER-PRE-RELEASE",
     "1.0.1-1.20.6-HIGHER-PRE-RELEASE",
@@ -20,7 +20,8 @@
     "1.0.7-1.20.6-HIGHER-RELEASE",
     "1.0.8-1.20.6-HIGHER-RELEASE",
     "1.0.9-1.20.6-HIGHER-RELEASE",
-    "1.1.0-1.20.6-HIGHER-RELEASE"
+    "1.1.0-1.20.6-HIGHER-RELEASE",
+    "1.1.1-1.20.6-HIGHER-RELEASE"
   ],
   "pre-releases": [
     "1.4.2-1.20.6-PRE-RELEASE",
@@ -216,6 +217,8 @@
         "Added /essentialshelp alias and /emhelp text fallback for console or chat-based help",
         "Improved ProtocolLib skin refresh so /nick <nickname> <skin> updates visible player skins more reliably",
         "Nickname reset now restores the original skin data more reliably",
+        "Fixed a /nick skin refresh crash on newer ProtocolLib/Purpur builds when GameProfile properties are not exposed through ProtocolLib wrappers",
+        "Added a fallback skin refresh path for Java 26/Purpur builds where ProtocolLib cannot mutate final player-info packet action fields",
         "Updated /flyspeed with reset/default/normal arguments and tab completion",
         "Fixed /eco set for other players and added support for both amount-first and player-first usage",
         "Hardened economy commands so /pay, /eco, and /bank check transaction failures and account creation more reliably",
@@ -225,6 +228,27 @@
         "Added config comments explaining AutoDownload and checkForUpdates",
         "Added Geyser-Spigot and Floodgate as optional soft dependencies",
         "Updated README.md and SpigotMC description for the new release"
+      ]
+    },
+    {
+      "version": "1.1.1-1.20.6-HIGHER-RELEASE",
+      "description": [
+        "Fixed SQL ban/mute table creation for SQL and SQLite storage so login/chat checks cannot query essentialsmini_ban_mute before it exists",
+        "Ban/mute SQL lookups now fall back safely instead of throwing chat/login stack traces when storage is unavailable",
+        "Reduced SQL connection log spam by removing successful connection messages",
+        "Fixed /nick skin refresh crashes on newer ProtocolLib/Purpur builds when GameProfile properties are not exposed through ProtocolLib wrappers",
+        "Added a fallback skin refresh path for Java 26/Purpur builds where ProtocolLib cannot mutate final player-info packet action fields",
+        "Skin refresh now avoids rewriting final player-info packet fields directly, preventing ClientboundPlayerInfoUpdatePacket.actions warnings on Java 26/Purpur",
+        "/nick now writes fetched skin textures to the live player profile before refreshing viewers so the selected skin is actually applied",
+        "Skin writes now fall back from Bukkit profile objects to the NMS GameProfile when Bukkit does not expose Mojang texture properties",
+        "Skin property reflection now supports newer authlib accessors, private property-map fields, and inherited Multimap methods used by modern Purpur/Java builds",
+        "Mojang PropertyMap texture updates now use the Guava Multimap API directly, fixing failed texture insert/remove operations on newer authlib builds",
+        "Live skin writes now prefer the NMS player GameProfile before Bukkit profile copies and handle immutable property maps without aborting /nick",
+        "Added a Paper/Purpur PlayerProfile runtime path for servers that expose setPlayerProfile",
+        "Added Spigot/NMS fallbacks that mutate the backing authlib property map or replace the player's GameProfile when the public property map is immutable",
+        "Skin refresh no longer sends remove/add tab-list packets to the nicked player, preventing empty tab lists and signed chat validation errors",
+        "Added skinDebug diagnostics for /nick skin lookup, live profile texture writes, ProtocolLib packet choices, packet sends, and entity refreshes",
+        "config.yml now merges missing bundled defaults and comments on startup or /essentialsmini reload without overwriting configured values"
       ]
     }
   ]

@@ -384,6 +384,12 @@ Common files include:
 
 You can customize messages, storage options, economy settings, moderation behavior, and many other plugin features.
 
+Existing [CODE]config.yml[/CODE] files are updated with missing default options and bundled comments on startup or [CODE]/essentialsmini reload[/CODE] without overwriting configured values.
+
+For [B]/nick <nickname> <skin>[/B] troubleshooting, enable [CODE]skinDebug: true[/CODE] in [CODE]config.yml[/CODE], reload or restart the server, then check the console for [CODE][SkinDebug][/CODE] lines.
+
+Skin refresh supports Spigot, Paper, and Purpur by trying Paper/Purpur profile APIs first and falling back to ProtocolLib/NMS profile updates on Spigot-style servers.
+
 [SIZE=5][B]Storage Support[/B][/SIZE]
 
 EssentialsMiniReload supports different storage systems depending on your setup:
@@ -397,7 +403,7 @@ EssentialsMiniReload supports different storage systems depending on your setup:
 
 [SIZE=5][B]Current Version[/B][/SIZE]
 
-[CODE]1.1.0-1.20.6-HIGHER-RELEASE[/CODE]
+[CODE]1.1.1-1.20.6-HIGHER-RELEASE[/CODE]
 
 [SIZE=5][B]Support[/B][/SIZE]
 

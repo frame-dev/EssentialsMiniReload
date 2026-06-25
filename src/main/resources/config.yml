@@ -119,4 +119,6 @@ staffChatFormat: '&7[&cStaff&7] &f%player%: &7%message%'
 staffChat:
   usePrefix: false
 geyser-support: false
+# Enables detailed console logs for /nick skin lookup, profile writes, and ProtocolLib refresh packets.
+skinDebug: false
 debug: false

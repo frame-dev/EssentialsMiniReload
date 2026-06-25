@@ -64,8 +64,10 @@ public class NickCMD extends CommandBase {
         }
 
         String skinName = args[1];
+        debug("Command from " + player.getName() + ": displayName='" + displayName + "', profileName='" + profileName + "', skinName='" + skinName + "'");
 
         if (getPlugin().getSkinService() == null) {
+            debug("ProtocolLib SkinService is not available. Applying nickname only for " + player.getName());
             markNicked(player);
             applyDisplayNick(player, displayName);
             saveNickConfiguration(player);
@@ -79,17 +81,21 @@ public class NickCMD extends CommandBase {
                     if (!player.isOnline()) return;
 
                     if (err != null) {
+                        debug("Skin fetch failed for skinName='" + skinName + "': " + getRootMessage(err));
                         player.sendMessage(getPrefix() + "§cFailed to fetch skin: " + getRootMessage(err));
                         return;
                     }
 
                     try {
+                        debug("Skin fetch succeeded for skinName='" + skinName + "' valueLength=" + tex.value().length() + ", signatureLength=" + tex.signature().length());
                         getPlugin().getSkinService().apply(player, profileName, tex.value(), tex.signature());
                         applyDisplayNick(player, displayName);
                         markNicked(player);
                         saveNickConfiguration(player);
+                        debug("Nickname and skin apply completed for " + player.getName());
                         player.sendMessage(getPrefix() + "§aNickname and skin applied. Re-log if the skin does not refresh immediately.");
                     } catch (Exception e) {
+                        debug("Skin apply failed for " + player.getName() + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
                         player.sendMessage(getPrefix() + "§cApply failed: " + e.getMessage());
                     }
                 }));
@@ -146,6 +152,12 @@ public class NickCMD extends CommandBase {
             root = root.getCause();
         }
         return root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage();
+    }
+
+    private void debug(String message) {
+        if (getPlugin().getConfig().getBoolean("skinDebug", false) || getPlugin().getConfig().getBoolean("debug", false)) {
+            getPlugin().getLogger().info("[SkinDebug] " + message);
+        }
     }
 
     @Override

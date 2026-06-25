@@ -179,11 +179,17 @@ The plugin creates and uses several files in its data folder, including:
 
 Back up these files before upgrading on a production server.
 
+Existing `config.yml` files are updated with missing default options and bundled comments on startup or `/essentialsmini reload` without overwriting configured values.
+
+For `/nick <nickname> <skin>` troubleshooting, set `skinDebug: true` in `config.yml`, reload or restart the server, then check the console for `[SkinDebug]` lines.
+
+Skin refresh supports Spigot, Paper, and Purpur by trying Paper/Purpur profile APIs first and falling back to ProtocolLib/NMS profile updates on Spigot-style servers.
+
 ## Project Info
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.1.0-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.1.1-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 
 ## License
