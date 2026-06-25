@@ -415,6 +415,9 @@ Website:
 GitHub:
 [URL]https://github.com/frame-dev/EssentialsMiniReload[/URL]
 
+Issues/support:
+[URL]https://github.com/frame-dev/EssentialsMiniReload/issues[/URL]
+
 [SIZE=5][B]License[/B][/SIZE]
 
 EssentialsMiniReload is licensed under the MIT License.

@@ -248,7 +248,8 @@
         "Added Spigot/NMS fallbacks that mutate the backing authlib property map or replace the player's GameProfile when the public property map is immutable",
         "Skin refresh no longer sends remove/add tab-list packets to the nicked player, preventing empty tab lists and signed chat validation errors",
         "Added skinDebug diagnostics for /nick skin lookup, live profile texture writes, ProtocolLib packet choices, packet sends, and entity refreshes",
-        "config.yml now merges missing bundled defaults and comments on startup or /essentialsmini reload without overwriting configured values"
+        "config.yml now merges missing bundled defaults and comments on startup or /essentialsmini reload without overwriting configured values",
+        "Added the GitHub issues/support link to README.md and the SpigotMC resource description"
       ]
     }
   ]
