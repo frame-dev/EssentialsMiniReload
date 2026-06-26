@@ -38,6 +38,7 @@ public class EssentialsMiniCMD extends CommandBase {
         return switch (subCommand) {
             case "reload" -> handleReload(sender);
             case "economy" -> handleEconomy(sender, args);
+            case "messages" -> handleMessages(sender, args);
             case "help" -> handleHelp(sender);
             case "version", "ver" -> handleVersion(sender);
             case "about", "info" -> handleAbout(sender);
@@ -68,6 +69,9 @@ public class EssentialsMiniCMD extends CommandBase {
             }
             if (sender.hasPermission(PERMISSION_BASE + "economy")) {
                 sender.sendMessage("  §a/essentialsmini economy <on|off> §8- §7Toggle economy");
+            }
+            if (sender.hasPermission(PERMISSION_BASE + "messages")) {
+                sender.sendMessage("  §a/essentialsmini messages <list|add|remove|create> §8- §7Manage custom message files");
             }
             if (sender.hasPermission(PERMISSION_BASE + "version")) {
                 sender.sendMessage("  §a/essentialsmini version §8- §7Show version info");
@@ -162,6 +166,124 @@ public class EssentialsMiniCMD extends CommandBase {
         return true;
     }
 
+    private boolean handleMessages(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (!sender.hasPermission(PERMISSION_BASE + "messages")) {
+            sender.sendMessage(PREFIX + "§cYou do not have permission to use this command.");
+            return true;
+        }
+
+        if (args.length < 2) {
+            sendMessagesHelp(sender);
+            return true;
+        }
+
+        String action = args[1].toLowerCase();
+        return switch (action) {
+            case "list" -> handleMessagesList(sender);
+            case "add" -> handleMessagesAdd(sender, args);
+            case "remove" -> handleMessagesRemove(sender, args);
+            case "create" -> handleMessagesCreate(sender, args);
+            default -> {
+                sendMessagesHelp(sender);
+                yield true;
+            }
+        };
+    }
+
+    private void sendMessagesHelp(@NotNull CommandSender sender) {
+        sender.sendMessage(PREFIX + "§7Usage:");
+        sender.sendMessage(PREFIX + "§a/essentialsmini messages list §8- §7Show loaded and detected message files");
+        sender.sendMessage(PREFIX + "§a/essentialsmini messages add <locale> §8- §7Enable an existing custom message file");
+        sender.sendMessage(PREFIX + "§a/essentialsmini messages remove <locale> §8- §7Disable a custom message locale");
+        sender.sendMessage(PREFIX + "§a/essentialsmini messages create <locale> §8- §7Create a custom file from English and enable it");
+    }
+
+    private boolean handleMessagesList(@NotNull CommandSender sender) {
+        sender.sendMessage(PREFIX + "§7Loaded message locales: §a" + formatList(getPlugin().getLoadedMessageLocales()));
+        sender.sendMessage(PREFIX + "§7Enabled custom locales: §a" + formatList(getPlugin().getConfiguredCustomMessageLocales()));
+
+        List<String> detectedLocales = getPlugin().getUnconfiguredCustomMessageLocales();
+        if (detectedLocales.isEmpty()) {
+            sender.sendMessage(PREFIX + "§7Unconfigured custom files: §aNone");
+        } else {
+            sender.sendMessage(PREFIX + "§7Unconfigured custom files: §e" + formatList(detectedLocales));
+            sender.sendMessage(PREFIX + "§7Use §e/essentialsmini messages add <locale> §7to add one to the project.");
+        }
+        return true;
+    }
+
+    private boolean handleMessagesAdd(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(PREFIX + "§cUsage: /essentialsmini messages add <locale>");
+            return true;
+        }
+
+        String locale = args[2];
+        if (getPlugin().isBuiltInMessageLocale(locale)) {
+            sender.sendMessage(PREFIX + "§eThat locale is already built in.");
+            return true;
+        }
+
+        if (!getPlugin().getMessageFile(locale).exists()) {
+            sender.sendMessage(PREFIX + "§cNo custom message file exists for that locale.");
+            sender.sendMessage(PREFIX + "§7Create §emessages_" + locale + ".yml §7or run §e/essentialsmini messages create " + locale + "§7.");
+            return true;
+        }
+
+        if (getPlugin().addCustomMessageLocale(locale)) {
+            sender.sendMessage(PREFIX + "§aCustom message locale added and reloaded.");
+        } else {
+            sender.sendMessage(PREFIX + "§cCould not add that custom message locale.");
+        }
+        return true;
+    }
+
+    private boolean handleMessagesRemove(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(PREFIX + "§cUsage: /essentialsmini messages remove <locale>");
+            return true;
+        }
+
+        if (getPlugin().removeCustomMessageLocale(args[2])) {
+            sender.sendMessage(PREFIX + "§aCustom message locale removed and languages reloaded.");
+        } else {
+            sender.sendMessage(PREFIX + "§eThat locale is not enabled as a custom message locale.");
+        }
+        return true;
+    }
+
+    private boolean handleMessagesCreate(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(PREFIX + "§cUsage: /essentialsmini messages create <locale>");
+            return true;
+        }
+
+        String locale = args[2];
+        if (getPlugin().isBuiltInMessageLocale(locale)) {
+            sender.sendMessage(PREFIX + "§eThat locale is already built in.");
+            return true;
+        }
+
+        if (!getPlugin().createCustomMessageFile(locale)) {
+            sender.sendMessage(PREFIX + "§cCould not create the custom message file.");
+            return true;
+        }
+
+        if (getPlugin().addCustomMessageLocale(locale)) {
+            sender.sendMessage(PREFIX + "§aCustom message file created, added, and reloaded.");
+        } else {
+            sender.sendMessage(PREFIX + "§cThe file was created, but the locale could not be added.");
+        }
+        return true;
+    }
+
+    private String formatList(@NotNull List<String> values) {
+        if (values.isEmpty()) {
+            return "None";
+        }
+        return String.join(", ", values);
+    }
+
     /**
      * Handle help command
      */
@@ -185,6 +307,12 @@ public class EssentialsMiniCMD extends CommandBase {
             sender.sendMessage("§a/essentialsmini economy <on|off>");
             sender.sendMessage("  §7Enables or disables the economy feature");
             sender.sendMessage("  §7Requires Vault and an economy plugin");
+            sender.sendMessage("");
+        }
+
+        if (sender.hasPermission(PERMISSION_BASE + "messages")) {
+            sender.sendMessage("§a/essentialsmini messages <list|add|remove|create>");
+            sender.sendMessage("  §7Manages custom messages_<locale>.yml files");
             sender.sendMessage("");
         }
 
@@ -269,7 +397,7 @@ public class EssentialsMiniCMD extends CommandBase {
 
         if (args.length == 1) {
             // First argument - subcommands
-            List<String> subCommands = Arrays.asList("reload", "help", "economy", "version", "about", "info");
+            List<String> subCommands = Arrays.asList("reload", "help", "economy", "messages", "version", "about", "info");
 
             // Filter by permission and starts with
             completions = subCommands.stream()
@@ -284,6 +412,24 @@ public class EssentialsMiniCMD extends CommandBase {
                 List<String> values = Arrays.asList("on", "off", "true", "false", "enable", "disable");
                 completions = values.stream()
                         .filter(val -> val.startsWith(args[1].toLowerCase()))
+                        .sorted()
+                        .collect(Collectors.toList());
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("messages")) {
+            if (sender.hasPermission(PERMISSION_BASE + "messages")) {
+                List<String> values = Arrays.asList("list", "add", "remove", "create");
+                completions = values.stream()
+                        .filter(val -> val.startsWith(args[1].toLowerCase()))
+                        .sorted()
+                        .collect(Collectors.toList());
+            }
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("messages")) {
+            if (sender.hasPermission(PERMISSION_BASE + "messages")) {
+                List<String> locales = args[1].equalsIgnoreCase("add")
+                        ? getPlugin().getUnconfiguredCustomMessageLocales()
+                        : getPlugin().getConfiguredCustomMessageLocales();
+                completions = locales.stream()
+                        .filter(locale -> locale.toLowerCase().startsWith(args[2].toLowerCase()))
                         .sorted()
                         .collect(Collectors.toList());
             }

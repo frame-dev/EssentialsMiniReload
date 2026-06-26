@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author DHZoc
@@ -104,7 +105,7 @@ public class HomeCMD extends CommandListenerBase {
         Player player = requirePlayer(sender);
         if (player == null) return true;
 
-        InventoryManager inventoryManager = new InventoryManager(INVENTORY_TITLE);
+        InventoryManager inventoryManager = new InventoryManager(homeGuiTitle());
         inventoryManager.setSize(3);
         inventoryManager.create();
 
@@ -112,10 +113,13 @@ public class HomeCMD extends CommandListenerBase {
         int maxHomes = Math.min(homesList.size(), inventoryManager.getSize());
         for (int i = 0; i < maxHomes; i++) {
             String homeName = homesList.get(i);
-            inventoryManager.setItem(i, new ItemBuilder(Material.BLACK_BED)
-                    .setDisplayName("§6" + homeName)
-                    .setLore("§aTeleport to Home §6" + homeName)
-                    .build());
+            inventoryManager.setItem(i, plugin.getConfiguredGuiItem(
+                    "homes.items.home",
+                    Material.BLACK_BED,
+                    "§6" + homeName,
+                    List.of("§aTeleport to Home §6" + homeName),
+                    Map.of("%Home%", homeName)
+            ));
         }
 
         inventoryManager.fillNull();
@@ -307,6 +311,10 @@ public class HomeCMD extends CommandListenerBase {
         sender.sendMessage(plugin.getPrefix() + message);
     }
 
+    private String homeGuiTitle() {
+        return plugin.getConfiguredGuiTitle("homes", INVENTORY_TITLE, Map.of());
+    }
+
     private String homePath(String playerName, String homeName) {
         return playerName + ".home." + homeName;
     }
@@ -342,7 +350,7 @@ public class HomeCMD extends CommandListenerBase {
 
     @EventHandler
     public void onClickInventory(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equalsIgnoreCase(INVENTORY_TITLE)) return;
+        if (!event.getView().getTitle().equalsIgnoreCase(homeGuiTitle())) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         event.setCancelled(true);

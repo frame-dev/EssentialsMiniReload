@@ -25,14 +25,14 @@ public class UtilityStationCMD extends CommandBase {
         super(plugin, "workbench", "anvil", "grindstone", "smithingtable", "cartographytable", "loom", "stonecutter");
         this.plugin = plugin;
 
-        stations.put("workbench", new Station("workbench", InventoryType.WORKBENCH, "Workbench"));
+        stations.put("workbench", new Station("workbench", "workbench", InventoryType.WORKBENCH, "Workbench"));
         stations.put("craft", stations.get("workbench"));
-        stations.put("anvil", new Station("anvil", InventoryType.ANVIL, "Anvil"));
-        stations.put("grindstone", new Station("grindstone", InventoryType.GRINDSTONE, "Grindstone"));
-        stations.put("smithingtable", new Station("smithingtable", InventoryType.SMITHING, "Smithing Table"));
-        stations.put("cartographytable", new Station("cartographytable", InventoryType.CARTOGRAPHY, "Cartography Table"));
-        stations.put("loom", new Station("loom", InventoryType.LOOM, "Loom"));
-        stations.put("stonecutter", new Station("stonecutter", InventoryType.STONECUTTER, "Stonecutter"));
+        stations.put("anvil", new Station("anvil", "anvil", InventoryType.ANVIL, "Anvil"));
+        stations.put("grindstone", new Station("grindstone", "grindstone", InventoryType.GRINDSTONE, "Grindstone"));
+        stations.put("smithingtable", new Station("smithingtable", "smithingtable", InventoryType.SMITHING, "Smithing Table"));
+        stations.put("cartographytable", new Station("cartographytable", "cartographytable", InventoryType.CARTOGRAPHY, "Cartography Table"));
+        stations.put("loom", new Station("loom", "loom", InventoryType.LOOM, "Loom"));
+        stations.put("stonecutter", new Station("stonecutter", "stonecutter", InventoryType.STONECUTTER, "Stonecutter"));
     }
 
     @Override
@@ -57,7 +57,8 @@ public class UtilityStationCMD extends CommandBase {
             return true;
         }
 
-        player.openInventory(Bukkit.createInventory(player, station.inventoryType()));
+        player.openInventory(Bukkit.createInventory(player, station.inventoryType(),
+                plugin.getConfiguredGuiTitle("utilityStations." + station.configKey(), station.displayName(), Map.of("%Station%", station.displayName()))));
         sendMessage(player, "UtilityStation.Opened", "&aOpened &6%Station%&a.", station.displayName());
         return true;
     }
@@ -76,6 +77,6 @@ public class UtilityStationCMD extends CommandBase {
         player.sendMessage(plugin.getPrefix() + message);
     }
 
-    private record Station(String permission, InventoryType inventoryType, String displayName) {
+    private record Station(String permission, String configKey, InventoryType inventoryType, String displayName) {
     }
 }

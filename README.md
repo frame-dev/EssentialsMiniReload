@@ -80,7 +80,8 @@ Economy features require Vault and an economy provider.
 
 ### Kits And Items
 
-- `/kits`
+- `/kits` opens the kit selector GUI
+- `/kits <kit>`
 - `/createkit`
 - `/item`
 - `/repair`
@@ -142,6 +143,7 @@ Economy features require Vault and an economy provider.
 - `/essentialsmini help`
 - `/essentialsmini version`
 - `/essentialsmini economy <on|off>`
+- `/essentialsmini messages <list|add|remove|create>`
 
 ## Permissions
 
@@ -162,6 +164,7 @@ Examples:
 - `essentialsmini.mute`
 - `essentialsmini.tempmute`
 - `essentialsmini.ban`
+- `essentialsmini.messages`
 
 Use `essentialsmini.*` for broad administrator access where supported by your permission plugin.
 
@@ -171,6 +174,7 @@ The plugin creates and uses several files in its data folder, including:
 
 - `config.yml`
 - language files such as `messages_en-EN.yml`
+- custom language files such as `messages_nl-NL.yml`
 - `locations.yml`
 - `kits.yml`
 - `mail.yml`
@@ -181,6 +185,72 @@ Back up these files before upgrading on a production server.
 
 Existing `config.yml` files are updated with missing default options and bundled comments on startup or `/essentialsmini reload` without overwriting configured values.
 
+### Custom Message Locales
+
+Custom message files can be added to the plugin data folder using the `messages_<locale>.yml` naming format. For example, create `plugins/EssentialsMini/messages_nl-NL.yml` for Dutch.
+
+If a custom file is detected but not enabled, the plugin logs a prompt. Add it with:
+
+```text
+/essentialsmini messages add nl-NL
+```
+
+You can also create a new custom message file from the English messages and enable it immediately:
+
+```text
+/essentialsmini messages create nl-NL
+```
+
+The same setting can be managed directly in `config.yml`:
+
+```yaml
+messages:
+  customLocales:
+    - nl-NL
+  promptForCustomLocales: true
+```
+
+Use `/essentialsmini messages list` to see loaded locales, enabled custom locales, and custom files that still need to be added.
+
+### Customization
+
+The `customization` section in `config.yml` makes common visible parts of the plugin toggleable and configurable:
+
+- `customization.prefixes`: enable feature-specific prefixes for economy, moderation, mail, teleport, help, kits, backpack, trash, and utility stations.
+- `customization.notifications`: configure chat, actionbar, title, and sound delivery for teleport requests, teleport completion, teleport delay, mail received, and money received.
+- `customization.disabledCommands`: set a default disabled-command message and per-command overrides such as `help`, `me`, and `plugins`.
+- `customization.guis`: customize titles and item materials/names/lore for home, warp, kit selector, trash, backpack, and utility station interfaces.
+
+Example feature prefix setup:
+
+```yaml
+customization:
+  prefixes:
+    enabled: true
+    features:
+      economy:
+        enabled: true
+        value: '&6[&eEconomy&6] &f'
+```
+
+Example notification setup:
+
+```yaml
+customization:
+  notifications:
+    moneyReceived:
+      enabled: true
+      chat:
+        enabled: true
+        message: '&aYou received &6%Money% &afrom &6%Player%&a.'
+      actionbar:
+        enabled: true
+        message: '&a+%Money% from &6%Player%'
+      sound:
+        enabled: true
+        name: ENTITY_EXPERIENCE_ORB_PICKUP
+```
+
 For `/nick <nickname> <skin>` troubleshooting, set `skinDebug: true` in `config.yml`, reload or restart the server, then check the console for `[SkinDebug]` lines.
 
 Skin refresh supports Spigot, Paper, and Purpur by trying Paper/Purpur profile APIs first and falling back to ProtocolLib/NMS profile updates on Spigot-style servers.
@@ -189,7 +259,7 @@ Skin refresh supports Spigot, Paper, and Purpur by trying Paper/Purpur profile A
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.1.1-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.1.2-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 - Issues/support: [https://github.com/frame-dev/EssentialsMiniReload/issues](https://github.com/frame-dev/EssentialsMiniReload/issues)
 

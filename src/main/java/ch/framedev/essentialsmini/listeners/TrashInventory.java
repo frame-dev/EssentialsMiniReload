@@ -67,7 +67,8 @@ public class TrashInventory extends CommandListenerBase {
         }
 
         // Create new trash inventory for this player
-        Inventory newTrash = Bukkit.createInventory(null, TRASH_SIZE, TRASH_TITLE);
+        int rows = Math.max(1, Math.min(6, plugin.getConfig().getInt("customization.guis.trash.rows", TRASH_SIZE / 9)));
+        Inventory newTrash = Bukkit.createInventory(null, rows * 9, trashTitle());
         playerTrashInventories.put(playerId, newTrash);
 
         return newTrash;
@@ -77,7 +78,7 @@ public class TrashInventory extends CommandListenerBase {
     public void onClose(InventoryCloseEvent event) {
         // Check if this is a trash inventory by title
         String title = event.getView().getTitle();
-        if (!title.equals(TRASH_TITLE)) {
+        if (!title.equals(trashTitle())) {
             return;
         }
 
@@ -105,5 +106,9 @@ public class TrashInventory extends CommandListenerBase {
     public void cleanup() {
         playerTrashInventories.values().forEach(Inventory::clear);
         playerTrashInventories.clear();
+    }
+
+    private String trashTitle() {
+        return plugin.getConfiguredGuiTitle("trash", TRASH_TITLE, Map.of());
     }
 }

@@ -1,6 +1,6 @@
 package ch.framedev.essentialsmini.commands.playercommands;
 
-import ch.framedev.essentialsmini.abstracts.CommandBase;
+import ch.framedev.essentialsmini.abstracts.CommandListenerBase;
 import ch.framedev.essentialsmini.main.Main;
 import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.utils.Cooldown;
@@ -8,11 +8,16 @@ import ch.framedev.essentialsmini.utils.ReplaceCharConfig;
 import ch.framedev.essentialsmini.utils.TabCompleteUtils;
 import ch.framedev.essentialsmini.utils.TextUtils;
 import ch.framedev.essentialsmini.utils.Variables;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class KitCMD extends CommandBase {
+public class KitCMD extends CommandListenerBase {
 
     private static final String KITS = "kits";
     private static final String CREATE_KIT = "createkit";
@@ -56,6 +61,11 @@ public class KitCMD extends CommandBase {
     }
 
     private boolean handleKits(Player player, String[] args) {
+        if (args.length == 0) {
+            openKitGui(player);
+            return true;
+        }
+
         if (args.length != 1) {
             sendWrongArgs(player, KITS_USAGE);
             return true;
@@ -83,6 +93,29 @@ public class KitCMD extends CommandBase {
         }
         kitManager.loadKits(kitName, player);
         return true;
+    }
+
+    private void openKitGui(Player player) {
+        List<String> kits = getVisibleKits(player);
+        if (kits.isEmpty()) {
+            send(player, "§cNo kits are available.");
+            return;
+        }
+
+        int size = Math.min(54, Math.max(9, ((kits.size() + 8) / 9) * 9));
+        Inventory inventory = Bukkit.createInventory(null, size, kitGuiTitle());
+        int maxItems = Math.min(kits.size(), size);
+        for (int slot = 0; slot < maxItems; slot++) {
+            String kitName = kits.get(slot);
+            inventory.setItem(slot, plugin.getConfiguredGuiItem(
+                    "kits.items.kit",
+                    Material.CHEST,
+                    "§6" + kitName,
+                    List.of("§aClick to receive this kit."),
+                    Map.of("%Kit%", kitName)
+            ));
+        }
+        player.openInventory(inventory);
     }
 
     private boolean handleCreateKit(Player player, String[] args) {
@@ -228,6 +261,10 @@ public class KitCMD extends CommandBase {
         sender.sendMessage(plugin.getPrefix() + message);
     }
 
+    private String kitGuiTitle() {
+        return plugin.getConfiguredGuiTitle("kits", "§aKits", Map.of());
+    }
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         String commandName = command.getName().toLowerCase(Locale.ROOT);
@@ -243,6 +280,10 @@ public class KitCMD extends CommandBase {
     }
 
     private List<String> matchingKits(CommandSender sender, String prefix) {
+        return TabCompleteUtils.matchingStrings(getVisibleKits(sender), prefix);
+    }
+
+    private List<String> getVisibleKits(CommandSender sender) {
         FileConfiguration config = KitManager.getCustomConfig();
         if (config == null) return Collections.emptyList();
 
@@ -255,7 +296,31 @@ public class KitCMD extends CommandBase {
                 visibleKits.add(kitName);
             }
         }
-        return TabCompleteUtils.matchingStrings(visibleKits, prefix);
+        Collections.sort(visibleKits);
+        return visibleKits;
+    }
+
+    @EventHandler
+    public void onKitGuiClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equalsIgnoreCase(kitGuiTitle())) {
+            return;
+        }
+
+        event.setCancelled(true);
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+
+        if (event.getRawSlot() < 0 || event.getRawSlot() >= event.getView().getTopInventory().getSize()) {
+            return;
+        }
+
+        List<String> kits = getVisibleKits(player);
+        int slot = event.getRawSlot();
+        if (slot < kits.size()) {
+            player.closeInventory();
+            handleKits(player, new String[]{kits.get(slot)});
+        }
     }
 
     private record KitOptions(int cost, int cooldownSeconds) {

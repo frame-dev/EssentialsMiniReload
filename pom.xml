@@ -7,10 +7,11 @@
 
     <groupId>ch.framedev</groupId>
     <artifactId>EssentialsMini</artifactId>
-    <version>1.1.1-1.20.6-HIGHER-RELEASE</version>
+    <version>${build.version}</version>
     <url>https://framedev.ch</url>
 
     <properties>
+        <build.version>1.1.2-1.20.6-HIGHER-RELEASE</build.version>
         <repo_version>pre-release</repo_version>
         <java.version>17</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>

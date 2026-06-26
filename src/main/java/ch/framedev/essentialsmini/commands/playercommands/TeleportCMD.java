@@ -131,15 +131,23 @@ public class TeleportCMD implements CommandExecutor, Listener {
 
     private void notifyRequestSent(Player requester, Player target, RequestType type) {
         if (type == RequestType.TPA) {
-            send(requester, lang(requester, "TpaMessages.TeleportSend", "&aYou sent &6%Target% &aa teleport request!",
-                    Map.of("%Target%", target.getName())));
-            send(target, lang(target, "TpaMessages.TeleportGot", "&aYou got a teleport request from &6%Player%!",
-                    Map.of("%Player%", requester.getName())));
+            plugin.sendConfiguredNotification(requester, "teleportRequestSent", "teleport",
+                    lang(requester, "TpaMessages.TeleportSend", "&aYou sent &6%Target% &aa teleport request!",
+                            Map.of("%Target%", target.getName())),
+                    Map.of("%Target%", target.getName(), "%Player%", requester.getName()));
+            plugin.sendConfiguredNotification(target, "teleportRequestReceived", "teleport",
+                    lang(target, "TpaMessages.TeleportGot", "&aYou got a teleport request from &6%Player%!",
+                            Map.of("%Player%", requester.getName())),
+                    Map.of("%Target%", target.getName(), "%Player%", requester.getName()));
         } else {
-            send(target, lang(target, "TpaMessages.TpaHereTarget", "&6%Player% &awants you to teleport to him!",
-                    Map.of("%Player%", requester.getName())));
-            send(requester, lang(requester, "TpaMessages.TpaHere", "&aDo you want to teleport &6%Player% to you?",
-                    Map.of("%Player%", target.getName())));
+            plugin.sendConfiguredNotification(target, "teleportRequestReceived", "teleport",
+                    lang(target, "TpaMessages.TpaHereTarget", "&6%Player% &awants you to teleport to him!",
+                            Map.of("%Player%", requester.getName())),
+                    Map.of("%Target%", target.getName(), "%Player%", requester.getName()));
+            plugin.sendConfiguredNotification(requester, "teleportRequestSent", "teleport",
+                    lang(requester, "TpaMessages.TpaHere", "&aDo you want to teleport &6%Player% to you?",
+                            Map.of("%Player%", target.getName())),
+                    Map.of("%Target%", target.getName(), "%Player%", requester.getName()));
         }
 
         sendRequestButtons(target, type.acceptCommand + " " + requester.getName(), type.denyCommand + " " + requester.getName(), type.acceptHover, type.denyHover);
@@ -230,9 +238,11 @@ public class TeleportCMD implements CommandExecutor, Listener {
         }
 
         teleportQueue.add(movingPlayer.getUniqueId());
-        send(movingPlayer, lang(movingPlayer, "TpaMessages.Delay",
-                "&aYou'll be teleported in &6%Time%! &aIf you move the teleportation will be cancelled.",
-                Map.of("%Time%", String.valueOf(delay))));
+        plugin.sendConfiguredNotification(movingPlayer, "teleportDelay", "teleport",
+                lang(movingPlayer, "TpaMessages.Delay",
+                        "&aYou'll be teleported in &6%Time%! &aIf you move the teleportation will be cancelled.",
+                        Map.of("%Time%", String.valueOf(delay))),
+                Map.of("%Time%", String.valueOf(delay), "%Player%", destinationPlayer.getName()));
         scheduleTeleport(movingPlayer.getUniqueId(), destinationPlayer.getUniqueId(), delay);
     }
 
@@ -266,8 +276,10 @@ public class TeleportCMD implements CommandExecutor, Listener {
 
     private void completeTeleport(Player movingPlayer, Player destinationPlayer) {
         movingPlayer.teleport(destinationPlayer.getLocation());
-        send(movingPlayer, lang(movingPlayer, "TpaMessages.TeleportToPlayer", "&aYou were teleported to &6%Player%!",
-                Map.of("%Player%", destinationPlayer.getName())));
+        plugin.sendConfiguredNotification(movingPlayer, "teleportCompleted", "teleport",
+                lang(movingPlayer, "TpaMessages.TeleportToPlayer", "&aYou were teleported to &6%Player%!",
+                        Map.of("%Player%", destinationPlayer.getName())),
+                Map.of("%Player%", destinationPlayer.getName(), "%Target%", movingPlayer.getName()));
         send(destinationPlayer, lang(destinationPlayer, "TpaMessages.TargetMessage", "&6%Target% &ateleported to you!",
                 Map.of("%Target%", movingPlayer.getName())));
     }

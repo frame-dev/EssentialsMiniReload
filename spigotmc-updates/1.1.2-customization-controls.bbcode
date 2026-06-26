@@ -1,0 +1,35 @@
+[B][SIZE=5]EssentialsMiniReload 1.1.2 - Customization Controls[/SIZE][/B]
+
+[B]Resource update title[/B]
+[CODE]EssentialsMiniReload 1.1.2 - Feature prefixes, notifications, disabled-command messages, and GUI customization[/CODE]
+
+[B]Update post[/B]
+This update adds a new [CODE]customization[/CODE] section to [CODE]config.yml[/CODE] for server owners who want deeper control over visible plugin behavior.
+
+[B]New customization options[/B]
+[LIST]
+[*]Added optional feature-specific prefixes for economy, moderation, mail, teleport, help, kits, backpack, trash, and utility station messages.
+[*]Added configurable chat, actionbar, title, and sound notifications for teleport requests, teleport completion, teleport delay, received mail, and received money.
+[*]Added per-command disabled-command messages with a configurable default message and overrides for commands such as [CODE]help[/CODE], [CODE]me[/CODE], and [CODE]plugins[/CODE].
+[*]Added configurable GUI titles and item materials/names/lore for homes, warps, the kit selector, trash, backpack, and utility stations.
+[/LIST]
+
+[B]Behavior changes[/B]
+[LIST]
+[*]Backpack inventories no longer rely on parsing the inventory title to save contents, so the backpack title can now be freely customized.
+[*]Warp GUI clicks now resolve warps by slot instead of relying on a fixed display-name format, so warp item names can be customized safely.
+[*][CODE]/kits[/CODE] now opens a configurable kit selector GUI when no kit name is provided.
+[*]Feature prefixes are disabled by default to preserve existing server behavior until [CODE]customization.prefixes.enabled[/CODE] is set to [CODE]true[/CODE].
+[/LIST]
+
+[B]Documentation updates[/B]
+[LIST]
+[*]Updated README.md with examples for feature prefixes and configurable notifications.
+[*]Updated the SpigotMC resource description with the new customization capabilities.
+[/LIST]
+
+[B]Compatibility notes[/B]
+[LIST]
+[*]Existing [CODE]prefix[/CODE], [CODE]NotAllowCommand[/CODE], [CODE]WarpGUI[/CODE], and [CODE]BackPackSize[/CODE] settings continue to work.
+[*]Use [CODE]/essentialsmini reload[/CODE] or restart after editing [CODE]config.yml[/CODE].
+[/LIST]

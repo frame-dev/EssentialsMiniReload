@@ -80,6 +80,232 @@ msg:
   notificationTo: "&cme &r→ &a %TARGET% &f» %MESSAGE%"
   notificationFrom: "&a%TARGET% &r→ &cme  &f» %MESSAGE%"
   consoleName: "Console"
+messages:
+  # Add custom locale codes here after creating files such as messages_nl-NL.yml.
+  customLocales: []
+  # Logs a console prompt when custom message files exist but are not enabled above.
+  promptForCustomLocales: true
+customization:
+  prefixes:
+    # When enabled, commands automatically use the matching feature prefix below.
+    enabled: false
+    features:
+      default:
+        enabled: true
+        value: '&6[&aEssentials&bMini&6] &c>> &f'
+      economy:
+        enabled: true
+        value: '&6[&eEconomy&6] &f'
+      moderation:
+        enabled: true
+        value: '&6[&cModeration&6] &f'
+      mail:
+        enabled: true
+        value: '&6[&dMail&6] &f'
+      teleport:
+        enabled: true
+        value: '&6[&bTeleport&6] &f'
+      help:
+        enabled: true
+        value: '&6[&aHelp&6] &f'
+      kits:
+        enabled: true
+        value: '&6[&eKits&6] &f'
+      backpack:
+        enabled: true
+        value: '&6[&aBackpack&6] &f'
+      trash:
+        enabled: true
+        value: '&6[&7Trash&6] &f'
+      utilityStations:
+        enabled: true
+        value: '&6[&bTools&6] &f'
+  notifications:
+    teleportRequestReceived:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: '&aYou got a teleport request from &6%Player%&a!'
+      actionbar:
+        enabled: false
+        message: '&6%Player% &awants to teleport to you.'
+      title:
+        enabled: false
+        title: '&6Teleport Request'
+        subtitle: '&aFrom &6%Player%'
+        fadeIn: 10
+        stay: 40
+        fadeOut: 10
+      sound:
+        enabled: false
+        name: ENTITY_EXPERIENCE_ORB_PICKUP
+        volume: 1.0
+        pitch: 1.0
+    teleportRequestSent:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: '&aYou sent &6%Target% &aa teleport request!'
+      actionbar:
+        enabled: false
+        message: '&aTeleport request sent to &6%Target%&a.'
+      title:
+        enabled: false
+        title: ''
+        subtitle: '&aRequest sent to &6%Target%'
+        fadeIn: 10
+        stay: 30
+        fadeOut: 10
+      sound:
+        enabled: false
+        name: UI_BUTTON_CLICK
+        volume: 1.0
+        pitch: 1.2
+    teleportCompleted:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: '&aYou were teleported to &6%Player%&a!'
+      actionbar:
+        enabled: false
+        message: '&aTeleported to &6%Player%&a.'
+      title:
+        enabled: false
+        title: ''
+        subtitle: '&aTeleport complete'
+        fadeIn: 10
+        stay: 30
+        fadeOut: 10
+      sound:
+        enabled: false
+        name: ENTITY_ENDERMAN_TELEPORT
+        volume: 1.0
+        pitch: 1.0
+    teleportDelay:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: "&aYou'll be teleported in &6%Time%&a! Do not move."
+      actionbar:
+        enabled: false
+        message: '&aTeleporting in &6%Time%&a...'
+      title:
+        enabled: false
+        title: ''
+        subtitle: '&aTeleporting in &6%Time%'
+        fadeIn: 5
+        stay: 20
+        fadeOut: 5
+      sound:
+        enabled: false
+        name: BLOCK_NOTE_BLOCK_PLING
+        volume: 1.0
+        pitch: 1.0
+    mailReceived:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: '&aYou have new mail from &6%Sender%&a.'
+      actionbar:
+        enabled: false
+        message: '&dNew mail from &6%Sender%&d.'
+      title:
+        enabled: false
+        title: '&dNew Mail'
+        subtitle: '&aFrom &6%Sender%'
+        fadeIn: 10
+        stay: 40
+        fadeOut: 10
+      sound:
+        enabled: false
+        name: ENTITY_PLAYER_LEVELUP
+        volume: 1.0
+        pitch: 1.0
+    moneyReceived:
+      enabled: true
+      chat:
+        enabled: true
+        useFeaturePrefix: true
+        message: '&aYou received &6%Money% &afrom &6%Player%&a.'
+      actionbar:
+        enabled: false
+        message: '&a+%Money% from &6%Player%'
+      title:
+        enabled: false
+        title: '&6Payment Received'
+        subtitle: '&a%Money% from &6%Player%'
+        fadeIn: 10
+        stay: 40
+        fadeOut: 10
+      sound:
+        enabled: false
+        name: ENTITY_EXPERIENCE_ORB_PICKUP
+        volume: 1.0
+        pitch: 1.0
+  disabledCommands:
+    # Per-command messages override NotAllowCommand. Use %Command% for the blocked command.
+    usePerCommandMessages: true
+    defaultMessage: '&cYou are not allowed to use &6%Command%&c.'
+    commands:
+      help: '&cUse &6/emhelp &cfor EssentialsMiniReload help.'
+      me: '&cYou are not allowed to use &6/me&c.'
+      plugins: '&cPlugins are hidden on this server.'
+  guis:
+    homes:
+      title: '&aHomes'
+      items:
+        home:
+          material: BLACK_BED
+          name: '&6%Home%'
+          lore:
+            - '&aTeleport to Home &6%Home%'
+    warps:
+      title: '&aWarps'
+      items:
+        warp:
+          material: ENDER_PEARL
+          name: '&6%Warp%'
+          lore:
+            - '&aTeleport to this Warp'
+        warpWithCost:
+          material: ENDER_PEARL
+          name: '&6%Warp%'
+          lore:
+            - '&aCost: &6%Cost%'
+            - '&aTeleport to this Warp'
+    trash:
+      title: 'Trash'
+      rows: 6
+    backpack:
+      title: "%Owner%'s Inventory"
+    kits:
+      title: '&aKits'
+      items:
+        kit:
+          material: CHEST
+          name: '&6%Kit%'
+          lore:
+            - '&aClick to receive this kit.'
+    utilityStations:
+      workbench:
+        title: '&aWorkbench'
+      anvil:
+        title: '&aAnvil'
+      grindstone:
+        title: '&aGrindstone'
+      smithingtable:
+        title: '&aSmithing Table'
+      cartographytable:
+        title: '&aCartography Table'
+      loom:
+        title: '&aLoom'
+      stonecutter:
+        title: '&aStonecutter'
 spawnTpIgnoreWorlds:
   - world_nether
   - world_the_end

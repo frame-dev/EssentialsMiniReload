@@ -18,10 +18,14 @@ import ch.framedev.essentialsmini.managers.KitManager;
 import ch.framedev.essentialsmini.managers.RegisterManager;
 import ch.framedev.essentialsmini.managers.VaultManager;
 import ch.framedev.essentialsmini.utils.*;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -31,6 +35,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +44,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main extends JavaPlugin {
 
@@ -73,6 +81,12 @@ public class Main extends JavaPlugin {
     private boolean debug;
 
     private final Map<String, FileConfiguration> languageConfigs = new HashMap<>();
+    private final Set<String> loadedLanguageLocales = new LinkedHashSet<>();
+
+    private static final List<String> SUPPORTED_LOCALES = Collections.unmodifiableList(Arrays.asList(
+            "de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"
+    ));
+    private static final Pattern MESSAGE_FILE_PATTERN = Pattern.compile("^messages_([A-Za-z][A-Za-z0-9_-]*)\\.yml$");
 
     private static final Map<String, Language> LANGUAGE_BY_PREFIX = Map.of(
             "en", Language.EN,
@@ -306,8 +320,6 @@ public class Main extends JavaPlugin {
         return skinService;
     }
 
-    private static final String[] SUPPORTED_LOCALES = {"de-DE", "en-EN", "fr-FR", "it-IT", "pt-PT", "pl-PL", "es-ES", "ru-RU"};
-
     /**
      * Moves example messages from the resources to the messages-examples directory.
      * The method checks if the destination file already exists before copying.
@@ -435,6 +447,25 @@ public class Main extends JavaPlugin {
      * @throws NullPointerException if the prefix is not found in the configuration.
      */
     public String getPrefix() {
+        return getFeaturePrefix(detectFeatureKeyFromCaller());
+    }
+
+    public String getFeaturePrefix(String feature) {
+        String globalPrefix = getFormattedGlobalPrefix();
+        if (!getConfig().getBoolean("customization.prefixes.enabled", false)) {
+            return globalPrefix;
+        }
+
+        String featureKey = feature == null || feature.isBlank() ? "default" : feature;
+        String path = "customization.prefixes.features." + featureKey;
+        if (!getConfig().getBoolean(path + ".enabled", true)) {
+            return globalPrefix;
+        }
+
+        return formatText(getConfig().getString(path + ".value", globalPrefix));
+    }
+
+    private String getFormattedGlobalPrefix() {
         // If prefix is not found in config.yml, check for prefix in config.yml (old format) and update config.yml
         if (!getConfig().contains("prefix") && getConfig().contains("Prefix")) {
             getConfig().set("prefix", getConfig().getString("Prefix"));
@@ -457,6 +488,149 @@ public class Main extends JavaPlugin {
         if (prefix.contains("<-"))
             prefix = prefix.replace("<-", "←");
         return prefix;
+    }
+
+    public String formatText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String formatted = text.replace('&', '§');
+        formatted = formatted.replace(">>", "»");
+        formatted = formatted.replace("<<", "«");
+        formatted = formatted.replace("->", "→");
+        formatted = formatted.replace("<-", "←");
+        return formatted;
+    }
+
+    public String applyPlaceholders(String text, Map<String, String> placeholders) {
+        String formatted = formatText(text);
+        if (placeholders == null) {
+            return formatted;
+        }
+
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            formatted = formatted.replace(entry.getKey(), entry.getValue() == null ? "" : entry.getValue());
+        }
+        return formatted;
+    }
+
+    public void sendFeatureMessage(CommandSender sender, String feature, String message) {
+        if (sender == null || message == null || message.isBlank()) {
+            return;
+        }
+
+        sender.sendMessage(getFeaturePrefix(feature) + formatText(message));
+    }
+
+    public void sendConfiguredNotification(Player player, String notificationKey, String feature, String defaultMessage, Map<String, String> placeholders) {
+        if (player == null) {
+            return;
+        }
+
+        String path = "customization.notifications." + notificationKey;
+        if (!getConfig().getBoolean(path + ".enabled", true)) {
+            return;
+        }
+
+        if (getConfig().getBoolean(path + ".chat.enabled", true)) {
+            String chatMessage = getConfig().getString(path + ".chat.message", defaultMessage);
+            if (chatMessage != null && !chatMessage.isBlank()) {
+                boolean usePrefix = getConfig().getBoolean(path + ".chat.useFeaturePrefix", true);
+                String message = applyPlaceholders(chatMessage, placeholders);
+                player.sendMessage((usePrefix ? getFeaturePrefix(feature) : "") + message);
+            }
+        }
+
+        if (getConfig().getBoolean(path + ".actionbar.enabled", false)) {
+            String actionbarMessage = applyPlaceholders(getConfig().getString(path + ".actionbar.message", defaultMessage), placeholders);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionbarMessage));
+        }
+
+        if (getConfig().getBoolean(path + ".title.enabled", false)) {
+            String title = applyPlaceholders(getConfig().getString(path + ".title.title", ""), placeholders);
+            String subtitle = applyPlaceholders(getConfig().getString(path + ".title.subtitle", defaultMessage), placeholders);
+            player.sendTitle(
+                    title,
+                    subtitle,
+                    getConfig().getInt(path + ".title.fadeIn", 10),
+                    getConfig().getInt(path + ".title.stay", 40),
+                    getConfig().getInt(path + ".title.fadeOut", 10)
+            );
+        }
+
+        if (getConfig().getBoolean(path + ".sound.enabled", false)) {
+            String soundName = getConfig().getString(path + ".sound.name", "ENTITY_EXPERIENCE_ORB_PICKUP");
+            try {
+                Sound sound = Sound.valueOf(soundName == null ? "ENTITY_EXPERIENCE_ORB_PICKUP" : soundName.toUpperCase(Locale.ROOT));
+                player.playSound(
+                        player.getLocation(),
+                        sound,
+                        (float) getConfig().getDouble(path + ".sound.volume", 1.0D),
+                        (float) getConfig().getDouble(path + ".sound.pitch", 1.0D)
+                );
+            } catch (IllegalArgumentException ex) {
+                getLogger4J().warn("Invalid notification sound '" + soundName + "' for " + notificationKey);
+            }
+        }
+    }
+
+    public String getConfiguredGuiTitle(String guiKey, String defaultTitle, Map<String, String> placeholders) {
+        String title = getConfig().getString("customization.guis." + guiKey + ".title", defaultTitle);
+        return applyPlaceholders(title, placeholders);
+    }
+
+    public ItemStack getConfiguredGuiItem(String path, Material defaultMaterial, String defaultName, List<String> defaultLore, Map<String, String> placeholders) {
+        String basePath = "customization.guis." + path;
+        Material material = matchMaterial(getConfig().getString(basePath + ".material"), defaultMaterial);
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return item;
+        }
+
+        meta.setDisplayName(applyPlaceholders(getConfig().getString(basePath + ".name", defaultName), placeholders));
+
+        List<String> configuredLore = getConfig().getStringList(basePath + ".lore");
+        List<String> lore = configuredLore.isEmpty() ? defaultLore : configuredLore;
+        List<String> formattedLore = new ArrayList<>();
+        for (String line : lore) {
+            formattedLore.add(applyPlaceholders(line, placeholders));
+        }
+        meta.setLore(formattedLore);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private Material matchMaterial(String materialName, Material defaultMaterial) {
+        if (materialName == null || materialName.isBlank()) {
+            return defaultMaterial;
+        }
+
+        Material material = Material.matchMaterial(materialName);
+        return material == null ? defaultMaterial : material;
+    }
+
+    private String detectFeatureKeyFromCaller() {
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            String className = element.getClassName();
+            if (className.equals(Main.class.getName())
+                    || className.startsWith("java.")
+                    || className.startsWith("org.bukkit.")) {
+                continue;
+            }
+
+            if (className.contains("Eco") || className.contains("Bank") || className.contains("Money") || className.contains("Vault")) return "economy";
+            if (className.contains("Ban") || className.contains("Mute") || className.contains("Maintenance") || className.contains("ClearChat")) return "moderation";
+            if (className.contains("Mail")) return "mail";
+            if (className.contains("Teleport") || className.contains("Warp") || className.contains("Home") || className.contains("Spawn") || className.contains("BackCMD") || className.contains("TopCMD")) return "teleport";
+            if (className.contains("Help")) return "help";
+            if (className.contains("Kit")) return "kits";
+            if (className.contains("Trash")) return "trash";
+            if (className.contains("Backpack")) return "backpack";
+            if (className.contains("UtilityStation")) return "utilityStations";
+        }
+        return "default";
     }
 
     /**
@@ -482,19 +656,11 @@ public class Main extends JavaPlugin {
 
     @NotNull
     private String getLanguageCode(CommandSender player) {
-        String locale;
-        Language language = getLanguage(player);
-        switch (language) {
-            case DE -> locale = "de-DE";
-            case FR -> locale = "fr-FR";
-            case IT -> locale = "it-IT";
-            case ES -> locale = "es-ES";
-            case PT -> locale = "pt-PT";
-            case PL -> locale = "pl-PL";
-            case RU -> locale = "ru-RU";
-            default -> locale = "en-EN";
+        if (player instanceof Player) {
+            return resolveLanguageConfigLocale(((Player) player).getLocale());
         }
-        return locale;
+
+        return "en-EN";
     }
 
     /**
@@ -515,25 +681,255 @@ public class Main extends JavaPlugin {
 
     public void reloadLanguageConfigs() {
         languageConfigs.clear();
-        for (String locale : SUPPORTED_LOCALES) {
+        loadedLanguageLocales.clear();
+
+        for (String locale : getActiveMessageLocales()) {
             File configFile = new File(getDataFolder(), "messages_" + locale + ".yml");
             if (configFile.exists()) {
                 languageConfigs.put(locale, YamlConfiguration.loadConfiguration(configFile));
+                loadedLanguageLocales.add(locale);
+            } else if (!SUPPORTED_LOCALES.contains(locale)) {
+                getLogger4J().warn("Configured custom message locale '" + locale + "' was not found at " + configFile.getPath());
             }
         }
 
         languageConfigs.computeIfAbsent("en-EN", locale ->
                 YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages_en-EN.yml")));
+        loadedLanguageLocales.add("en-EN");
+
+        promptForUnconfiguredCustomMessageFiles();
     }
 
     private FileConfiguration getCachedLanguageConfig(String locale) {
-        FileConfiguration config = languageConfigs.get(locale);
+        String normalizedLocale = normalizeLocale(locale);
+        FileConfiguration config = normalizedLocale == null ? null : languageConfigs.get(normalizedLocale);
         if (config != null) {
             return config;
         }
 
+        String prefixMatch = findLoadedLocaleByPrefix(normalizedLocale == null ? locale : normalizedLocale);
+        if (prefixMatch != null) {
+            return languageConfigs.get(prefixMatch);
+        }
+
         getLogger4J().warn("Language file for locale '" + locale + "' not found. Falling back to default (en-EN).");
         return languageConfigs.get("en-EN");
+    }
+
+    private Set<String> getActiveMessageLocales() {
+        Set<String> locales = new LinkedHashSet<>(SUPPORTED_LOCALES);
+        for (String locale : getConfiguredCustomMessageLocales()) {
+            locales.add(locale);
+        }
+        return locales;
+    }
+
+    public List<String> getConfiguredCustomMessageLocales() {
+        List<String> locales = new ArrayList<>();
+        for (String locale : getConfig().getStringList("messages.customLocales")) {
+            String normalizedLocale = normalizeLocale(locale);
+            if (normalizedLocale != null && !SUPPORTED_LOCALES.contains(normalizedLocale) && !locales.contains(normalizedLocale)) {
+                locales.add(normalizedLocale);
+            }
+        }
+        return locales;
+    }
+
+    public List<String> getLoadedMessageLocales() {
+        return new ArrayList<>(loadedLanguageLocales);
+    }
+
+    public List<String> getDetectedCustomMessageLocales() {
+        List<String> locales = new ArrayList<>();
+        File[] files = getDataFolder().listFiles();
+        if (files == null) {
+            return locales;
+        }
+
+        for (File file : files) {
+            String locale = getMessageLocaleFromFileName(file.getName());
+            if (locale != null && !SUPPORTED_LOCALES.contains(locale) && !locales.contains(locale)) {
+                locales.add(locale);
+            }
+        }
+        Collections.sort(locales);
+        return locales;
+    }
+
+    public List<String> getUnconfiguredCustomMessageLocales() {
+        List<String> unconfiguredLocales = new ArrayList<>(getDetectedCustomMessageLocales());
+        unconfiguredLocales.removeAll(getConfiguredCustomMessageLocales());
+        return unconfiguredLocales;
+    }
+
+    public boolean addCustomMessageLocale(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        if (normalizedLocale == null || SUPPORTED_LOCALES.contains(normalizedLocale)) {
+            return false;
+        }
+
+        List<String> locales = getConfiguredCustomMessageLocales();
+        if (!locales.contains(normalizedLocale)) {
+            locales.add(normalizedLocale);
+            Collections.sort(locales);
+            getConfig().set("messages.customLocales", locales);
+            saveConfig();
+        }
+        reloadLanguageConfigs();
+        return true;
+    }
+
+    public boolean removeCustomMessageLocale(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        if (normalizedLocale == null) {
+            return false;
+        }
+
+        List<String> locales = getConfiguredCustomMessageLocales();
+        boolean removed = locales.remove(normalizedLocale);
+        if (removed) {
+            getConfig().set("messages.customLocales", locales);
+            saveConfig();
+            reloadLanguageConfigs();
+        }
+        return removed;
+    }
+
+    public boolean createCustomMessageFile(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        if (normalizedLocale == null || SUPPORTED_LOCALES.contains(normalizedLocale)) {
+            return false;
+        }
+
+        File targetFile = getMessageFile(normalizedLocale);
+        if (targetFile.exists()) {
+            return true;
+        }
+
+        File sourceFile = getMessageFile("en-EN");
+        if (!sourceFile.exists()) {
+            getLogger4J().warn("Default English message file was not found: " + sourceFile.getPath());
+            return false;
+        }
+
+        try {
+            Files.copy(sourceFile.toPath(), targetFile.toPath());
+            return true;
+        } catch (IOException e) {
+            getLogger4J().error("Failed to create custom message file: " + targetFile.getPath(), e);
+            return false;
+        }
+    }
+
+    public File getMessageFile(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        return new File(getDataFolder(), "messages_" + (normalizedLocale == null ? locale : normalizedLocale) + ".yml");
+    }
+
+    public boolean isBuiltInMessageLocale(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        return normalizedLocale != null && SUPPORTED_LOCALES.contains(normalizedLocale);
+    }
+
+    private void promptForUnconfiguredCustomMessageFiles() {
+        if (!getConfig().getBoolean("messages.promptForCustomLocales", true)) {
+            return;
+        }
+
+        List<String> locales = getUnconfiguredCustomMessageLocales();
+        if (locales.isEmpty()) {
+            return;
+        }
+
+        getLogger4J().info("Custom message file(s) detected but not enabled: " + String.join(", ", locales));
+        getLogger4J().info("Run /essentialsmini messages add <locale> or add them to messages.customLocales in config.yml to use them.");
+    }
+
+    @NotNull
+    private String resolveLanguageConfigLocale(String playerLocale) {
+        String normalizedLocale = normalizeLocale(playerLocale);
+        if (normalizedLocale != null && languageConfigs.containsKey(normalizedLocale)) {
+            return normalizedLocale;
+        }
+
+        String prefixMatch = findLoadedLocaleByPrefix(normalizedLocale == null ? playerLocale : normalizedLocale);
+        if (prefixMatch != null) {
+            return prefixMatch;
+        }
+
+        return "en-EN";
+    }
+
+    private String findLoadedLocaleByPrefix(String locale) {
+        String prefix = getLocalePrefix(locale);
+        if (prefix == null) {
+            return null;
+        }
+
+        for (String loadedLocale : loadedLanguageLocales) {
+            String loadedPrefix = getLocalePrefix(loadedLocale);
+            if (prefix.equals(loadedPrefix)) {
+                return loadedLocale;
+            }
+        }
+        return null;
+    }
+
+    private String getMessageLocaleFromFileName(String fileName) {
+        Matcher matcher = MESSAGE_FILE_PATTERN.matcher(fileName);
+        if (!matcher.matches()) {
+            return null;
+        }
+        return normalizeLocale(matcher.group(1));
+    }
+
+    private String getLocalePrefix(String locale) {
+        String normalizedLocale = normalizeLocale(locale);
+        if (normalizedLocale == null) {
+            return null;
+        }
+
+        int separatorIndex = normalizedLocale.indexOf('-');
+        if (separatorIndex <= 0) {
+            return normalizedLocale.toLowerCase(Locale.ROOT);
+        }
+
+        return normalizedLocale.substring(0, separatorIndex).toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeLocale(String locale) {
+        if (locale == null) {
+            return null;
+        }
+
+        String cleanedLocale = locale.trim();
+        if (cleanedLocale.isEmpty()) {
+            return null;
+        }
+
+        if (cleanedLocale.startsWith("messages_")) {
+            cleanedLocale = cleanedLocale.substring("messages_".length());
+        }
+        if (cleanedLocale.endsWith(".yml")) {
+            cleanedLocale = cleanedLocale.substring(0, cleanedLocale.length() - ".yml".length());
+        }
+
+        cleanedLocale = cleanedLocale.replace('_', '-');
+        String[] parts = cleanedLocale.split("-", 2);
+        String language = parts[0].toLowerCase(Locale.ROOT);
+        if (!language.matches("[a-z][a-z0-9]*")) {
+            return null;
+        }
+
+        if (parts.length == 1 || parts[1].isBlank()) {
+            return language;
+        }
+
+        String country = parts[1].toUpperCase(Locale.ROOT);
+        if (!country.matches("[A-Z0-9-]+")) {
+            return null;
+        }
+        return language + "-" + country;
     }
 
     /**

@@ -462,6 +462,7 @@ permissions:
       essentialsmini.book: true
       essentialsmini.reload: true
       essentialsmini.economy: true
+      essentialsmini.messages: true
       essentialsmini.help: true
       essentialsmini.retrieve: true
       essentialsmini.anvil: true
@@ -783,6 +784,8 @@ permissions:
   essentialsmini.reload:
     default: op
   essentialsmini.economy:
+    default: op
+  essentialsmini.messages:
     default: op
   essentialsmini.retrieve:
     default: op

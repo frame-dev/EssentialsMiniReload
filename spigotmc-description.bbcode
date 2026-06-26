@@ -38,7 +38,8 @@ Need support for older Minecraft versions? Use the original EssentialsMini plugi
 [*][B]Player Utilities[/B] - Fly, god mode, heal, feed, speed, AFK, time played, online/offline player lists.
 [*][B]World Controls[/B] - Day, night, sun, rain, thunder, player time, player weather, lightning, and firework commands.
 [*][B]Geyser Support[/B] - Support for Bedrock players through Geyser where available.
-[*][B]Custom Messages[/B] - Configure and customize plugin messages.
+[*][B]Custom Message Locales[/B] - Add server-owned [CODE]messages_<locale>.yml[/CODE] files, enable them in config, and manage them with admin commands.
+[*][B]Deep Customization[/B] - Toggle and customize feature prefixes, chat/actionbar/title/sound notifications, disabled-command messages, and GUI titles/items.
 [*][B]Multiple Storage Options[/B] - YAML, SQLite, MySQL, and MongoDB support depending on the feature.
 [/LIST]
 
@@ -123,7 +124,8 @@ Aliases use the same arguments as their base command.
 /bank transfer <fromBank> <toBank> <amount>[/CODE]
 
 [B]Kits and Items[/B]
-[CODE]/kits <kit>
+[CODE]/kits
+/kits <kit>
 /createkit <kit> [cooldown] [cost]
 /item <item> [amount] [player]
 /repair [player]
@@ -215,6 +217,10 @@ Aliases use the same arguments as their base command.
 /essentialsmini
 /essentialsmini <reload|help|version|about>
 /essentialsmini economy <on|off|true|false>
+/essentialsmini messages list
+/essentialsmini messages add <locale>
+/essentialsmini messages remove <locale>
+/essentialsmini messages create <locale>
 /signremove <shop name>[/CODE]
 
 [SIZE=5][B]Permissions[/B][/SIZE]
@@ -353,6 +359,7 @@ essentialsmini.nick
 essentialsmini.book
 essentialsmini.reload
 essentialsmini.economy
+essentialsmini.messages
 essentialsmini.retrieve
 essentialsmini.anvil
 essentialsmini.grindstone
@@ -374,7 +381,8 @@ Common files include:
 
 [LIST]
 [*][CODE]config.yml[/CODE]
-[*]Language/message files
+[*]Language/message files such as [CODE]messages_en-EN.yml[/CODE]
+[*]Custom language/message files such as [CODE]messages_nl-NL.yml[/CODE]
 [*][CODE]locations.yml[/CODE]
 [*][CODE]kits.yml[/CODE]
 [*][CODE]mail.yml[/CODE]
@@ -385,6 +393,25 @@ Common files include:
 You can customize messages, storage options, economy settings, moderation behavior, and many other plugin features.
 
 Existing [CODE]config.yml[/CODE] files are updated with missing default options and bundled comments on startup or [CODE]/essentialsmini reload[/CODE] without overwriting configured values.
+
+[B]Custom message locales[/B]
+
+Add custom message files to [CODE]plugins/EssentialsMini/[/CODE] using the [CODE]messages_<locale>.yml[/CODE] naming format, for example [CODE]messages_nl-NL.yml[/CODE].
+
+If a custom file exists but is not enabled, EssentialsMiniReload logs a prompt explaining how to add it. You can enable it with [CODE]/essentialsmini messages add <locale>[/CODE] or by adding the locale to [CODE]messages.customLocales[/CODE] in [CODE]config.yml[/CODE].
+
+Use [CODE]/essentialsmini messages create <locale>[/CODE] to copy the English messages into a new custom locale file and enable it immediately. Use [CODE]/essentialsmini messages list[/CODE] to view loaded locales, enabled custom locales, and custom files that still need to be added.
+
+[B]Customization[/B]
+
+The [CODE]customization[/CODE] section in [CODE]config.yml[/CODE] lets server owners toggle and customize common visible behavior:
+
+[LIST]
+[*][CODE]customization.prefixes[/CODE] - Feature-specific prefixes for economy, moderation, mail, teleport, help, kits, backpack, trash, and utility stations.
+[*][CODE]customization.notifications[/CODE] - Chat, actionbar, title, and sound delivery for teleport requests, teleport completion, teleport delay, mail received, and money received.
+[*][CODE]customization.disabledCommands[/CODE] - A default disabled-command message plus per-command overrides such as [CODE]help[/CODE], [CODE]me[/CODE], and [CODE]plugins[/CODE].
+[*][CODE]customization.guis[/CODE] - Titles and item materials/names/lore for home, warp, kit selector, trash, backpack, and utility station interfaces.
+[/LIST]
 
 For [B]/nick <nickname> <skin>[/B] troubleshooting, enable [CODE]skinDebug: true[/CODE] in [CODE]config.yml[/CODE], reload or restart the server, then check the console for [CODE][SkinDebug][/CODE] lines.
 
@@ -403,7 +430,7 @@ EssentialsMiniReload supports different storage systems depending on your setup:
 
 [SIZE=5][B]Current Version[/B][/SIZE]
 
-[CODE]1.1.1-1.20.6-HIGHER-RELEASE[/CODE]
+[CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE]
 
 [SIZE=5][B]Support[/B][/SIZE]
 

@@ -213,7 +213,8 @@ public class EcoCMDs extends CommandBase {
                     got = colorizeAndFill(got,
                             "[Player]", sender.getName(),
                             "[Money]", amount + plugin.getCurrencySymbol());
-                    target.sendMessage(plugin.getPrefix() + got);
+                    plugin.sendConfiguredNotification(target, "moneyReceived", "economy", got,
+                            Map.of("%Player%", sender.getName(), "%Money%", amount + plugin.getCurrencySymbol()));
                 }
                 sender.sendMessage(plugin.getPrefix() + send);
             }
@@ -260,7 +261,8 @@ public class EcoCMDs extends CommandBase {
                 got = colorizeAndFill(got,
                         "[Player]", sender.getName(),
                         "[Money]", amount + plugin.getCurrencySymbol());
-                onlineTarget.sendMessage(plugin.getPrefix() + got);
+                plugin.sendConfiguredNotification(onlineTarget, "moneyReceived", "economy", got,
+                        Map.of("%Player%", sender.getName(), "%Money%", amount + plugin.getCurrencySymbol()));
             }
         }
         return true;

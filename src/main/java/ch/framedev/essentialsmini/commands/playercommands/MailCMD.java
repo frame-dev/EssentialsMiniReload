@@ -177,7 +177,9 @@ public class MailCMD extends CommandBase {
     private void notifyRecipient(MailTarget target, String senderName) {
         Player onlineRecipient = target.onlinePlayer();
         if (onlineRecipient != null) {
-            send(onlineRecipient, "You have new mail from " + senderName);
+            plugin.sendConfiguredNotification(onlineRecipient, "mailReceived", "mail",
+                    "You have new mail from " + senderName,
+                    Collections.singletonMap("%Sender%", senderName));
         }
     }
 

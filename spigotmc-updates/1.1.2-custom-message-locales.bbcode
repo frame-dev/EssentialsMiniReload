@@ -1,0 +1,40 @@
+[B][SIZE=5]EssentialsMiniReload 1.1.2 – Custom Message Locales[/SIZE][/B]
+
+[B]Resource update title[/B]
+[CODE]EssentialsMiniReload 1.1.2 – Custom messages_<locale>.yml support[/CODE]
+
+[B]Update post[/B]
+This update adds first-class support for server-owned custom message locale files.
+
+[B]New custom message file support[/B]
+[LIST]
+[*]Server owners can now add custom message files in the plugin data folder using the [CODE]messages_<locale>.yml[/CODE] format, for example [CODE]messages_nl-NL.yml[/CODE].
+[*]Custom locales can be enabled through [CODE]messages.customLocales[/CODE] in [CODE]config.yml[/CODE].
+[*]The plugin now detects custom message files that exist but are not enabled and logs a prompt explaining how to add them to the active project configuration.
+[/LIST]
+
+[B]New admin commands[/B]
+[LIST]
+[*]Added [CODE]/essentialsmini messages list[/CODE] to show loaded locales, enabled custom locales, and custom files that still need to be added.
+[*]Added [CODE]/essentialsmini messages add <locale>[/CODE] to enable an existing custom message file.
+[*]Added [CODE]/essentialsmini messages remove <locale>[/CODE] to disable a custom message locale without deleting the file.
+[*]Added [CODE]/essentialsmini messages create <locale>[/CODE] to copy the English messages into a new custom file and enable it immediately.
+[/LIST]
+
+[B]Permissions[/B]
+[LIST]
+[*]Added [CODE]essentialsmini.messages[/CODE] for the new custom message locale management commands.
+[/LIST]
+
+[B]Documentation[/B]
+[LIST]
+[*]Updated README.md with custom message locale setup steps, command examples, and the [CODE]messages.customLocales[/CODE] config example.
+[*]Updated the SpigotMC resource description with the new custom message locale feature, commands, permission, and configuration notes.
+[/LIST]
+
+[B]Compatibility notes[/B]
+[LIST]
+[*]Built-in locale files continue to work as before.
+[*]Custom files must use the [CODE]messages_<locale>.yml[/CODE] naming format.
+[*]Use [CODE]/essentialsmini reload[/CODE] after manually editing [CODE]messages.customLocales[/CODE] in [CODE]config.yml[/CODE].
+[/LIST]

@@ -11,6 +11,7 @@ import org.bukkit.help.HelpTopic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.bukkit.Bukkit.getServer;
 
@@ -30,15 +31,25 @@ public class DisallowCommands extends ListenerBase {
         this.plugin = plugin;
     }
 
-    private String getNotAllowMessage(Player player) {
-        String message = plugin.getConfig().getString("NotAllowCommand");
+    private String getNotAllowMessage(Player player, String command) {
+        String commandName = command == null ? "" : command.toLowerCase().replaceFirst("^/", "");
+        String message = null;
+        if (plugin.getConfig().getBoolean("customization.disabledCommands.usePerCommandMessages", true)) {
+            message = plugin.getConfig().getString("customization.disabledCommands.commands." + commandName);
+        }
+        if (message == null) {
+            message = plugin.getConfig().getString("customization.disabledCommands.defaultMessage");
+        }
+        if (message == null) {
+            message = plugin.getConfig().getString("NotAllowCommand");
+        }
         if (message == null) {
             if (player != null && player.isOp()) {
                 player.sendMessage("§cCould not find Config Key 'NotAllowCommand' in the config.yml");
             }
             return null;
         }
-        return message.contains("&") ? message.replace('&', '§') : message;
+        return plugin.applyPlaceholders(message, Map.of("%Command%", commandName.isBlank() ? "this command" : "/" + commandName));
     }
 
     @EventHandler
@@ -251,13 +262,14 @@ public class DisallowCommands extends ListenerBase {
         if (!player.hasPermission("essentialsmini.plugins")) {
             if (baseCmdLower.equals("/pl") || baseCmdLower.equals("/bukkit:pl") || baseCmdLower.equals("/plugins")
                     || baseCmdLower.equals("/bukkit:plugins")) {
-                player.sendMessage(ChatColor.WHITE + "Plugins(3): " + ChatColor.GREEN + "Nothing" + ChatColor.WHITE + ", " + ChatColor.GREEN + "too" + ChatColor.WHITE + ", " + ChatColor.GREEN + "see!");
+                String notAllow = getNotAllowMessage(player, "plugins");
+                player.sendMessage(notAllow == null ? ChatColor.WHITE + "Plugins(3): " + ChatColor.GREEN + "Nothing" + ChatColor.WHITE + ", " + ChatColor.GREEN + "too" + ChatColor.WHITE + ", " + ChatColor.GREEN + "see!" : notAllow);
                 event.setCancelled(true);
             }
         }
         if (!player.hasPermission("essentialsmini.me")) {
             if (baseCmdLower.equals("/me") || baseCmdLower.equals("/bukkit:me") || baseCmdLower.equals("/minecraft:me")) {
-                String notAllow = getNotAllowMessage(player);
+                String notAllow = getNotAllowMessage(player, baseCmdLower);
                 if (notAllow == null) return;
                 player.sendMessage(notAllow);
                 event.setCancelled(true);
@@ -265,7 +277,7 @@ public class DisallowCommands extends ListenerBase {
         }
         if (!player.hasPermission(plugin.getPermissionBase() + "fuck")) {
             if (message.contains("/fuck") || message.contains("/essentialsmini:fuck")) {
-                String notAllow = getNotAllowMessage(player);
+                String notAllow = getNotAllowMessage(player, baseCmdLower);
                 if (notAllow == null) return;
                 player.sendMessage(notAllow);
                 event.setCancelled(true);
@@ -274,7 +286,7 @@ public class DisallowCommands extends ListenerBase {
         if (baseCmdLower.equals("/?") || baseCmdLower.equals("/help") ||
                 baseCmdLower.equals("/bukkit:help") || baseCmdLower.equals("/bukkit:?")) {
             if (!player.hasPermission("essentialsmini.help")) {
-                String notAllow = getNotAllowMessage(player);
+                String notAllow = getNotAllowMessage(player, baseCmdLower);
                 if (notAllow == null) return;
                 player.sendMessage(notAllow);
                 event.setCancelled(true);

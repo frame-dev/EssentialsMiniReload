@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /*
  * ===================================================
@@ -217,7 +218,7 @@ public class WarpCMD extends CommandListenerBase {
 
         int rows = Math.min(6, Math.max(1, (warps.size() + 8) / 9));
         InventoryManager inventoryManager = new InventoryManager();
-        inventoryManager.setTitle(INVENTORY_TITLE);
+        inventoryManager.setTitle(warpGuiTitle());
         inventoryManager.setSize(rows);
         inventoryManager.create();
 
@@ -225,13 +226,23 @@ public class WarpCMD extends CommandListenerBase {
         int maxItems = Math.min(warps.size(), inventoryManager.getSize());
         for (int i = 0; i < maxItems; i++) {
             String warp = warps.get(i);
-            ItemBuilder builder = new ItemBuilder(Material.ENDER_PEARL).setDisplayName("§6" + warp);
             if (locationManager.costWarp(warp)) {
-                builder.setLore("§aCost : §6" + locationManager.getWarpCost(warp), "§aTeleport to this Warp");
+                inventoryManager.setItem(i, plugin.getConfiguredGuiItem(
+                        "warps.items.warpWithCost",
+                        Material.ENDER_PEARL,
+                        "§6" + warp,
+                        List.of("§aCost : §6" + locationManager.getWarpCost(warp), "§aTeleport to this Warp"),
+                        Map.of("%Warp%", warp, "%Cost%", locationManager.getWarpCost(warp) + plugin.getCurrencySymbol())
+                ));
             } else {
-                builder.setLore("§aTeleport to this Warp");
+                inventoryManager.setItem(i, plugin.getConfiguredGuiItem(
+                        "warps.items.warp",
+                        Material.ENDER_PEARL,
+                        "§6" + warp,
+                        List.of("§aTeleport to this Warp"),
+                        Map.of("%Warp%", warp)
+                ));
             }
-            inventoryManager.setItem(i, builder.build());
         }
 
         inventoryManager.fillNull();
@@ -318,6 +329,10 @@ public class WarpCMD extends CommandListenerBase {
         sender.sendMessage(plugin.getPrefix() + message);
     }
 
+    private String warpGuiTitle() {
+        return plugin.getConfiguredGuiTitle("warps", INVENTORY_TITLE, Map.of());
+    }
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         String commandName = command.getName().toLowerCase(Locale.ROOT);
@@ -332,7 +347,7 @@ public class WarpCMD extends CommandListenerBase {
 
     @EventHandler
     public void onClickInventory(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equalsIgnoreCase(INVENTORY_TITLE)) {
+        if (!event.getView().getTitle().equalsIgnoreCase(warpGuiTitle())) {
             return;
         }
 
@@ -341,24 +356,14 @@ public class WarpCMD extends CommandListenerBase {
             return;
         }
 
-        ItemStack currentItem = event.getCurrentItem();
-        if (currentItem == null || !currentItem.hasItemMeta()) {
+        if (event.getRawSlot() < 0 || event.getRawSlot() >= event.getView().getTopInventory().getSize()) {
             return;
         }
 
-        ItemMeta itemMeta = currentItem.getItemMeta();
-        if (itemMeta == null || !itemMeta.hasDisplayName()) {
-            return;
-        }
-
-        String displayName = itemMeta.getDisplayName();
-        if (!displayName.startsWith("§6")) {
-            return;
-        }
-
-        String warpName = normalizeWarpName(displayName.substring(2));
-        if (warpExists(warpName)) {
-            teleportToWarp(player, warpName);
+        List<String> warps = getWarpNames();
+        int slot = event.getRawSlot();
+        if (slot < warps.size()) {
+            teleportToWarp(player, warps.get(slot));
         }
     }
 }

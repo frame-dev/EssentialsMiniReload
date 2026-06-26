@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public class BackpackCMD extends CommandListenerBase {
 
@@ -46,6 +47,7 @@ public class BackpackCMD extends CommandListenerBase {
     public static final Map<String, String> itemsStringHashMap = new HashMap<>();
     private final Main plugin;
     private final TextUtils textUtils = new TextUtils();
+    private final Map<UUID, UUID> openBackpackOwners = new HashMap<>();
 
     public BackpackCMD(Main plugin) {
         super(plugin);
@@ -69,15 +71,13 @@ public class BackpackCMD extends CommandListenerBase {
 
     @EventHandler
     public void onCloseGui(InventoryCloseEvent event) {
-        // Try to parse owner name from the inventory title in the form "<name>'s Inventory"
-        String title = event.getView().getTitle();
-        if (title.toLowerCase(Locale.ROOT).endsWith(INVENTORY_SUFFIX.toLowerCase(Locale.ROOT))) {
-            String ownerName = title.substring(0, title.length() - INVENTORY_SUFFIX.length());
-            if (!ownerName.isEmpty()) {
-                OfflinePlayer offlinePlayer = PlayerUtils.getOfflinePlayerByName(ownerName);
-                // store the serialized inventory contents keyed by UUID string
-                itemsStringHashMap.put(offlinePlayer.getUniqueId().toString(), InventoryStringDeSerializer.itemStackArrayToBase64(event.getInventory().getContents()));
-            }
+        if (!(event.getPlayer() instanceof Player viewer)) {
+            return;
+        }
+
+        UUID ownerId = openBackpackOwners.remove(viewer.getUniqueId());
+        if (ownerId != null) {
+            itemsStringHashMap.put(ownerId.toString(), InventoryStringDeSerializer.itemStackArrayToBase64(event.getInventory().getContents()));
         }
     }
 
@@ -217,7 +217,7 @@ public class BackpackCMD extends CommandListenerBase {
 
         String ownerName = owner.getName() == null ? "Unknown" : owner.getName();
         int size = normalizeInventorySize(plugin.getConfig().getInt("BackPackSize", DEFAULT_BACKPACK_SIZE));
-        Inventory inventory = Bukkit.createInventory(null, size, ownerName + INVENTORY_SUFFIX);
+        Inventory inventory = Bukkit.createInventory(null, size, backpackTitle(ownerName));
 
         String stored = itemsStringHashMap.get(owner.getUniqueId().toString());
         if (stored != null) {
@@ -227,7 +227,16 @@ public class BackpackCMD extends CommandListenerBase {
                 plugin.getLogger4J().error(e);
             }
         }
+        openBackpackOwners.put(viewer.getUniqueId(), owner.getUniqueId());
         viewer.openInventory(inventory);
+    }
+
+    private String backpackTitle(String ownerName) {
+        return plugin.getConfiguredGuiTitle(
+                "backpack",
+                ownerName + INVENTORY_SUFFIX,
+                Map.of("%Owner%", ownerName)
+        );
     }
 
     private int normalizeInventorySize(int configuredSize) {
