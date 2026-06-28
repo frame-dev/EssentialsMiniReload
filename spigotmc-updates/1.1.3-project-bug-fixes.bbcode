@@ -1,0 +1,30 @@
+[B][SIZE=5]EssentialsMiniReload 1.1.3 - Project Bug Fixes[/SIZE][/B]
+
+[B]Resource update title[/B]
+[CODE]EssentialsMiniReload 1.1.3 - Sleep, signs, warps, and GUI stability fixes[/CODE]
+
+[B]Update post[/B]
+This update focuses on project-wide stability fixes found during a clean build and runtime-risk pass.
+
+[B]Bug fixes[/B]
+[LIST]
+[*]Fixed filesystem-backed banks so all [CODE]/bank[/CODE] operations work consistently from [CODE]plugins/EssentialsMini/money/eco.yml[/CODE].
+[*]Fixed stale player-balance saves that could remove filesystem banks after bank deposits or balance updates.
+[*]Added YAML-safe bank name validation and case-insensitive bank lookup for filesystem storage.
+[*]Improved filesystem bank owner/member checks to support legacy player-name entries and UUID-backed ownership data.
+[*]Fixed [CODE]/sleep[/CODE] temporary-bed handling so the command restores the original blocks after the sleep window instead of using shared state between players.
+[*]Fixed [CODE]/sleep[/CODE] bed color parsing so invalid [CODE]BedColor[/CODE] values fail cleanly without broad exception handling.
+[*]Fixed economy signs so the Vault economy provider can be resolved again after startup instead of staying unavailable if it was not ready during listener construction.
+[*]Hardened buy/free/sell sign creation against malformed sign lines.
+[*]Fixed warp location collection so stored warps are read from [CODE]warps.<name>[/CODE] instead of the bare warp name.
+[*]Hardened saved location loading so missing worlds, malformed serialized locations, and null locations fail safely instead of throwing runtime errors.
+[*]Fixed inventory GUI helper behavior so empty-slot lookup returns [CODE]-1[/CODE] when no inventory exists and filler placement safely skips missing inventories.
+[*]Made [CODE]ItemBuilder[/CODE] fluent methods safe for materials without item metadata and added bounds checks for lore lookup.
+[/LIST]
+
+[B]Compatibility notes[/B]
+[LIST]
+[*]No new commands, permissions, config paths, or dependencies were added.
+[*]Existing [CODE]BedColor[/CODE], economy sign, warp, home, and GUI configurations continue to work.
+[*]This release targets [CODE]1.1.3-1.20.6-HIGHER-RELEASE[/CODE].
+[/LIST]

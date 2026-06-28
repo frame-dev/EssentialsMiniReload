@@ -1,0 +1,106 @@
+[B][SIZE=5]EssentialsMiniReload 1.1.2 - Custom Locales, Notifications, and GUI Customization[/SIZE][/B]
+
+[B]Resource update title[/B]
+[CODE]EssentialsMiniReload 1.1.2 - Custom message locales, feature prefixes, notifications, and GUI customization[/CODE]
+
+[B]Update post[/B]
+EssentialsMiniReload 1.1.2 expands server-owner customization across messages, visible command output, notifications, and plugin GUIs. This release also adds first-class support for custom [CODE]messages_<locale>.yml[/CODE] files and updates the 1.20.6+ release metadata to [CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE].
+
+[B]New custom message locale support[/B]
+[LIST]
+[*]Added support for server-owned custom message files in the plugin data folder using the [CODE]messages_<locale>.yml[/CODE] naming format, for example [CODE]messages_nl-NL.yml[/CODE].
+[*]Added [CODE]messages.customLocales[/CODE] in [CODE]config.yml[/CODE] so custom locales can be enabled without modifying the jar.
+[*]Added [CODE]messages.promptForCustomLocales[/CODE] to log a helpful console prompt when custom message files are detected but not enabled.
+[*]Custom locale names are normalized, so values such as [CODE]nl_NL[/CODE], [CODE]nl-NL[/CODE], and [CODE]messages_nl-NL.yml[/CODE] resolve consistently.
+[*]Player language lookup now checks exact loaded locales first, then falls back by locale prefix before using English.
+[*]Missing configured custom locale files now log a warning instead of silently failing.
+[/LIST]
+
+[B]New admin commands[/B]
+[LIST]
+[*]Added [CODE]/essentialsmini messages list[/CODE] to show loaded locales, enabled custom locales, and detected custom files that are not enabled yet.
+[*]Added [CODE]/essentialsmini messages add <locale>[/CODE] to enable an existing custom message file.
+[*]Added [CODE]/essentialsmini messages remove <locale>[/CODE] to disable a custom locale without deleting its file.
+[*]Added [CODE]/essentialsmini messages create <locale>[/CODE] to copy the English message file into a new custom file and enable it immediately.
+[*]Added tab completion for the new [CODE]/essentialsmini messages[/CODE] subcommands and locale arguments.
+[/LIST]
+
+[B]New permissions[/B]
+[LIST]
+[*]Added [CODE]essentialsmini.messages[/CODE] for custom message locale management.
+[*]Added [CODE]essentialsmini.messages[/CODE] to the broad [CODE]essentialsmini.*[/CODE] permission group.
+[/LIST]
+
+[B]New customization config[/B]
+[LIST]
+[*]Added the new [CODE]customization[/CODE] section to [CODE]config.yml[/CODE].
+[*]Added optional feature-specific prefixes for default, economy, moderation, mail, teleport, help, kits, backpack, trash, and utility station output.
+[*]Feature prefixes are disabled by default with [CODE]customization.prefixes.enabled: false[/CODE] to preserve existing server behavior until explicitly enabled.
+[*]Added configurable chat, actionbar, title, and sound notifications for teleport request received, teleport request sent, teleport completed, teleport delay, mail received, and money received events.
+[*]Added configurable per-command disabled-command messages with [CODE]%Command%[/CODE] support.
+[*]Added configurable GUI titles and item settings for homes, warps, kits, trash, backpacks, and utility stations.
+[/LIST]
+
+[B]Notification changes[/B]
+[LIST]
+[*]Teleport request sent/received messages can now be delivered through configurable chat, actionbar, title, and sound channels.
+[*]Teleport delay and teleport completion messages can now use configurable notification channels.
+[*]Mail received alerts now use the configurable notification system.
+[*]Money received alerts from economy transfers now use the configurable notification system.
+[*]Notification placeholders include values such as [CODE]%Player%[/CODE], [CODE]%Target%[/CODE], [CODE]%Time%[/CODE], [CODE]%Sender%[/CODE], and [CODE]%Money%[/CODE] depending on the notification.
+[/LIST]
+
+[B]GUI changes[/B]
+[LIST]
+[*][CODE]/kits[/CODE] with no arguments now opens a kit selector GUI.
+[*]The kit selector only shows kits the player can use and lets players click a kit to receive it.
+[*]Home GUI titles, home item material, home item name, and home item lore can now be customized.
+[*]Warp GUI titles, warp item material, names, and lore can now be customized.
+[*]Warp GUI clicks now resolve the warp by inventory slot instead of parsing the item display name, so custom warp item names are safe to use.
+[*]Trash inventory title and row count can now be customized.
+[*]Backpack inventory title can now be customized with [CODE]%Owner%[/CODE].
+[*]Backpacks now track the opened backpack owner internally by UUID instead of parsing the inventory title, so customized titles do not break saving.
+[*]Utility station inventory titles can now be customized for workbench, anvil, grindstone, smithing table, cartography table, loom, and stonecutter.
+[/LIST]
+
+[B]Bug fixes and stability[/B]
+[LIST]
+[*]Fixed backpack saving so custom backpack titles no longer prevent inventory contents from being stored correctly.
+[*]Fixed warp GUI clicks so custom warp item names no longer break warp selection.
+[*]Fixed custom message locale discovery so detected files are reported clearly when they still need to be enabled.
+[*]Improved locale fallback handling so players can use exact custom locales or locale-prefix matches before falling back to English.
+[*]Improved disabled-command handling so blocked plugin-list commands, [CODE]/help[/CODE], [CODE]/?[/CODE], and [CODE]/me[/CODE] can return the configured message instead of hardcoded or generic text.
+[*]Improved money, mail, and teleport notifications so they consistently use the new configurable notification system.
+[/LIST]
+
+[B]Disabled command message changes[/B]
+[LIST]
+[*]Blocked [CODE]/help[/CODE], [CODE]/?[/CODE], [CODE]/me[/CODE], and plugin-list commands can now use configured disabled-command messages.
+[*]Added default overrides for [CODE]help[/CODE], [CODE]me[/CODE], and [CODE]plugins[/CODE].
+[*]Existing [CODE]NotAllowCommand[/CODE] remains supported as a fallback.
+[*]The help override points players to [CODE]/emhelp[/CODE], keeping EssentialsMiniReload help separate from Bukkit/Spigot's owned [CODE]/help[/CODE] command.
+[/LIST]
+
+[B]Documentation and resource metadata[/B]
+[LIST]
+[*]Updated [CODE]README.md[/CODE] with the new custom locale workflow, message management commands, customization examples, and current project version.
+[*]Updated the SpigotMC resource description to BBCode and added the new custom locale, notification, prefix, and GUI customization features.
+[*]Refreshed the SpigotMC resource description with 1.1.2 highlights, optional Geyser/Floodgate dependency notes, custom message examples, notification examples, disabled-command examples, and the [CODE]essentialsmini.eco.remove[/CODE] permissions.
+[*]Added an explicit bug-fix/stability summary to make the 1.1.2 fixes easier to find in the resource update.
+[*]Added the GitHub issues/support link to the README and SpigotMC resource description: [URL]https://github.com/frame-dev/EssentialsMiniReload/issues[/URL]
+[*]Updated [CODE]versions.json[/CODE] so the 1.20.6+ higher release channel points to [CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE].
+[*]Updated Maven project version metadata for [CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE].
+[/LIST]
+
+[B]Compatibility notes[/B]
+[LIST]
+[*]This release targets the [CODE]1.20.6-HIGHER-RELEASE[/CODE] channel.
+[*]Existing built-in locale files continue to work as before.
+[*]Custom message files must use the [CODE]messages_<locale>.yml[/CODE] naming format.
+[*]Existing [CODE]prefix[/CODE], [CODE]NotAllowCommand[/CODE], [CODE]WarpGUI[/CODE], and [CODE]BackPackSize[/CODE] settings remain supported.
+[*]Use [CODE]/essentialsmini reload[/CODE] or restart the server after editing [CODE]config.yml[/CODE] or custom message files.
+[*]ProtocolLib remains optional but recommended for extended live skin refresh behavior from previous releases.
+[/LIST]
+
+[B]Version[/B]
+[CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE]

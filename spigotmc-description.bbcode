@@ -25,8 +25,9 @@ Need support for older Minecraft versions? Use the original EssentialsMini plugi
 [*][B]Teleport Requests[/B] - TPA, TPAHere, accept, deny, and teleport toggles.
 [*][B]Back Command[/B] - Return to your last death or previous location.
 [*][B]Economy[/B] - Balance, pay, balance top, eco admin commands, and bank features.
+[*][B]Filesystem Banks[/B] - Bank data works with the default YAML economy storage in [CODE]plugins/EssentialsMini/money/eco.yml[/CODE].
 [*][B]Vault Support[/B] - Economy integration through Vault.
-[*][B]Kits[/B] - Create and use permission-based kits.
+[*][B]Kits[/B] - Create kits, use permission-based kits, and browse available kits in a GUI.
 [*][B]Inventory Tools[/B] - Invsee, ender chest, backpack, trash, repair, item commands, and portable utility stations.
 [*][B]Portable Utility Stations[/B] - Open crafting, anvil, grindstone, smithing table, cartography table, loom, and stonecutter menus anywhere.
 [*][B]Recipe Helpers[/B] - Show item recipes and retrieve ingredients from crafted items.
@@ -37,10 +38,39 @@ Need support for older Minecraft versions? Use the original EssentialsMini plugi
 [*][B]Command Help GUI[/B] - Use [CODE]/emhelp[/CODE] to browse every EssentialsMiniReload command in a paged GUI with hover lore for description, usage, aliases, and permission.
 [*][B]Player Utilities[/B] - Fly, god mode, heal, feed, speed, AFK, time played, online/offline player lists.
 [*][B]World Controls[/B] - Day, night, sun, rain, thunder, player time, player weather, lightning, and firework commands.
-[*][B]Geyser Support[/B] - Support for Bedrock players through Geyser where available.
-[*][B]Custom Message Locales[/B] - Add server-owned [CODE]messages_<locale>.yml[/CODE] files, enable them in config, and manage them with admin commands.
+[*][B]Geyser and Floodgate Support[/B] - Optional Bedrock player support where Geyser/Floodgate are available.
+[*][B]Custom Message Locales[/B] - Add server-owned [CODE]messages_<locale>.yml[/CODE] files, enable them in config, and manage them with [CODE]/essentialsmini messages[/CODE].
 [*][B]Deep Customization[/B] - Toggle and customize feature prefixes, chat/actionbar/title/sound notifications, disabled-command messages, and GUI titles/items.
 [*][B]Multiple Storage Options[/B] - YAML, SQLite, MySQL, and MongoDB support depending on the feature.
+[/LIST]
+
+[SIZE=5][B]Latest 1.1.3 Highlights[/B][/SIZE]
+
+[LIST]
+[*]Create and enable custom [CODE]messages_<locale>.yml[/CODE] files without editing the plugin jar.
+[*]Manage custom message files with [CODE]/essentialsmini messages list[/CODE], [CODE]add[/CODE], [CODE]remove[/CODE], and [CODE]create[/CODE].
+[*]Customize feature prefixes, notification delivery, disabled-command messages, and GUI titles/items from [CODE]config.yml[/CODE].
+[*]Use the new [CODE]/kits[/CODE] selector GUI when no kit name is supplied.
+[*]Safely customize backpack and warp GUI titles/items without breaking inventory saving or warp clicks.
+[/LIST]
+
+[B]Recent bug fixes[/B]
+
+[LIST]
+[*]Filesystem-backed banks now work consistently for create, remove, balance, deposit, withdraw, transfer, member management, list, and info commands.
+[*]Filesystem banks are no longer removed by stale player-balance saves after bank deposits or balance updates.
+[*]Bank names are validated for safe YAML storage and may contain letters, numbers, underscores, and hyphens.
+[*]Filesystem bank lookup is case-insensitive while preserving the original bank display name.
+[*]Filesystem bank owner/member checks now support legacy player-name entries and UUID-backed ownership data.
+[*][CODE]/sleep[/CODE] now restores temporary bed blocks safely per player and handles invalid [CODE]BedColor[/CODE] values cleanly.
+[*]Economy signs can recover the Vault economy provider after startup if it was not ready during listener construction.
+[*]Stored warp locations are collected from the correct [CODE]warps.<name>[/CODE] paths.
+[*]Saved location loading now handles missing worlds, malformed serialized locations, and null locations more safely.
+[*]GUI helper code now handles missing inventories and empty-slot lookups more safely.
+[*]Backpack contents now save correctly even when the backpack GUI title is customized.
+[*]Warp GUI clicks no longer depend on parsing the displayed item name, so custom warp item names are safe.
+[*]Custom message files are detected, normalized, and reported more clearly when they still need to be enabled.
+[*]Disabled-command responses for [CODE]/help[/CODE], [CODE]/?[/CODE], [CODE]/me[/CODE], and plugin-list commands can now use configured messages.
 [/LIST]
 
 [SIZE=5][B]Requirements[/B][/SIZE]
@@ -57,7 +87,8 @@ Need support for older Minecraft versions? Use the original EssentialsMini plugi
 [*][B]Vault[/B] - Required for economy integration.
 [*][B]LuckPerms[/B] - Recommended for permission management.
 [*][B]ProtocolLib[/B] - Used for extended packet-based features such as live skin refreshes.
-[*][B]Geyser[/B] - Optional support for Bedrock players.
+[*][B]Geyser-Spigot[/B] - Optional support for Bedrock players.
+[*][B]floodgate[/B] - Optional support for Bedrock account checks with Geyser setups.
 [/LIST]
 
 [SIZE=5][B]Installation[/B][/SIZE]
@@ -223,6 +254,12 @@ Aliases use the same arguments as their base command.
 /essentialsmini messages create <locale>
 /signremove <shop name>[/CODE]
 
+[B]Custom message management[/B]
+[CODE]/essentialsmini messages list
+/essentialsmini messages add nl-NL
+/essentialsmini messages remove nl-NL
+/essentialsmini messages create nl-NL[/CODE]
+
 [SIZE=5][B]Permissions[/B][/SIZE]
 
 All permissions use the [CODE]essentialsmini.[/CODE] prefix.
@@ -306,6 +343,8 @@ essentialsmini.balance
 essentialsmini.balance.others
 essentialsmini.eco.add
 essentialsmini.eco.add.others
+essentialsmini.eco.remove
+essentialsmini.eco.remove.others
 essentialsmini.eco.set
 essentialsmini.eco.set.others
 essentialsmini.pay
@@ -402,6 +441,11 @@ If a custom file exists but is not enabled, EssentialsMiniReload logs a prompt e
 
 Use [CODE]/essentialsmini messages create <locale>[/CODE] to copy the English messages into a new custom locale file and enable it immediately. Use [CODE]/essentialsmini messages list[/CODE] to view loaded locales, enabled custom locales, and custom files that still need to be added.
 
+[CODE]messages:
+  customLocales:
+    - nl-NL
+  promptForCustomLocales: true[/CODE]
+
 [B]Customization[/B]
 
 The [CODE]customization[/CODE] section in [CODE]config.yml[/CODE] lets server owners toggle and customize common visible behavior:
@@ -412,6 +456,43 @@ The [CODE]customization[/CODE] section in [CODE]config.yml[/CODE] lets server ow
 [*][CODE]customization.disabledCommands[/CODE] - A default disabled-command message plus per-command overrides such as [CODE]help[/CODE], [CODE]me[/CODE], and [CODE]plugins[/CODE].
 [*][CODE]customization.guis[/CODE] - Titles and item materials/names/lore for home, warp, kit selector, trash, backpack, and utility station interfaces.
 [/LIST]
+
+Feature prefixes are disabled by default to preserve existing behavior. Enable them when you want per-feature branding:
+
+[CODE]customization:
+  prefixes:
+    enabled: true
+    features:
+      economy:
+        enabled: true
+        value: '&6[&eEconomy&6] &f'[/CODE]
+
+Notifications can be sent through chat, actionbar, title, and sound channels. Available notification groups include [CODE]teleportRequestReceived[/CODE], [CODE]teleportRequestSent[/CODE], [CODE]teleportCompleted[/CODE], [CODE]teleportDelay[/CODE], [CODE]mailReceived[/CODE], and [CODE]moneyReceived[/CODE].
+
+Useful notification placeholders include [CODE]%Player%[/CODE], [CODE]%Target%[/CODE], [CODE]%Time%[/CODE], [CODE]%Sender%[/CODE], and [CODE]%Money%[/CODE].
+
+[CODE]customization:
+  notifications:
+    moneyReceived:
+      enabled: true
+      chat:
+        enabled: true
+        message: '&aYou received &6%Money% &afrom &6%Player%&a.'
+      actionbar:
+        enabled: true
+        message: '&a+%Money% from &6%Player%'[/CODE]
+
+Disabled-command messages can be configured globally or per command. EssentialsMiniReload uses [CODE]/emhelp[/CODE] and [CODE]/essentialshelp[/CODE] for plugin help because Bukkit/Spigot owns [CODE]/help[/CODE].
+
+[CODE]customization:
+  disabledCommands:
+    usePerCommandMessages: true
+    defaultMessage: '&cYou are not allowed to use &6%Command%&c.'
+    commands:
+      help: '&cUse &6/emhelp &cfor EssentialsMiniReload help.'
+      plugins: '&cPlugins are hidden on this server.'[/CODE]
+
+GUI customization supports titles, item materials, names, and lore for supported interfaces. Warp clicks and backpack saving are handled internally, so custom item names and titles are safe to use.
 
 For [B]/nick <nickname> <skin>[/B] troubleshooting, enable [CODE]skinDebug: true[/CODE] in [CODE]config.yml[/CODE], reload or restart the server, then check the console for [CODE][SkinDebug][/CODE] lines.
 
@@ -430,7 +511,7 @@ EssentialsMiniReload supports different storage systems depending on your setup:
 
 [SIZE=5][B]Current Version[/B][/SIZE]
 
-[CODE]1.1.2-1.20.6-HIGHER-RELEASE[/CODE]
+[CODE]1.1.3-1.20.6-HIGHER-RELEASE[/CODE]
 
 [SIZE=5][B]Support[/B][/SIZE]
 

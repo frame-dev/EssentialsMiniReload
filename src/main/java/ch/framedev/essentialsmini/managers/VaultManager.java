@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings("unused")
 public class VaultManager {
@@ -23,6 +24,8 @@ public class VaultManager {
     private static final String ECO_FILE_NAME = "eco.yml";
     private static final String ACCOUNTS_PATH = "accounts";
     private static final String BANKS_PATH = "Banks.";
+    private static final String BANKS_SECTION = "Banks";
+    private static final String BANK_DISPLAY_NAME_PATH = ".Name";
     private static final String BANK_MEMBERS_PATH = ".members";
     private static final String DEFAULT_ONLINE_ACCOUNT = "14555508-6819-4434-aa6a-e5ce1509ea35";
     private static final String DEFAULT_OFFLINE_ACCOUNT = "sambakuchen";
@@ -95,11 +98,16 @@ public class VaultManager {
             plugin.getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
         } else {
             loadConfig();
-            List<String> players = cfg.getStringList(getBankMembersPath(bankName));
-            if (!players.contains(playerName)) {
+            String bankKey = getExistingBankKey(bankName);
+            if (bankKey == null) {
+                plugin.getLogger4J().warn("Cannot add member to missing filesystem bank: " + bankName);
+                return;
+            }
+            List<String> players = cfg.getStringList(getBankMembersPath(bankKey));
+            if (!containsIgnoreCase(players, playerName)) {
                 players.add(playerName);
             }
-            cfg.set(getBankMembersPath(bankName), players);
+            cfg.set(getBankMembersPath(bankKey), players);
             saveConfig();
         }
     }
@@ -129,10 +137,11 @@ public class VaultManager {
             plugin.getDatabaseManager().getBackendManager().updateData("bankname", bankName, "bankmembers", users, "essentialsmini_data");
         } else {
             loadConfig();
-            if (cfg.contains(getBankMembersPath(bankName))) {
-                List<String> players = cfg.getStringList(getBankMembersPath(bankName));
-                players.remove(playerName);
-                cfg.set(getBankMembersPath(bankName), players);
+            String bankKey = getExistingBankKey(bankName);
+            if (bankKey != null && cfg.contains(getBankMembersPath(bankKey))) {
+                List<String> players = cfg.getStringList(getBankMembersPath(bankKey));
+                players.removeIf(entry -> entry != null && entry.equalsIgnoreCase(playerName));
+                cfg.set(getBankMembersPath(bankKey), players);
                 saveConfig();
             }
         }
@@ -157,7 +166,8 @@ public class VaultManager {
             return users == null ? new ArrayList<>() : new ArrayList<>(users);
         } else {
             loadConfig();
-            return new ArrayList<>(cfg.getStringList(getBankMembersPath(bankName)));
+            String bankKey = getExistingBankKey(bankName);
+            return bankKey == null ? new ArrayList<>() : new ArrayList<>(cfg.getStringList(getBankMembersPath(bankKey)));
         }
     }
 
@@ -241,5 +251,37 @@ public class VaultManager {
 
     private String getBankMembersPath(String bankName) {
         return BANKS_PATH + bankName + BANK_MEMBERS_PATH;
+    }
+
+    private String getExistingBankKey(String bankName) {
+        if (bankName == null || bankName.isBlank()) {
+            return null;
+        }
+        if (cfg.contains(BANKS_PATH + bankName)) {
+            return bankName;
+        }
+        if (cfg.getConfigurationSection(BANKS_SECTION) == null) {
+            return null;
+        }
+        for (String key : cfg.getConfigurationSection(BANKS_SECTION).getKeys(false)) {
+            String displayName = cfg.getString(BANKS_PATH + key + BANK_DISPLAY_NAME_PATH, key);
+            if (key.equalsIgnoreCase(bankName) || displayName.equalsIgnoreCase(bankName)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private boolean containsIgnoreCase(List<String> values, String value) {
+        if (values == null || value == null) {
+            return false;
+        }
+        String lowered = value.toLowerCase(Locale.ROOT);
+        for (String entry : values) {
+            if (entry != null && entry.toLowerCase(Locale.ROOT).equals(lowered)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

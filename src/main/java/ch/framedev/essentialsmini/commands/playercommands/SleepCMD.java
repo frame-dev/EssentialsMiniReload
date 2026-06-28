@@ -12,6 +12,7 @@ package ch.framedev.essentialsmini.commands.playercommands;
 import ch.framedev.essentialsmini.abstracts.CommandBase;
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.Bukkit;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,15 +25,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Locale;
 
 public class SleepCMD extends CommandBase {
 
     private final Main plugin;
-
-    private final ArrayList<Material> block = new ArrayList<>();
 
     public SleepCMD(Main plugin) {
         super(plugin, "sleep");
@@ -41,52 +39,60 @@ public class SleepCMD extends CommandBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (sender instanceof Player player) {
-            if (sender.hasPermission("essentialsmini.sleep")) {
-                Location location = player.getLocation().subtract(0, 0, 0);
-                block.add(location.getBlock().getType());
-                try {
-                    if (plugin.getConfig().getString("BedColor") == null) {
-                        player.sendMessage(plugin.getPrefix() + "§cThis Color doesn't exists!");
-                        return true;
-                    }
-                    DyeColor dyeColor = DyeColor.valueOf(Objects.requireNonNull(plugin.getConfig().getString("BedColor")).toUpperCase());
-                    setBed(location.getBlock(), BlockFace.NORTH, Material.getMaterial(dyeColor.name().toUpperCase() + "_BED"));
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            for (Material material : block) {
-                                if (material != Material.AIR) {
-                                    location.getBlock().setType(material);
-                                }
-                            }
-                            if (location.getWorld() != null && location.getWorld().getTime() >= 0) {
-                                location.getBlock().setType(Material.AIR);
-                                cancel();
-                            }
-                        }
-                    }.runTaskTimer(plugin, 0, 5);
-                    player.sleep(player.getLocation(), false);
-                } catch (Exception ignored) {
-                    player.sendMessage(plugin.getPrefix() + "§cThis Color doesn't exists!");
-                    return true;
-                }
-            } else {
-                sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
-            }
-        } else {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getPrefix() + plugin.getOnlyPlayer());
+            return true;
         }
-        return false;
+
+        if (!sender.hasPermission("essentialsmini.sleep")) {
+            sender.sendMessage(plugin.getPrefix() + plugin.getNoPerms());
+            return true;
+        }
+
+        Material bedMaterial = getConfiguredBedMaterial();
+        if (bedMaterial == null) {
+            player.sendMessage(plugin.getPrefix() + "§cThis Color doesn't exists!");
+            return true;
+        }
+
+        Block foot = player.getLocation().getBlock();
+        BlockFace facing = player.getFacing();
+        Block head = foot.getRelative(facing);
+        BlockData originalFoot = foot.getBlockData();
+        BlockData originalHead = head.getBlockData();
+
+        setBed(foot, facing, bedMaterial);
+        player.sleep(foot.getLocation(), false);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                foot.setBlockData(originalFoot, false);
+                head.setBlockData(originalHead, false);
+            }
+        }.runTaskLater(plugin, 140L);
+
+        return true;
     }
 
     public void setBed(Block start, BlockFace facing, Material material) {
-        for (Bed.Part part : Bed.Part.values()) {
-            start.setBlockData(Bukkit.createBlockData(material, (data) -> {
-                ((Bed) data).setPart(part);
-                ((Bed) data).setFacing(facing);
-            }));
-            start = start.getRelative(facing.getOppositeFace());
+        start.setBlockData(Bukkit.createBlockData(material, (data) -> {
+            ((Bed) data).setPart(Bed.Part.FOOT);
+            ((Bed) data).setFacing(facing);
+        }));
+        start.getRelative(facing).setBlockData(Bukkit.createBlockData(material, (data) -> {
+            ((Bed) data).setPart(Bed.Part.HEAD);
+            ((Bed) data).setFacing(facing);
+        }));
+    }
+
+    private Material getConfiguredBedMaterial() {
+        String configuredColor = plugin.getConfig().getString("BedColor", "RED");
+        try {
+            DyeColor dyeColor = DyeColor.valueOf(configuredColor.toUpperCase(Locale.ROOT));
+            return Material.matchMaterial(dyeColor.name() + "_BED");
+        } catch (IllegalArgumentException ignored) {
+            return null;
         }
     }
 

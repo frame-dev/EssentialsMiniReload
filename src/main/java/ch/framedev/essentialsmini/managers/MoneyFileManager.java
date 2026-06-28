@@ -3,6 +3,7 @@ package ch.framedev.essentialsmini.managers;
 import ch.framedev.essentialsmini.main.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -30,14 +31,31 @@ public class MoneyFileManager {
 
     private void saveFile() {
         try {
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                Main.getInstance().getLogger4J().error("Could not create money directory: " + parent.getAbsolutePath());
+                return;
+            }
             cfg.save(file);
         } catch (IOException e) {
             Main.getInstance().getLogger4J().error(e);
         }
     }
 
+    private void loadFile() {
+        if (!file.exists()) {
+            return;
+        }
+        try {
+            cfg.load(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            Main.getInstance().getLogger4J().error(e);
+        }
+    }
+
     public void setMoney(OfflinePlayer player, double amount) {
         if(player.getName() == null) return;
+        loadFile();
         if (Bukkit.getServer().getOnlineMode()) {
             cfg.set(player.getUniqueId().toString(), amount);
         } else {
@@ -48,6 +66,7 @@ public class MoneyFileManager {
 
     public double getMoney(OfflinePlayer player) {
         if(player.getName() == null) return 0.0;
+        loadFile();
         if (Bukkit.getServer().getOnlineMode()) {
             return cfg.getDouble(player.getUniqueId().toString());
         } else {

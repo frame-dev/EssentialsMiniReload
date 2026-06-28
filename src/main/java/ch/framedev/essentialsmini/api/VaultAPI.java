@@ -15,7 +15,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * This Plugin was Created by FrameDev
@@ -31,9 +35,13 @@ public class VaultAPI extends AbstractEconomy {
     private static final String MONEY_FILE_NAME = "eco.yml";
     private static final String ACCOUNTS_PATH = "accounts";
     private static final String BANKS_PATH = "Banks.";
+    private static final String BANKS_SECTION = "Banks";
+    private static final String BANK_DISPLAY_NAME_PATH = ".Name";
     private static final String BANK_OWNER_PATH = ".Owner";
+    private static final String BANK_OWNER_NAME_PATH = ".OwnerName";
     private static final String BANK_BALANCE_PATH = ".balance";
     private static final String BANK_MEMBERS_PATH = ".members";
+    private static final String BANK_NAME_PATTERN = "[A-Za-z0-9_-]{1,32}";
 
     private static BackendManager BACKEND_MANAGER;
 
@@ -90,6 +98,10 @@ public class VaultAPI extends AbstractEconomy {
             return null;
         }
         try {
+            try {
+                return Bukkit.getOfflinePlayer(UUID.fromString(playerName));
+            } catch (IllegalArgumentException ignored) {
+            }
             return Bukkit.getOfflinePlayer(playerName);
         } catch (Exception e) {
             plugin.getLogger4J().log(Level.ERROR, "Failed to get OfflinePlayer for: " + playerName, e);
@@ -388,8 +400,12 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse createBank(String name, String player) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
+        }
+        if (!isValidBankName(bankName)) {
+            return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Bank names may only contain letters, numbers, underscores, and hyphens.");
         }
 
         if (player == null || player.trim().isEmpty()) {
@@ -402,17 +418,24 @@ public class VaultAPI extends AbstractEconomy {
         }
 
         if (usesSqlStorage()) {
-            getMySQLManager().createBank(offlinePlayer, name);
+            getMySQLManager().createBank(offlinePlayer, bankName);
         } else if (usesMongoStorage()) {
             if (notEnsureBackend()) {
                 return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Backend not available!");
             }
             BACKEND_MANAGER.updateUser(offlinePlayer, "bankowner", offlinePlayer.getUniqueId().toString(), COLLECTION);
-            BACKEND_MANAGER.updateUser(offlinePlayer, "bankname", name, COLLECTION);
+            BACKEND_MANAGER.updateUser(offlinePlayer, "bankname", bankName, COLLECTION);
         } else {
             FileConfiguration cfg = loadMoneyConfig();
-            cfg.set(getBankPath(name) + BANK_OWNER_PATH, player);
-            cfg.set(getBankPath(name) + BANK_BALANCE_PATH, 0.0);
+            if (getExistingBankKey(cfg, bankName) != null) {
+                return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Bank already exists!");
+            }
+            String bankPath = getBankPath(bankName);
+            cfg.set(bankPath + BANK_DISPLAY_NAME_PATH, bankName);
+            cfg.set(bankPath + BANK_OWNER_PATH, getPlayerStorageId(offlinePlayer));
+            cfg.set(bankPath + BANK_OWNER_NAME_PATH, player);
+            cfg.set(bankPath + BANK_BALANCE_PATH, 0.0);
+            cfg.set(bankPath + BANK_MEMBERS_PATH, new ArrayList<String>());
             save(cfg);
         }
 
@@ -421,12 +444,13 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse deleteBank(String name) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
         if (usesSqlStorage()) {
-            if (getMySQLManager().removeBank(name)) {
+            if (getMySQLManager().removeBank(bankName)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.SUCCESS, "");
             } else {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Error while Deleting Bank!");
@@ -437,8 +461,8 @@ public class VaultAPI extends AbstractEconomy {
             }
             boolean deleted = false;
             for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                Object bankName = BACKEND_MANAGER.get(offlinePlayer, "bankname", COLLECTION);
-                if (bankName instanceof String storedName && storedName.equalsIgnoreCase(name)) {
+                Object storedBankName = BACKEND_MANAGER.get(offlinePlayer, "bankname", COLLECTION);
+                if (storedBankName instanceof String storedName && storedName.equalsIgnoreCase(bankName)) {
                     BACKEND_MANAGER.updateUser(offlinePlayer, "bankname", "", COLLECTION);
                     BACKEND_MANAGER.updateUser(offlinePlayer, "bankowner", "", COLLECTION);
                     BACKEND_MANAGER.updateUser(offlinePlayer, "bankmembers", new ArrayList<String>(), COLLECTION);
@@ -451,12 +475,13 @@ public class VaultAPI extends AbstractEconomy {
                     : new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist!");
         } else {
             FileConfiguration cfg = loadMoneyConfig();
+            String bankKey = getExistingBankKey(cfg, bankName);
 
-            if (!cfg.contains(getBankPath(name))) {
+            if (bankKey == null) {
                 return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist!");
             }
 
-            cfg.set(getBankPath(name), null);
+            cfg.set(getBankPath(bankKey), null);
             save(cfg);
             return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.SUCCESS, "");
         }
@@ -464,12 +489,13 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse bankBalance(String name) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
         if (usesSqlStorage()) {
-            double balance = getMySQLManager().getBankMoney(name);
+            double balance = getMySQLManager().getBankMoney(bankName);
             return new EconomyResponse(balance, balance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
@@ -478,7 +504,7 @@ public class VaultAPI extends AbstractEconomy {
                 return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Backend not available!");
             }
 
-            Object obj = BACKEND_MANAGER.getObject("bankname", name, "bank", COLLECTION);
+            Object obj = BACKEND_MANAGER.getObject("bankname", bankName, "bank", COLLECTION);
             if (obj instanceof Number) {
                 double val = ((Number) obj).doubleValue();
                 return new EconomyResponse(val, val, EconomyResponse.ResponseType.SUCCESS, "");
@@ -487,13 +513,14 @@ public class VaultAPI extends AbstractEconomy {
         }
 
         FileConfiguration cfg = loadMoneyConfig();
+        String bankKey = getExistingBankKey(cfg, bankName);
 
-        if (!cfg.contains(getBankPath(name))) {
+        if (bankKey == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist!");
         }
 
-        if (cfg.contains(getBankPath(name) + BANK_BALANCE_PATH)) {
-            double balance = cfg.getDouble(getBankPath(name) + BANK_BALANCE_PATH);
+        if (cfg.contains(getBankPath(bankKey) + BANK_BALANCE_PATH)) {
+            double balance = cfg.getDouble(getBankPath(bankKey) + BANK_BALANCE_PATH);
             return new EconomyResponse(balance, balance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
@@ -514,7 +541,8 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse bankWithdraw(String name, double amount) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
@@ -535,7 +563,7 @@ public class VaultAPI extends AbstractEconomy {
         double newBalance = balance - amount;
 
         if (usesSqlStorage()) {
-            getMySQLManager().setBankMoney(name, newBalance);
+            getMySQLManager().setBankMoney(bankName, newBalance);
             return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
@@ -543,22 +571,24 @@ public class VaultAPI extends AbstractEconomy {
             if (notEnsureBackend()) {
                 return new EconomyResponse(0.0D, balance, EconomyResponse.ResponseType.FAILURE, "Backend not available!");
             }
-            BACKEND_MANAGER.updateData("bankname", name, "bank", newBalance, COLLECTION);
+            BACKEND_MANAGER.updateData("bankname", bankName, "bank", newBalance, COLLECTION);
             return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
         FileConfiguration cfg = loadMoneyConfig();
-        if (!cfg.contains(getBankPath(name))) {
+        String bankKey = getExistingBankKey(cfg, bankName);
+        if (bankKey == null) {
             return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist!");
         }
-        cfg.set(getBankPath(name) + BANK_BALANCE_PATH, newBalance);
+        cfg.set(getBankPath(bankKey) + BANK_BALANCE_PATH, newBalance);
         save(cfg);
         return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
     }
 
     @Override
     public EconomyResponse bankDeposit(String name, double amount) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
@@ -574,7 +604,7 @@ public class VaultAPI extends AbstractEconomy {
         double newBalance = balance + amount;
 
         if (usesSqlStorage()) {
-            getMySQLManager().setBankMoney(name, newBalance);
+            getMySQLManager().setBankMoney(bankName, newBalance);
             return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
@@ -582,22 +612,24 @@ public class VaultAPI extends AbstractEconomy {
             if (notEnsureBackend()) {
                 return new EconomyResponse(0.0D, balance, EconomyResponse.ResponseType.FAILURE, "Backend not available!");
             }
-            BACKEND_MANAGER.updateData("bankname", name, "bank", newBalance, COLLECTION);
+            BACKEND_MANAGER.updateData("bankname", bankName, "bank", newBalance, COLLECTION);
             return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
         }
 
         FileConfiguration cfg = loadMoneyConfig();
-        if (!cfg.contains(getBankPath(name))) {
+        String bankKey = getExistingBankKey(cfg, bankName);
+        if (bankKey == null) {
             return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist!");
         }
-        cfg.set(getBankPath(name) + BANK_BALANCE_PATH, newBalance);
+        cfg.set(getBankPath(bankKey) + BANK_BALANCE_PATH, newBalance);
         save(cfg);
         return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, "");
     }
 
     @Override
     public EconomyResponse isBankOwner(String name, String player) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Invalid bank name");
         }
 
@@ -611,7 +643,7 @@ public class VaultAPI extends AbstractEconomy {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Failed to get player");
             }
 
-            if (!getMySQLManager().isBankOwner(name, offlinePlayer)) {
+            if (!getMySQLManager().isBankOwner(bankName, offlinePlayer)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
             }
         } else if (usesMongoStorage()) {
@@ -625,7 +657,7 @@ public class VaultAPI extends AbstractEconomy {
             }
 
             Object bankNameObj = BACKEND_MANAGER.get(offlinePlayer, "bankname", COLLECTION);
-            if (!(bankNameObj instanceof String bankName) || !bankName.equalsIgnoreCase(name)) {
+            if (!(bankNameObj instanceof String storedBankName) || !storedBankName.equalsIgnoreCase(bankName)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
             }
 
@@ -639,13 +671,16 @@ public class VaultAPI extends AbstractEconomy {
             }
         } else {
             FileConfiguration cfg = loadMoneyConfig();
+            String bankKey = getExistingBankKey(cfg, bankName);
 
-            if (!cfg.contains(getBankPath(name) + BANK_OWNER_PATH)) {
+            if (bankKey == null || !cfg.contains(getBankPath(bankKey) + BANK_OWNER_PATH)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Bank doesn't exist");
             }
 
-            String owner = cfg.getString(getBankPath(name) + BANK_OWNER_PATH);
-            if (!player.equalsIgnoreCase(owner)) {
+            List<String> references = getPlayerReferences(player);
+            String owner = cfg.getString(getBankPath(bankKey) + BANK_OWNER_PATH);
+            String ownerName = cfg.getString(getBankPath(bankKey) + BANK_OWNER_NAME_PATH);
+            if (!matchesAnyReference(owner, references) && !matchesAnyReference(ownerName, references)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't the Owner");
             }
         }
@@ -655,7 +690,8 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse isBankMember(String name, String player) {
-        if (name == null || name.trim().isEmpty()) {
+        String bankName = normalizeBankName(name);
+        if (bankName == null) {
             return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Invalid bank name");
         }
 
@@ -669,7 +705,7 @@ public class VaultAPI extends AbstractEconomy {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Failed to get player");
             }
 
-            if (!getMySQLManager().isBankMember(name, offlinePlayer)) {
+            if (!getMySQLManager().isBankMember(bankName, offlinePlayer)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't a member");
             }
         } else if (usesMongoStorage()) {
@@ -677,19 +713,20 @@ public class VaultAPI extends AbstractEconomy {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Backend not available");
             }
 
-            List<String> members = plugin.getVaultManager().getBankMembers(name);
+            List<String> members = plugin.getVaultManager().getBankMembers(bankName);
             if (members == null || !members.contains(player)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't a member");
             }
         } else {
             FileConfiguration cfg = loadMoneyConfig();
+            String bankKey = getExistingBankKey(cfg, bankName);
 
-            if (!cfg.contains(getBankPath(name) + BANK_MEMBERS_PATH)) {
+            if (bankKey == null || !cfg.contains(getBankPath(bankKey) + BANK_MEMBERS_PATH)) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Bank has no members");
             }
 
-            List<String> players = cfg.getStringList(getBankPath(name) + BANK_MEMBERS_PATH);
-            if (!players.contains(player)) {
+            List<String> players = cfg.getStringList(getBankPath(bankKey) + BANK_MEMBERS_PATH);
+            if (!containsAnyReference(players, getPlayerReferences(player))) {
                 return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.FAILURE, "Isn't a member");
             }
         }
@@ -731,11 +768,11 @@ public class VaultAPI extends AbstractEconomy {
 
         FileConfiguration cfg = loadMoneyConfig();
         List<String> banks = new ArrayList<>();
-        ConfigurationSection cs = cfg.getConfigurationSection("Banks");
+        ConfigurationSection cs = cfg.getConfigurationSection(BANKS_SECTION);
         if (cs != null) {
             for (String s : cs.getKeys(false)) {
                 if (s != null && !s.trim().isEmpty()) {
-                    banks.add(s);
+                    banks.add(cfg.getString(getBankPath(s) + BANK_DISPLAY_NAME_PATH, s));
                 }
             }
         }
@@ -834,6 +871,78 @@ public class VaultAPI extends AbstractEconomy {
         return BANKS_PATH + name;
     }
 
+    private String normalizeBankName(String name) {
+        if (name == null) {
+            return null;
+        }
+        String trimmed = name.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean isValidBankName(String name) {
+        return name != null && name.matches(BANK_NAME_PATTERN);
+    }
+
+    private String getExistingBankKey(FileConfiguration cfg, String name) {
+        ConfigurationSection section = cfg.getConfigurationSection(BANKS_SECTION);
+        if (section == null || name == null) {
+            return null;
+        }
+        for (String key : section.getKeys(false)) {
+            String displayName = cfg.getString(getBankPath(key) + BANK_DISPLAY_NAME_PATH, key);
+            if (key.equalsIgnoreCase(name) || displayName.equalsIgnoreCase(name)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private String getPlayerStorageId(OfflinePlayer player) {
+        if (player == null) {
+            return "";
+        }
+        return Bukkit.getServer().getOnlineMode() ? player.getUniqueId().toString() : String.valueOf(player.getName());
+    }
+
+    private List<String> getPlayerReferences(String playerName) {
+        Set<String> references = new LinkedHashSet<>();
+        if (playerName != null && !playerName.isBlank()) {
+            references.add(playerName);
+        }
+        OfflinePlayer offlinePlayer = getOfflinePlayerSafe(playerName);
+        if (offlinePlayer != null) {
+            references.add(offlinePlayer.getUniqueId().toString());
+            if (offlinePlayer.getName() != null && !offlinePlayer.getName().isBlank()) {
+                references.add(offlinePlayer.getName());
+            }
+        }
+        return new ArrayList<>(references);
+    }
+
+    private boolean matchesAnyReference(String value, List<String> references) {
+        if (value == null || references == null) {
+            return false;
+        }
+        for (String reference : references) {
+            if (reference != null && value.equalsIgnoreCase(reference)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsAnyReference(List<String> values, List<String> references) {
+        if (values == null || references == null) {
+            return false;
+        }
+        for (String value : values) {
+            if (matchesAnyReference(value, references)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private EconomyResponse failure(double amount, double balance, String error) {
         return new EconomyResponse(amount, balance, EconomyResponse.ResponseType.FAILURE, error);
     }
@@ -844,6 +953,11 @@ public class VaultAPI extends AbstractEconomy {
 
     public void save(File file, FileConfiguration cfg) {
         try {
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                plugin.getLogger4J().log(Level.ERROR, "Could not create directory: " + parent.getAbsolutePath());
+                return;
+            }
             cfg.save(file);
         } catch (IOException e) {
             plugin.getLogger4J().log(Level.ERROR, "Error saving", e);

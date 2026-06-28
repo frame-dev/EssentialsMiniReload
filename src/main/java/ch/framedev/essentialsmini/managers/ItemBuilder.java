@@ -46,7 +46,7 @@ public class ItemBuilder {
 
     public ItemBuilder setDisplayName(String displayName) {
         if (itemMeta == null) {
-            return null;
+            return this;
         }
         this.itemMeta.setDisplayName(displayName);
         return this;
@@ -60,7 +60,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setLore(String... lore) {
-        if (itemMeta == null) return null;
+        if (itemMeta == null) return this;
         this.itemMeta.setLore(Arrays.asList(lore));
         return this;
     }
@@ -81,7 +81,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addLore(String stringLore) {
-        if (this.itemMeta == null) return null;
+        if (this.itemMeta == null) return this;
         if (!this.itemMeta.hasLore()) {
             List<String> lore = new ArrayList<>();
             lore.add(stringLore);
@@ -98,7 +98,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addLore(String... stringLore) {
-        if (this.itemMeta == null) return null;
+        if (this.itemMeta == null) return this;
         if (!this.itemMeta.hasLore()) {
             List<String> lore = new ArrayList<>(Arrays.asList(stringLore));
             this.itemMeta.setLore(lore);
@@ -120,20 +120,21 @@ public class ItemBuilder {
 
     public @Nullable String getLore(int index) {
         if (this.itemMeta == null) return null;
-        if (this.itemMeta.hasLore() && this.itemMeta.getLore() != null) {
-            return this.itemMeta.getLore().get(index);
+        List<String> lore = this.itemMeta.getLore();
+        if (this.itemMeta.hasLore() && lore != null && index >= 0 && index < lore.size()) {
+            return lore.get(index);
         }
         return null;
     }
 
     public @Nullable ItemBuilder addEnchantment(Enchantment enchantment, int level, boolean ignore) {
-        if (this.itemMeta == null) return null;
+        if (this.itemMeta == null) return this;
         itemMeta.addEnchant(enchantment, level, ignore);
         return this;
     }
 
     public @Nullable ItemBuilder removeEnchantment(Enchantment enchantment) {
-        if (this.itemMeta == null) return null;
+        if (this.itemMeta == null) return this;
         if (itemMeta.hasEnchant(enchantment))
             itemMeta.removeEnchant(enchantment);
         return this;

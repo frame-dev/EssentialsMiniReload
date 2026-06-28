@@ -1,7 +1,7 @@
 {
   "latest": "1.3.9-RELEASE",
   "latest-pre-release": "1.4.9.3-1.20.6-PRE-RELEASE",
-  "1.20.6-higher-release": "1.1.2-1.20.6-HIGHER-RELEASE",
+  "1.20.6-higher-release": "1.1.3-1.20.6-HIGHER-RELEASE",
   "1.20.6-higher-releases": [
     "1.0.0-1.20.6-HIGHER-PRE-RELEASE",
     "1.0.1-1.20.6-HIGHER-PRE-RELEASE",
@@ -22,7 +22,8 @@
     "1.0.9-1.20.6-HIGHER-RELEASE",
     "1.1.0-1.20.6-HIGHER-RELEASE",
     "1.1.1-1.20.6-HIGHER-RELEASE",
-    "1.1.2-1.20.6-HIGHER-RELEASE"
+    "1.1.2-1.20.6-HIGHER-RELEASE",
+    "1.1.3-1.20.6-HIGHER-RELEASE"
   ],
   "pre-releases": [
     "1.4.2-1.20.6-PRE-RELEASE",
@@ -264,6 +265,28 @@
         "Added skinDebug diagnostics for /nick skin lookup, live profile texture writes, ProtocolLib packet choices, packet sends, and entity refreshes",
         "config.yml now merges missing bundled defaults and comments on startup or /essentialsmini reload without overwriting configured values",
         "Added the GitHub issues/support link to README.md and the SpigotMC resource description"
+      ]
+    },
+    {
+      "version": "1.1.3-1.20.6-HIGHER-RELEASE",
+      "description": [
+        "Updated the 1.20.6 higher release channel to 1.1.3",
+        "Updated Maven project version metadata to 1.1.3-1.20.6-HIGHER-RELEASE",
+        "Updated README.md and the SpigotMC resource description to show the current 1.1.3 release",
+        "Fixed /sleep temporary-bed handling so original blocks are restored safely per player",
+        "Fixed /sleep BedColor parsing so invalid colors fail cleanly",
+        "Fixed economy signs so the Vault economy provider can be resolved after startup if it was not ready during listener construction",
+        "Hardened buy, free, and sell sign creation against malformed sign lines",
+        "Fixed warp location collection so stored warps are read from warps.<name>",
+        "Hardened saved location loading against missing worlds, malformed serialized locations, and null locations",
+        "Fixed inventory GUI helper behavior for missing inventories and empty-slot lookups",
+        "Made ItemBuilder fluent methods safe for materials without item metadata and added bounds checks for lore lookup",
+        "Improved filesystem-backed banks so /bank create, remove, balance, deposit, withdraw, transfer, members, list, and info work consistently from money/eco.yml",
+        "Fixed stale player-balance saves that could overwrite and remove filesystem banks after deposits or balance updates",
+        "Added YAML-safe filesystem bank name validation for letters, numbers, underscores, and hyphens",
+        "Filesystem bank lookup is now case-insensitive while preserving the bank display name",
+        "Filesystem bank owners and members now support legacy player-name checks and UUID-backed ownership checks",
+        "Carries forward the 1.1.2 custom message locale, customization, notification, GUI, and bug-fix improvements"
       ]
     }
   ]

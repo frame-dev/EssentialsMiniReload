@@ -1,0 +1,28 @@
+[B][SIZE=5]EssentialsMiniReload 1.1.3 - Filesystem Bank Support[/SIZE][/B]
+
+[B]Resource update title[/B]
+[CODE]EssentialsMiniReload 1.1.3 - Filesystem-backed banks now work with YAML economy storage[/CODE]
+
+[B]Update post[/B]
+This update fixes and hardens [CODE]/bank[/CODE] support for servers using the default filesystem/YAML economy storage.
+
+[B]Bank fixes[/B]
+[LIST]
+[*]Filesystem-backed banks now work consistently from [CODE]plugins/EssentialsMini/money/eco.yml[/CODE].
+[*][CODE]/bank create[/CODE], [CODE]remove[/CODE], [CODE]balance[/CODE], [CODE]deposit[/CODE], [CODE]withdraw[/CODE], [CODE]transfer[/CODE], [CODE]addmember[/CODE], [CODE]removemember[/CODE], [CODE]listmembers[/CODE], [CODE]list[/CODE], and [CODE]info[/CODE] now resolve YAML-backed banks consistently.
+[*]Bank names are now validated for filesystem/YAML safety. Names may contain letters, numbers, underscores, and hyphens.
+[*]Bank lookup is now case-insensitive while preserving the bank display name.
+[*]Filesystem bank owners are stored with UUID-backed ownership data where available and keep owner names for compatibility/display.
+[*]Filesystem owner and member checks support legacy player-name entries as well as UUID-backed ownership data.
+[*]Bank member add/remove/list operations now resolve the canonical YAML bank key before writing to [CODE]eco.yml[/CODE].
+[*]The money storage directory is created before saving filesystem economy or bank data.
+[*]Fixed stale filesystem economy saves that could overwrite and remove the [CODE]Banks[/CODE] section after depositing money or updating player balances.
+[/LIST]
+
+[B]Compatibility notes[/B]
+[LIST]
+[*]Existing filesystem banks under [CODE]Banks[/CODE] in [CODE]money/eco.yml[/CODE] continue to load.
+[*]Existing member lists using player names continue to work.
+[*]New bank names should use only [CODE]A-Z[/CODE], [CODE]a-z[/CODE], [CODE]0-9[/CODE], [CODE]_[/CODE], and [CODE]-[/CODE].
+[*]No new permissions or dependencies were added.
+[/LIST]

@@ -87,7 +87,7 @@ public class BankCMD extends CommandBase {
         if (args.length != 2) return true;
         if (!hasPermission(sender, plugin.getPermissionBase() + "bank.info")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(sender);
             return true;
@@ -118,8 +118,14 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.create")) return true;
 
-        if (bankExists(args[1])) {
-            player.sendMessage(plugin.getPrefix() + "§6" + args[1] + " §calready exists!");
+        String bankName = args[1].trim();
+        if (!isValidBankName(bankName)) {
+            player.sendMessage(plugin.getPrefix() + "§cBank names may only contain letters, numbers, underscores, and hyphens.");
+            return true;
+        }
+
+        if (bankExists(bankName)) {
+            player.sendMessage(plugin.getPrefix() + "§6" + bankName + " §calready exists!");
             return true;
         }
 
@@ -128,7 +134,7 @@ public class BankCMD extends CommandBase {
             return true;
         }
 
-        EconomyResponse response = economy.createBank(args[1], player);
+        EconomyResponse response = economy.createBank(bankName, player);
         if (response.transactionSuccess()) {
             player.sendMessage(plugin.getPrefix() + lang(player, "Created"));
         } else {
@@ -142,7 +148,7 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.balance")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -164,7 +170,7 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.remove")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -188,7 +194,7 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.listmembers")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -211,7 +217,7 @@ public class BankCMD extends CommandBase {
         Economy economy = economyOrNull();
         if (economy == null || !ensureAccount(player, player)) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -247,7 +253,7 @@ public class BankCMD extends CommandBase {
         Economy economy = economyOrNull();
         if (economy == null || !ensureAccount(player, player)) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -285,7 +291,7 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.addmember")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -316,7 +322,7 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.removemember")) return true;
 
-        String bankName = args[1];
+        String bankName = canonicalBankName(args[1]);
         if (!bankExists(bankName)) {
             sendBankNotFound(player);
             return true;
@@ -347,8 +353,8 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.transfer")) return true;
 
-        String fromBank = args[1];
-        String toBank = args[2];
+        String fromBank = canonicalBankName(args[1]);
+        String toBank = canonicalBankName(args[2]);
         if (!bankExists(fromBank)) {
             sendBankNotFound(player);
             return true;
@@ -478,7 +484,23 @@ public class BankCMD extends CommandBase {
     }
 
     private boolean bankExists(String bankName) {
-        return safeBanks().contains(bankName);
+        return canonicalBankName(bankName) != null;
+    }
+
+    private String canonicalBankName(String bankName) {
+        if (bankName == null || bankName.isBlank()) {
+            return null;
+        }
+        for (String existingBank : safeBanks()) {
+            if (existingBank != null && existingBank.equalsIgnoreCase(bankName)) {
+                return existingBank;
+            }
+        }
+        return null;
+    }
+
+    private boolean isValidBankName(String bankName) {
+        return bankName != null && bankName.matches("[A-Za-z0-9_-]{1,32}");
     }
 
     private List<String> safeBanks() {

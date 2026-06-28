@@ -135,22 +135,7 @@ public class LocationManager {
      * @throws NullPointerException throw a NullPointerException if the Location was not found
      */
     public Location getLocation(String s) throws NotFoundException {
-        if (cfg.contains(s)) {
-            try {
-                World world = Bukkit.getWorld(Objects.requireNonNull(cfg.getString(s + ".world")));
-                double x = cfg.getDouble(s + ".x");
-                double y = cfg.getDouble(s + ".y");
-                double z = cfg.getDouble(s + ".z");
-                float yaw = cfg.getInt(s + ".yaw");
-                float pitch = cfg.getInt(s + ".pitch");
-                if (world == null) {
-                    throw new NotFoundException("World");
-                }
-                return new Location(world, x, y, z, yaw, pitch);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        return null;
+        return readLocation(s);
     }
 
     public void setWarp(String warpName, Location location) {
@@ -199,24 +184,7 @@ public class LocationManager {
      * @return return the Location from the file
      */
     public Location getLocation() {
-        if (cfg.contains(name)) {
-            try {
-                World world = Bukkit.getWorld(Objects.requireNonNull(cfg.getString(name + ".world")));
-                double x = cfg.getDouble(name + ".x");
-                double y = cfg.getDouble(name + ".y");
-                double z = cfg.getDouble(name + ".z");
-                float yaw = cfg.getInt(name + ".yaw");
-                float pitch = cfg.getInt(name + ".pitch");
-                if (world != null) {
-
-                } else {
-                    throw new NotFoundException("World");
-                }
-                return new Location(world, x, y, z, yaw, pitch);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        return null;
+        return readLocation(name);
     }
 
     /**
@@ -227,7 +195,7 @@ public class LocationManager {
      */
     public static String locationToString(Location location) {
         String s = "";
-        if (location.getWorld() == null) {
+        if (location == null || location.getWorld() == null) {
             return null;
         }
         s += location.getWorld().getName() + ";";
@@ -245,8 +213,22 @@ public class LocationManager {
      * @return returns a completed Location from the String
      */
     public static Location locationFromString(String string) {
+        if (string == null || string.isBlank()) {
+            return null;
+        }
         String[] s = string.split(";");
-        return new Location(Bukkit.getWorld(s[0]), Double.parseDouble(s[1]), Double.parseDouble(s[2]), Double.parseDouble(s[3]), Float.parseFloat(s[4]), Float.parseFloat(s[5]));
+        if (s.length < 6) {
+            return null;
+        }
+        World world = Bukkit.getWorld(s[0]);
+        if (world == null) {
+            return null;
+        }
+        try {
+            return new Location(world, Double.parseDouble(s[1]), Double.parseDouble(s[2]), Double.parseDouble(s[3]), Float.parseFloat(s[4]), Float.parseFloat(s[5]));
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     public List<Location> getWarps() {
@@ -254,7 +236,10 @@ public class LocationManager {
         List<Location> warps = new ArrayList<>();
         if (cs == null) return warps;
         for (String s : cs.getKeys(false)) {
-            warps.add(getLocation(s));
+            Location location = getLocation("warps." + s);
+            if (location != null) {
+                warps.add(location);
+            }
         }
         return warps;
     }
@@ -288,8 +273,12 @@ public class LocationManager {
                 if (cs != null) {
                     for (String s : cs.getKeys(false)) {
                         if (getCfg().get(ss + ".home." + s) != null && !getCfg().get(ss + ".home." + s).equals(" ")) {
-                            cfgBackup.set(ss + ".home." + s, locationToString(getLocation(ss + ".home." + s)));
-                            backups.put(ss + ".home." + s, locationToString(getLocation(ss + ".home." + s)));
+                            Location location = getLocation(ss + ".home." + s);
+                            String serializedLocation = locationToString(location);
+                            if (serializedLocation != null) {
+                                cfgBackup.set(ss + ".home." + s, serializedLocation);
+                                backups.put(ss + ".home." + s, serializedLocation);
+                            }
                         }
                     }
                 }
@@ -327,5 +316,28 @@ public class LocationManager {
         } catch (IOException e) {
             Main.getInstance().getLogger4J().error(e);
         }
+    }
+
+    private Location readLocation(String path) {
+        if (path == null || !cfg.contains(path)) {
+            return null;
+        }
+
+        String worldName = cfg.getString(path + ".world");
+        if (worldName == null || worldName.isBlank()) {
+            return null;
+        }
+
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            return null;
+        }
+
+        double x = cfg.getDouble(path + ".x");
+        double y = cfg.getDouble(path + ".y");
+        double z = cfg.getDouble(path + ".z");
+        float yaw = (float) cfg.getDouble(path + ".yaw");
+        float pitch = (float) cfg.getDouble(path + ".pitch");
+        return new Location(world, x, y, z, yaw, pitch);
     }
 }

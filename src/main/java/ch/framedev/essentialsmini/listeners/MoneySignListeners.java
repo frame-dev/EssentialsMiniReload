@@ -91,7 +91,7 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         if (!e.getHand().equals(EquipmentSlot.HAND)) return;
         if (!(e.getClickedBlock().getState() instanceof Sign s)) return;
 
-        // Check if eco is initialized
+        eco = getEconomy();
         if (eco == null) {
             e.getPlayer().sendMessage(Main.getInstance().getPrefix() + "§cEconomy system is not available!");
             e.setCancelled(true);
@@ -486,9 +486,9 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             return;
         }
 
-        if (e.getLine(1).equalsIgnoreCase(name.name()) &&
-                e.getLine(2).equalsIgnoreCase(amount + "") &&
-                e.getLine(3).equalsIgnoreCase(money + "")) {
+        if (args[1].equalsIgnoreCase(name.name()) &&
+                args[2].equalsIgnoreCase(String.valueOf(amount)) &&
+                args[3].equalsIgnoreCase(String.valueOf(money))) {
             e.setLine(0, signName);
             e.setLine(1, name.name());
             e.setLine(2, amount + "");
@@ -527,7 +527,7 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             return;
         }
 
-        if (e.getLine(1).equalsIgnoreCase(name.name())) {
+        if (args[1].equalsIgnoreCase(name.name())) {
             e.setLine(0, signName);
             e.setLine(1, name.name());
         }
@@ -574,9 +574,9 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
             return;
         }
 
-        if (e.getLine(1).equalsIgnoreCase(name.name()) &&
-                e.getLine(2).equalsIgnoreCase(amount + "") &&
-                e.getLine(3).equalsIgnoreCase(money + "")) {
+        if (args[1].equalsIgnoreCase(name.name()) &&
+                args[2].equalsIgnoreCase(String.valueOf(amount)) &&
+                args[3].equalsIgnoreCase(String.valueOf(money))) {
             e.setLine(0, signName);
             e.setLine(1, name.name());
             e.setLine(2, amount + "");
@@ -712,6 +712,19 @@ public class MoneySignListeners extends ListenerBase implements CommandExecutor 
         } catch (NumberFormatException ignored) {
             return null;
         }
+    }
+
+    private Economy getEconomy() {
+        if (!Main.getInstance().getConfig().getBoolean("Economy.Activate")) {
+            return null;
+        }
+        if (eco != null) {
+            return eco;
+        }
+        if (Main.getInstance().getVaultManager() == null) {
+            return null;
+        }
+        return Main.getInstance().getVaultManager().getEco();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

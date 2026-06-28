@@ -96,6 +96,7 @@ public class InventoryManager {
     }
 
     public void fillNull() {
+        if (inventory == null) return;
         int inventorySize = getSize();
         for (int i = 0; i < inventorySize; i++) {
             if (inventory.getItem(i) == null) {
@@ -113,7 +114,7 @@ public class InventoryManager {
     }
 
     public int getFirstEmptySlot() {
-        if (inventory == null) return -0;
+        if (inventory == null) return -1;
         for (int i = 0; i < getSize(); i++) {
             if (inventory.getItem(i) == null)
                 return i;

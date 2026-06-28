@@ -259,7 +259,7 @@ Skin refresh supports Spigot, Paper, and Purpur by trying Paper/Purpur profile A
 
 - Main class: `ch.framedev.essentialsmini.main.Main`
 - Maven artifact: `EssentialsMini`
-- Current project version: `1.1.2-1.20.6-HIGHER-RELEASE`
+- Current project version: `1.1.3-1.20.6-HIGHER-RELEASE`
 - Website: [framedev.ch](https://framedev.ch)
 - Issues/support: [https://github.com/frame-dev/EssentialsMiniReload/issues](https://github.com/frame-dev/EssentialsMiniReload/issues)
 
