@@ -114,6 +114,7 @@ commands:
     description: make suicid
   signitem:
     description: sign your custom Item
+    permission: essentialsmini.signitem
   playerheads:
     description: getPlayer heads from Players
   r:
@@ -149,7 +150,9 @@ commands:
     description: set Thunder in our World
   renameitem:
     description: Rename a Item
+    permission: essentialsmini.renameitem
   position:
+    permission: essentialsmini.position
     aliases:
       - pos
     description: Mark an position for other player after an reload all positions will be removed
@@ -173,8 +176,10 @@ commands:
       - godm
   spawnmob:
     description: Spawn a Custom Mob
+    permission: essentialsmini.spawnmob
   walkspeed:
     description: Change your Walk Speed
+    permission: essentialsmini.speed
   chatclear:
     aliases:
       - cc
@@ -199,6 +204,7 @@ commands:
     description: This will allow or deny Teleports from other players
   mysql:
     description: Check if MySQL is Enabled
+    permission: essentialsmini.mysql
   balancetop:
     description: Who has the Most Money
     aliases:
@@ -211,6 +217,7 @@ commands:
     description: Main Command for all Bank Commands
   flyspeed:
     description: Change your Fly Speed
+    permission: essentialsmini.flyspeed
   tempmute:
     description: Base Command for the use of Temp Mute
   muteinfo:
@@ -227,12 +234,15 @@ commands:
     description: Base Command for Permanent Unban
   book:
     description: Open an Written Book and edited it
+    permission: essentialsmini.book
   copybook:
     description: Copy an Written Book
+    permission: essentialsmini.copybook
   removetempban:
     description: Base Command for the use of Remove Temp Ban
   firework:
     description: Spawn a Firework
+    permission: essentialsmini.firework
   createkit:
     description: Create a new Kit, Place all your Items in your Inventory.This Command will delete your Inventory after execute
   offline:
@@ -246,12 +256,10 @@ commands:
       - experience
     description: Base Command to change your XP or Level
   plweather:
-    aliases:
-      - playerweather
+    permission: essentialsmini.playerweather
     description: Change the Weather for a Player
   resetplweather:
-    aliases:
-      - resetplayerweather
+    permission: essentialsmini.playerweather
     description: Reset the Weather for a Player
   timeplayed:
     aliases:
@@ -261,11 +269,14 @@ commands:
     description: Mute a Player for a specific Player
   nick:
   nicklist:
+    permission: essentialsmini.nicklist
+    description: Shows players currently marked as nicked
   playerweather:
+    permission: essentialsmini.playerweather
     aliases:
-      - plweather
       - playerw
   resetplayerweather:
+    permission: essentialsmini.playerweather
     aliases:
       - resetplayerw
       - rplayerweather
@@ -369,6 +380,8 @@ permissions:
       essentialsmini.showlocation: true
       essentialsmini.showcrafting: true
       essentialsmini.position: true
+      essentialsmini.renameitem: true
+      essentialsmini.signitem: true
       essentialsmini.plugins: true
       essentialsmini.me: true
       essentialsmini.tabcomplete: true
@@ -459,7 +472,12 @@ permissions:
       essentialsmini.mail.read.others: true
       essentialsmini.mail.clear.others: true
       essentialsmini.nick: true
+      essentialsmini.nicklist: true
       essentialsmini.book: true
+      essentialsmini.copybook: true
+      essentialsmini.firework: true
+      essentialsmini.mysql: true
+      essentialsmini.spawnmob: true
       essentialsmini.reload: true
       essentialsmini.economy: true
       essentialsmini.messages: true
@@ -496,6 +514,10 @@ permissions:
   essentialsmini.showcrafting:
     default: op
   essentialsmini.position:
+    default: op
+  essentialsmini.renameitem:
+    default: op
+  essentialsmini.signitem:
     default: op
   essentialsmini.vanish:
     default: op
@@ -779,7 +801,17 @@ permissions:
       essentialsmini.mail: true
   essentialsmini.nick:
     default: op
+  essentialsmini.nicklist:
+    default: op
   essentialsmini.book:
+    default: op
+  essentialsmini.copybook:
+    default: op
+  essentialsmini.firework:
+    default: op
+  essentialsmini.mysql:
+    default: op
+  essentialsmini.spawnmob:
     default: op
   essentialsmini.reload:
     default: op

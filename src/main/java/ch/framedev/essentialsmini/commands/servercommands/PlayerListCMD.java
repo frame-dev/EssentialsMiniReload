@@ -63,6 +63,7 @@ public class PlayerListCMD extends CommandBase {
 
         try {
             // Get online players with null safety
+            @SuppressWarnings("null")
             List<String> players = Bukkit.getOnlinePlayers().stream()
                     .filter(player -> player != null && player.getName() != null)
                     .map(Player::getName)

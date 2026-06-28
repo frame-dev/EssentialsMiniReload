@@ -48,7 +48,7 @@ public class SleepListener implements Listener {
             return;
         }
         sleep = true;
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, new RunSkipNight(event), 120);
+        Bukkit.getScheduler().runTaskLater(plugin, new RunSkipNight(event), 120);
     }
 
     private class RunSkipNight implements Runnable {

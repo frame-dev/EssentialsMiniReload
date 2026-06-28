@@ -286,6 +286,8 @@
         "Added YAML-safe filesystem bank name validation for letters, numbers, underscores, and hyphens",
         "Filesystem bank lookup is now case-insensitive while preserving the bank display name",
         "Filesystem bank owners and members now support legacy player-name checks and UUID-backed ownership checks",
+        "Filesystem economy account and balance lookups now support UUID-only offline players on online-mode servers",
+        "Fixed /bank transfer missing-target messages so failed transfers show the requested bank name instead of null",
         "Carries forward the 1.1.2 custom message locale, customization, notification, GUI, and bug-fix improvements"
       ]
     }

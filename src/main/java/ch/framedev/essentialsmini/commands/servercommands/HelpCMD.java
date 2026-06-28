@@ -215,6 +215,7 @@ public class HelpCMD extends CommandListenerBase {
         player.sendMessage("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
 
+    @SuppressWarnings("null")
     private List<HelpEntry> getEntries() {
         Map<String, Map<String, Object>> commands = plugin.getDescription().getCommands();
         if (commands.isEmpty()) {
@@ -458,9 +459,9 @@ public class HelpCMD extends CommandListenerBase {
         usages.put("online", "/online");
         usages.put("pay", "/pay <amount> <player> or /pay <player> <amount>");
         usages.put("playerheads", "/playerheads <player>");
-        usages.put("playerweather", "/playerweather <sun|rain|thunder> [player]");
+        usages.put("playerweather", "/playerweather <clear|downfall>");
         usages.put("pltime", "/pltime <day|night|ticks> [player]");
-        usages.put("plweather", "/plweather <sun|rain|thunder> [player]");
+        usages.put("plweather", "/plweather <clear|downfall>");
         usages.put("position", "/position");
         usages.put("rain", "/rain [world]");
         usages.put("r", "/r <message>");
@@ -468,9 +469,9 @@ public class HelpCMD extends CommandListenerBase {
         usages.put("removetempmute", "/removetempmute <player>");
         usages.put("renameitem", "/renameitem <name>");
         usages.put("repair", "/repair [player]");
-        usages.put("resetplayerweather", "/resetplayerweather [player]");
+        usages.put("resetplayerweather", "/resetplayerweather");
         usages.put("resetpltime", "/resetpltime [player]");
-        usages.put("resetplweather", "/resetplweather [player]");
+        usages.put("resetplweather", "/resetplweather");
         usages.put("retrieve", "/retrieve");
         usages.put("sethome", "/sethome <name>");
         usages.put("setspawn", "/setspawn");
@@ -518,8 +519,10 @@ public class HelpCMD extends CommandListenerBase {
         details.put("nick", "Changes your display name and, when ProtocolLib is available, refreshes your visible skin.");
         details.put("nicklist", "Shows players currently marked as nicked.");
         details.put("maintenance", "Toggles maintenance mode so only allowed players can join.");
-        details.put("playerweather", "Alias of /plweather.");
-        details.put("resetplayerweather", "Alias of /resetplweather.");
+        details.put("playerweather", "Changes only your personal client-side weather.");
+        details.put("plweather", "Short command for personal client-side weather.");
+        details.put("resetplayerweather", "Resets your personal client-side weather to the world weather.");
+        details.put("resetplweather", "Short command for resetting personal client-side weather.");
         details.put("essentialsmini", "Main administration command for reload, version, and feature toggles.");
         return details;
     }

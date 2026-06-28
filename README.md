@@ -156,11 +156,16 @@ Examples:
 - `essentialsmini.home`
 - `essentialsmini.kits.<kitname>`
 - `essentialsmini.item`
+- `essentialsmini.renameitem`
+- `essentialsmini.signitem`
 - `essentialsmini.retrieve`
 - `essentialsmini.showrecipe`
 - `essentialsmini.workbench`
 - `essentialsmini.anvil`
 - `essentialsmini.near`
+- `essentialsmini.firework`
+- `essentialsmini.spawnmob`
+- `essentialsmini.copybook`
 - `essentialsmini.mute`
 - `essentialsmini.tempmute`
 - `essentialsmini.ban`

@@ -54,24 +54,29 @@ public class MoneyFileManager {
     }
 
     public void setMoney(OfflinePlayer player, double amount) {
-        if(player.getName() == null) return;
+        String storageKey = getStorageKey(player);
+        if (storageKey == null) return;
         loadFile();
-        if (Bukkit.getServer().getOnlineMode()) {
-            cfg.set(player.getUniqueId().toString(), amount);
-        } else {
-            cfg.set(player.getName(), amount);
-        }
+        cfg.set(storageKey, amount);
         saveFile();
     }
 
     public double getMoney(OfflinePlayer player) {
-        if(player.getName() == null) return 0.0;
+        String storageKey = getStorageKey(player);
+        if (storageKey == null) return 0.0;
         loadFile();
-        if (Bukkit.getServer().getOnlineMode()) {
-            return cfg.getDouble(player.getUniqueId().toString());
-        } else {
-            return cfg.getDouble(player.getName());
+        return cfg.getDouble(storageKey);
+    }
+
+    private String getStorageKey(OfflinePlayer player) {
+        if (player == null) {
+            return null;
         }
+        if (Bukkit.getServer().getOnlineMode()) {
+            return player.getUniqueId().toString();
+        }
+        String playerName = player.getName();
+        return playerName == null || playerName.isBlank() ? null : playerName;
     }
 
     public void addMoney(OfflinePlayer player, double amount) {

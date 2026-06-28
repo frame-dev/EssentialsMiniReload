@@ -12,7 +12,6 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class RegisterManager {
 
@@ -55,8 +54,11 @@ public class RegisterManager {
      */
     private void registerTabCompleters() {
         for (Map.Entry<String, TabCompleter> completer : plugin.getTabCompleters().entrySet()) {
-            PluginCommand command = Objects.requireNonNull(plugin.getCommand(completer.getKey()),
-                    "Command not found for tab completer: " + completer.getKey());
+            PluginCommand command = plugin.getCommand(completer.getKey());
+            if (command == null) {
+                plugin.getLogger4J().warn("Skipping tab completer for missing plugin.yml command: " + completer.getKey());
+                continue;
+            }
             command.setTabCompleter(completer.getValue());
         }
     }
@@ -148,6 +150,7 @@ public class RegisterManager {
 
         new RetrieveIngredientsCMD(plugin, "retrieve");
         new UtilityStationCMD(plugin);
+        new LegacyUtilityCMD(plugin);
         new NearCMD(plugin);
         new ShowRecipeCMD(plugin);
 
@@ -163,8 +166,12 @@ public class RegisterManager {
         for (Map.Entry<String, CommandExecutor> commands : plugin.getCommands().entrySet()) {
             if (commands.getKey() == null) continue;
             if (commands.getValue() == null) continue;
-            if (plugin.getCommand(commands.getKey()) == null) continue;
-            Objects.requireNonNull(plugin.getCommand(commands.getKey()), "Command not found for Executor: " + commands.getKey()).setExecutor(commands.getValue());
+            PluginCommand command = plugin.getCommand(commands.getKey());
+            if (command == null) {
+                plugin.getLogger4J().warn("Skipping executor for missing plugin.yml command: " + commands.getKey());
+                continue;
+            }
+            command.setExecutor(commands.getValue());
             if (plugin.getConfig().getBoolean("debug"))
                 plugin.getLogger4J().info("Registered Command: " + commands.getKey());
         }

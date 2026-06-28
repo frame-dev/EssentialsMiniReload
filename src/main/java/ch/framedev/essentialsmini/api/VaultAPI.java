@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -151,42 +150,47 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public boolean hasAccount(OfflinePlayer player) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return false;
         }
-        return hasAccount(player.getName());
+        return hasAccount(playerLookup);
     }
 
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return failure(0.0D, 0.0D, "Invalid player!");
         }
-        return depositPlayer(player.getName(), amount);
+        return depositPlayer(playerLookup, amount);
     }
 
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer player, double amount) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return failure(0.0D, 0.0D, "Invalid player!");
         }
-        return withdrawPlayer(player.getName(), amount);
+        return withdrawPlayer(playerLookup, amount);
     }
 
     @Override
     public boolean createPlayerAccount(OfflinePlayer player) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return false;
         }
-        return createPlayerAccount(player.getName());
+        return createPlayerAccount(playerLookup);
     }
 
     @Override
     public boolean has(OfflinePlayer player, double amount) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return false;
         }
-        return has(player.getName(), amount);
+        return has(playerLookup, amount);
     }
 
     @Override
@@ -212,12 +216,8 @@ public class VaultAPI extends AbstractEconomy {
         }
 
         FileConfiguration cfg = loadMoneyConfig();
-
-        if (Bukkit.getServer().getOnlineMode()) {
-            return cfg.getStringList(ACCOUNTS_PATH).contains(player.getUniqueId().toString());
-        } else {
-            return cfg.getStringList(ACCOUNTS_PATH).contains(player.getName());
-        }
+        String storageKey = getPlayerAccountLookup(player);
+        return storageKey != null && cfg.getStringList(ACCOUNTS_PATH).contains(storageKey);
     }
 
     @Override
@@ -258,18 +258,20 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public double getBalance(OfflinePlayer player) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return 0.0D;
         }
-        return getBalance(player.getName());
+        return getBalance(playerLookup);
     }
 
     @Override
     public double getBalance(OfflinePlayer player, String world) {
-        if (player == null) {
+        String playerLookup = getPlayerAccountLookup(player);
+        if (playerLookup == null) {
             return 0.0D;
         }
-        return getBalance(player.getName());
+        return getBalance(playerLookup);
     }
 
     @Override
@@ -279,7 +281,7 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public boolean has(String playerName, double amount) {
-        if (amount < 0.0D) {
+        if (!isValidAmount(amount, true)) {
             return false;
         }
         return !(getBalance(playerName) < amount);
@@ -296,7 +298,7 @@ public class VaultAPI extends AbstractEconomy {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid player name!");
         }
 
-        if (amount < 0.0D) {
+        if (!isValidAmount(amount, true)) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Amount cannot be negative!");
         }
 
@@ -352,7 +354,7 @@ public class VaultAPI extends AbstractEconomy {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "The Player does not have an Account!");
         }
 
-        if (amount < 0.0D) {
+        if (!isValidAmount(amount, true)) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Amount cannot be negative!");
         }
 
@@ -392,10 +394,11 @@ public class VaultAPI extends AbstractEconomy {
 
     @Override
     public EconomyResponse createBank(String name, OfflinePlayer player) {
-        if (player == null) {
+        String playerLookup = getPlayerNameOrAccountLookup(player);
+        if (playerLookup == null) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid player!");
         }
-        return createBank(name, player.getName());
+        return createBank(name, playerLookup);
     }
 
     @Override
@@ -546,7 +549,7 @@ public class VaultAPI extends AbstractEconomy {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
-        if (amount < 0.0D) {
+        if (!isValidAmount(amount, true)) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Amount cannot be negative!");
         }
 
@@ -592,7 +595,7 @@ public class VaultAPI extends AbstractEconomy {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Invalid bank name!");
         }
 
-        if (amount < 0.0D) {
+        if (!isValidAmount(amount, true)) {
             return new EconomyResponse(0.0D, 0.0D, EconomyResponse.ResponseType.FAILURE, "Amount cannot be negative!");
         }
 
@@ -823,12 +826,13 @@ public class VaultAPI extends AbstractEconomy {
 
         FileConfiguration cfg = loadMoneyConfig();
         List<String> accounts = cfg.getStringList(ACCOUNTS_PATH);
-
-        if (Bukkit.getServer().getOnlineMode()) {
-            accounts.add(player.getUniqueId().toString());
-        } else {
-            accounts.add(player.getName());
+        String storageKey = getPlayerAccountLookup(player);
+        if (storageKey == null) {
+            plugin.getLogger4J().log(Level.ERROR, "Failed to resolve account storage key for: " + playerName);
+            return false;
         }
+
+        accounts.add(storageKey);
 
         cfg.set(ACCOUNTS_PATH, accounts);
         save(cfg);
@@ -883,6 +887,10 @@ public class VaultAPI extends AbstractEconomy {
         return name != null && name.matches(BANK_NAME_PATTERN);
     }
 
+    private boolean isValidAmount(double amount, boolean allowZero) {
+        return Double.isFinite(amount) && (allowZero ? amount >= 0.0D : amount > 0.0D);
+    }
+
     private String getExistingBankKey(FileConfiguration cfg, String name) {
         ConfigurationSection section = cfg.getConfigurationSection(BANKS_SECTION);
         if (section == null || name == null) {
@@ -901,7 +909,27 @@ public class VaultAPI extends AbstractEconomy {
         if (player == null) {
             return "";
         }
-        return Bukkit.getServer().getOnlineMode() ? player.getUniqueId().toString() : String.valueOf(player.getName());
+        String storageKey = getPlayerAccountLookup(player);
+        return storageKey == null ? "" : storageKey;
+    }
+
+    private String getPlayerAccountLookup(OfflinePlayer player) {
+        if (player == null) {
+            return null;
+        }
+        if (Bukkit.getServer().getOnlineMode()) {
+            return player.getUniqueId().toString();
+        }
+        String playerName = player.getName();
+        return playerName == null || playerName.isBlank() ? null : playerName;
+    }
+
+    private String getPlayerNameOrAccountLookup(OfflinePlayer player) {
+        if (player == null) {
+            return null;
+        }
+        String playerName = player.getName();
+        return playerName == null || playerName.isBlank() ? getPlayerAccountLookup(player) : playerName;
     }
 
     private List<String> getPlayerReferences(String playerName) {

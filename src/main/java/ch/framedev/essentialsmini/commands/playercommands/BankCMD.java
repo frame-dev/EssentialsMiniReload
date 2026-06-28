@@ -353,8 +353,10 @@ public class BankCMD extends CommandBase {
         Player player = requirePlayer(sender);
         if (player == null || !hasPermission(player, "essentialsmini.bank.transfer")) return true;
 
-        String fromBank = canonicalBankName(args[1]);
-        String toBank = canonicalBankName(args[2]);
+        String requestedFromBank = args[1];
+        String requestedToBank = args[2];
+        String fromBank = canonicalBankName(requestedFromBank);
+        String toBank = canonicalBankName(requestedToBank);
         if (!bankExists(fromBank)) {
             sendBankNotFound(player);
             return true;
@@ -364,7 +366,7 @@ public class BankCMD extends CommandBase {
             return true;
         }
         if (!bankExists(toBank)) {
-            player.sendMessage(plugin.getPrefix() + "§6" + toBank + " §cdoesn't exist!");
+            player.sendMessage(plugin.getPrefix() + "§6" + requestedToBank + " §cdoesn't exist!");
             return true;
         }
 

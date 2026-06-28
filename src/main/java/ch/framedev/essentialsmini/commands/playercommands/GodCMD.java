@@ -26,7 +26,7 @@ import java.util.List;
 public class GodCMD extends CommandBase {
 
     public GodCMD(Main plugin) {
-        super(plugin, "god");
+        super(plugin, "godmode");
         setupTabCompleter(this);
     }
 

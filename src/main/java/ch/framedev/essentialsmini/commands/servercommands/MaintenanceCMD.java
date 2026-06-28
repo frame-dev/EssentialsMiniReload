@@ -523,6 +523,7 @@ public class MaintenanceCMD extends CommandListenerBase {
         }
     }
 
+    @SuppressWarnings("null")
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         // Null check and permission check

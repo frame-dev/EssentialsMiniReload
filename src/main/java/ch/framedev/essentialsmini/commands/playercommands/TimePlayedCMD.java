@@ -24,7 +24,7 @@ public class TimePlayedCMD extends CommandBase {
     private static final String TARGET_MESSAGE = "§aPlayer §6%Player% §ahas Played: §6%TimePlayed%";
 
     public TimePlayedCMD(Main plugin) {
-        super(plugin, "timeplayed", "playedtime");
+        super(plugin, "timeplayed");
     }
 
     @Override

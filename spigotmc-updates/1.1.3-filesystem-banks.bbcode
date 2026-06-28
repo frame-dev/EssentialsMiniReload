@@ -15,8 +15,10 @@ This update fixes and hardens [CODE]/bank[/CODE] support for servers using the d
 [*]Filesystem bank owners are stored with UUID-backed ownership data where available and keep owner names for compatibility/display.
 [*]Filesystem owner and member checks support legacy player-name entries as well as UUID-backed ownership data.
 [*]Bank member add/remove/list operations now resolve the canonical YAML bank key before writing to [CODE]eco.yml[/CODE].
+[*]Filesystem economy balances now support UUID-only offline player objects in online-mode servers instead of requiring a cached player name first.
 [*]The money storage directory is created before saving filesystem economy or bank data.
 [*]Fixed stale filesystem economy saves that could overwrite and remove the [CODE]Banks[/CODE] section after depositing money or updating player balances.
+[*]Fixed [CODE]/bank transfer[/CODE] missing-target messages so the requested bank name is shown instead of [CODE]null[/CODE].
 [/LIST]
 
 [B]Compatibility notes[/B]

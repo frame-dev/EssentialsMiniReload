@@ -12,8 +12,21 @@ This update focuses on project-wide stability fixes found during a clean build a
 [*]Fixed stale player-balance saves that could remove filesystem banks after bank deposits or balance updates.
 [*]Added YAML-safe bank name validation and case-insensitive bank lookup for filesystem storage.
 [*]Improved filesystem bank owner/member checks to support legacy player-name entries and UUID-backed ownership data.
+[*]Improved filesystem economy account and balance lookups for UUID-only offline players on online-mode servers.
+[*]Fixed [CODE]/bank transfer[/CODE] missing-target messages so failed transfers show the requested bank name instead of [CODE]null[/CODE].
+[*]Fixed command registration for [CODE]/godmode[/CODE] and [CODE]/timeplayed[/CODE] aliases so missing alias declarations no longer break startup tab-completer registration.
+[*]Hardened command registration so undeclared commands in [CODE]plugin.yml[/CODE] are logged and skipped instead of stopping plugin enable.
+[*]Restored executors for previously declared utility commands: [CODE]/book[/CODE], [CODE]/copybook[/CODE], [CODE]/firework[/CODE], [CODE]/mysql[/CODE], [CODE]/position[/CODE], [CODE]/renameitem[/CODE], [CODE]/signitem[/CODE], and [CODE]/spawnmob[/CODE].
+[*]Fixed [CODE]/nicklist[/CODE] so it now lists saved nicked players instead of being only a dead command declaration.
+[*]Fixed [CODE]/plweather[/CODE] and [CODE]/resetplweather[/CODE] so the short command names route to the player-weather executor.
+[*]Removed circular player-weather aliases in [CODE]plugin.yml[/CODE] while keeping both short and long command names available.
+[*]Added command-level permissions for [CODE]/walkspeed[/CODE], [CODE]/flyspeed[/CODE], and player-weather commands so Bukkit help and tab visibility match the executor permission checks.
+[*]Fixed AFK event handling so the AFK listener is registered once instead of twice.
+[*]Added explicit permissions for restored utility commands: [CODE]essentialsmini.copybook[/CODE], [CODE]essentialsmini.firework[/CODE], [CODE]essentialsmini.mysql[/CODE], [CODE]essentialsmini.nicklist[/CODE], [CODE]essentialsmini.renameitem[/CODE], [CODE]essentialsmini.signitem[/CODE], and [CODE]essentialsmini.spawnmob[/CODE].
+[*]Rejected non-finite Vault economy amounts such as [CODE]NaN[/CODE] before they can corrupt player or bank balances.
 [*]Fixed [CODE]/sleep[/CODE] temporary-bed handling so the command restores the original blocks after the sleep window instead of using shared state between players.
 [*]Fixed [CODE]/sleep[/CODE] bed color parsing so invalid [CODE]BedColor[/CODE] values fail cleanly without broad exception handling.
+[*]Fixed skip-night listener scheduling so world time and weather changes run on the main server thread.
 [*]Fixed economy signs so the Vault economy provider can be resolved again after startup instead of staying unavailable if it was not ready during listener construction.
 [*]Hardened buy/free/sell sign creation against malformed sign lines.
 [*]Fixed warp location collection so stored warps are read from [CODE]warps.<name>[/CODE] instead of the bare warp name.
@@ -24,7 +37,8 @@ This update focuses on project-wide stability fixes found during a clean build a
 
 [B]Compatibility notes[/B]
 [LIST]
-[*]No new commands, permissions, config paths, or dependencies were added.
+[*]No new dependencies were added.
+[*]Restored command permissions default to [CODE]op[/CODE] and are included under [CODE]essentialsmini.*[/CODE].
 [*]Existing [CODE]BedColor[/CODE], economy sign, warp, home, and GUI configurations continue to work.
 [*]This release targets [CODE]1.1.3-1.20.6-HIGHER-RELEASE[/CODE].
 [/LIST]

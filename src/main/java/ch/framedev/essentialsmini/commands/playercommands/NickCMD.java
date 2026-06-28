@@ -26,7 +26,7 @@ public class NickCMD extends CommandBase {
     private final List<String> nickList;
 
     public NickCMD(Main plugin) {
-        super(plugin, "nick");
+        super(plugin, "nick", "nicklist");
 
         this.file = new File(plugin.getDataFolder(), "nicks.yml");
         this.fileConfiguration = YamlConfiguration.loadConfiguration(file);
@@ -35,6 +35,10 @@ public class NickCMD extends CommandBase {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("nicklist")) {
+            return handleNickList(sender);
+        }
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage(getPrefix() + getPlugin().getOnlyPlayer(null));
             return true;
@@ -102,6 +106,21 @@ public class NickCMD extends CommandBase {
         return true;
     }
 
+    private boolean handleNickList(CommandSender sender) {
+        if (!sender.hasPermission(getPlugin().getPermissionBase() + "nicklist")) {
+            sender.sendMessage(getPrefix() + getPlugin().getNoPerms(sender instanceof Player player ? player : null));
+            return true;
+        }
+
+        if (nickList.isEmpty()) {
+            sender.sendMessage(getPrefix() + "§7No players are currently saved as nicked.");
+            return true;
+        }
+
+        sender.sendMessage(getPrefix() + "§aNicked players: §6" + String.join("§7, §6", nickList));
+        return true;
+    }
+
     private void resetNick(Player player) {
         resetDisplayNick(player);
         if (getPlugin().getSkinService() != null) {
@@ -162,6 +181,10 @@ public class NickCMD extends CommandBase {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("nicklist")) {
+            return Collections.emptyList();
+        }
+
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
             completions.add("reset");

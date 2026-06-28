@@ -62,6 +62,8 @@ Need support for older Minecraft versions? Use the original EssentialsMini plugi
 [*]Bank names are validated for safe YAML storage and may contain letters, numbers, underscores, and hyphens.
 [*]Filesystem bank lookup is case-insensitive while preserving the original bank display name.
 [*]Filesystem bank owner/member checks now support legacy player-name entries and UUID-backed ownership data.
+[*]Filesystem economy account and balance lookups now support UUID-only offline players on online-mode servers.
+[*][CODE]/bank transfer[/CODE] now shows the requested missing bank name instead of [CODE]null[/CODE].
 [*][CODE]/sleep[/CODE] now restores temporary bed blocks safely per player and handles invalid [CODE]BedColor[/CODE] values cleanly.
 [*]Economy signs can recover the Vault economy provider after startup if it was not ready during listener construction.
 [*]Stored warp locations are collected from the correct [CODE]warps.<name>[/CODE] paths.
@@ -395,7 +397,14 @@ essentialsmini.mail
 essentialsmini.mail.read.others
 essentialsmini.mail.clear.others
 essentialsmini.nick
+essentialsmini.nicklist
 essentialsmini.book
+essentialsmini.copybook
+essentialsmini.firework
+essentialsmini.mysql
+essentialsmini.renameitem
+essentialsmini.signitem
+essentialsmini.spawnmob
 essentialsmini.reload
 essentialsmini.economy
 essentialsmini.messages

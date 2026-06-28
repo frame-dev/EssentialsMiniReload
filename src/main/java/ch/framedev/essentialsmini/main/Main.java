@@ -300,13 +300,13 @@ public class Main extends JavaPlugin {
 
         // Clear lists, maps and variables
         instance = null;
-        listeners.clear();
-        commands.clear();
-        tabCompleters.clear();
+        if (listeners != null) listeners.clear();
+        if (commands != null) commands.clear();
+        if (tabCompleters != null) tabCompleters.clear();
         vaultManager = null;
         mongoDBUtils = null;
         variables = null;
-        silent.clear();
+        if (silent != null) silent.clear();
         databaseManager = null;
         // Log that the plugin has been disabled
         getLogger4J().info("EssentialsMini has been disabled!");

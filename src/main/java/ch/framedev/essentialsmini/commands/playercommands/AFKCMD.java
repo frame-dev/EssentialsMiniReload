@@ -170,7 +170,6 @@ public class AFKCMD implements CommandExecutor {
 
         public Events(Main plugin) {
             super(plugin);
-            setupListener(this);
         }
 
         @EventHandler

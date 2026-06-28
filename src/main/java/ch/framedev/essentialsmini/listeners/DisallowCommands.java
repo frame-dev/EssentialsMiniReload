@@ -180,7 +180,9 @@ public class DisallowCommands extends ListenerBase {
             blockedCommands.add("lightning");
         }
         if (!player.hasPermission(plugin.getPermissionBase() + "speed"))
-            blockedCommands.add("speed");
+            blockedCommands.add("walkspeed");
+        if (!player.hasPermission(plugin.getPermissionBase() + "flyspeed"))
+            blockedCommands.add("flyspeed");
         if (!player.hasPermission(plugin.getPermissionBase() + "afk"))
             blockedCommands.add("afk");
         if (!player.hasPermission(plugin.getPermissionBase() + "infoeconomy"))
@@ -217,7 +219,9 @@ public class DisallowCommands extends ListenerBase {
         }
 
         if (!player.hasPermission(plugin.getPermissionBase() + "book")) {
-            blockedCommands.add("bock");
+            blockedCommands.add("book");
+        }
+        if (!player.hasPermission(plugin.getPermissionBase() + "copybook")) {
             blockedCommands.add("copybook");
         }
 

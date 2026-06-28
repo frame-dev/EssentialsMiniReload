@@ -27,6 +27,8 @@ public class PlayerWeatherCMD extends CommandBase {
 
     private static final String PLAYER_WEATHER = "playerweather";
     private static final String RESET_PLAYER_WEATHER = "resetplayerweather";
+    private static final String PLAYER_WEATHER_SHORT = "plweather";
+    private static final String RESET_PLAYER_WEATHER_SHORT = "resetplweather";
     private static final String PERMISSION = "playerweather";
     private static final String USAGE = "/playerweather (CLEAR/DOWNFALL)";
     private static final String MESSAGE_KEY = "PlayerWeather";
@@ -34,7 +36,7 @@ public class PlayerWeatherCMD extends CommandBase {
     private static final String DEFAULT_RESET_MESSAGE = "§aYour Player weather has been reset!";
 
     public PlayerWeatherCMD(Main plugin) {
-        super(plugin, PLAYER_WEATHER, RESET_PLAYER_WEATHER);
+        super(plugin, PLAYER_WEATHER, RESET_PLAYER_WEATHER, PLAYER_WEATHER_SHORT, RESET_PLAYER_WEATHER_SHORT);
     }
 
     @Override
@@ -45,8 +47,8 @@ public class PlayerWeatherCMD extends CommandBase {
         if (!hasPermission(player)) return true;
 
         return switch (command.getName().toLowerCase(Locale.ROOT)) {
-            case PLAYER_WEATHER -> handleSetWeather(player, args);
-            case RESET_PLAYER_WEATHER -> handleResetWeather(player);
+            case PLAYER_WEATHER, PLAYER_WEATHER_SHORT -> handleSetWeather(player, args);
+            case RESET_PLAYER_WEATHER, RESET_PLAYER_WEATHER_SHORT -> handleResetWeather(player);
             default -> false;
         };
     }
@@ -112,7 +114,7 @@ public class PlayerWeatherCMD extends CommandBase {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (command.getName().equalsIgnoreCase(PLAYER_WEATHER) && args.length == 1) {
+        if ((command.getName().equalsIgnoreCase(PLAYER_WEATHER) || command.getName().equalsIgnoreCase(PLAYER_WEATHER_SHORT)) && args.length == 1) {
             return TabCompleteUtils.matchingStrings(Arrays.stream(WeatherType.values()).map(Enum::name).toList(), args[0]);
         }
         return List.of();
